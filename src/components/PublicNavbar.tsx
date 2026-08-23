@@ -31,12 +31,12 @@ export default async function PublicNavbar() {
         {/* Left Side (Logos) */}
         <div className="flex items-center gap-2 sm:gap-6 flex-shrink-0">
           
-          <Link href="/" className="flex items-center group relative h-10 sm:h-12 w-28 sm:w-40 flex-shrink-0">
+          <Link href="/" className="flex items-center group relative h-10 sm:h-12 w-[130px] sm:w-[160px] flex-shrink-0">
             <Image 
               src="/logo.png" 
               alt="RTIO TIX Logo" 
               fill
-              className="object-contain mix-blend-multiply scale-[2.2] sm:scale-125 origin-left transition-transform group-hover:scale-[2.3]" 
+              className="object-contain object-left mix-blend-multiply transition-transform group-hover:scale-105" 
               priority
             />
           </Link>
@@ -45,13 +45,13 @@ export default async function PublicNavbar() {
           
           <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden sm:block">Sponsored By</span>
-            <div className="relative h-8 sm:h-12 w-20 sm:w-32">
+            <div className="relative h-8 sm:h-12 w-[90px] sm:w-[120px]">
               <Image 
                 src="/images/logo_ruang_tenang.png" 
                 alt="Ruang Tenang" 
                 fill 
-                className="object-contain scale-[1.6] sm:scale-[1.3] origin-left"
-                sizes="(max-width: 768px) 80px, 128px" 
+                className="object-contain object-left"
+                sizes="(max-width: 768px) 90px, 120px" 
               />
             </div>
           </div>
