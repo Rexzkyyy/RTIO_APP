@@ -27,8 +27,8 @@ export default async function PublicNavbar() {
     <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-20 flex items-center justify-between overflow-hidden">
         <div className="flex items-center gap-2 sm:gap-6">
-          {/* Constrain logo height so it doesn't pop out of the navbar on mobile */}
-          <Link href="/" className="flex items-center gap-2 group relative h-8 sm:h-12 w-20 sm:w-32">
+          {/* Logo with better mobile size */}
+          <Link href="/" className="flex items-center gap-2 group relative h-10 sm:h-12 w-28 sm:w-32">
             <Image 
               src="/logo.png" 
               alt="RTIO TIX Logo" 
@@ -40,7 +40,7 @@ export default async function PublicNavbar() {
           <div className="h-4 sm:h-8 w-px bg-slate-200 ml-0 sm:ml-1 hidden sm:block"></div>
           <div className="flex items-center gap-1 sm:gap-3">
             <span className="text-[6px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden sm:block">Sponsored By</span>
-            <div className="relative h-5 sm:h-10 w-12 sm:w-24">
+            <div className="relative h-6 sm:h-10 w-16 sm:w-24">
               <Image 
                 src="/images/logo_ruang_tenang.png" 
                 alt="Ruang Tenang" 

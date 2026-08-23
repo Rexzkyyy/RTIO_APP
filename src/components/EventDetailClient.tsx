@@ -84,8 +84,8 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
       </div>
 
       {/* Immersive Hero Section */}
-      <div className="relative w-full h-[60vh] md:min-h-[75vh] overflow-hidden bg-slate-900 z-10">
-        {navbar}
+      <div className="relative w-full min-h-[60vh] md:min-h-[75vh] flex flex-col overflow-hidden bg-slate-900 z-10">
+        <div className="relative z-50 shrink-0">{navbar}</div>
         
         {/* Banner Image with Parallax */}
         <motion.div style={{ y, opacity }} className="absolute inset-0 z-0 bg-slate-900">
@@ -104,8 +104,8 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
         </motion.div>
 
         {/* Hero Content (Title & Info) */}
-        <div className="absolute bottom-28 md:bottom-40 left-0 right-0 z-10">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col gap-4">
+        <div className="relative z-10 flex-1 flex flex-col justify-end pb-24 sm:pb-32 pt-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col gap-4 w-full">
             <motion.h1 
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-2xl"
