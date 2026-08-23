@@ -31,13 +31,12 @@ export default async function PublicNavbar() {
         {/* Left Side (Logos) */}
         <div className="flex items-center gap-2 sm:gap-6 flex-shrink-0">
           
-          <Link href="/" className="flex items-center group relative h-10 sm:h-12 w-[130px] sm:w-[160px] flex-shrink-0">
-            <Image 
+          <Link href="/" className="flex items-center flex-shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
               src="/logo.png" 
               alt="RTIO TIX Logo" 
-              fill
-              className="object-contain object-left mix-blend-multiply transition-transform group-hover:scale-105" 
-              priority
+              className="w-[120px] sm:w-[150px] h-auto max-h-16 object-contain mix-blend-multiply transition-transform group-hover:scale-105" 
             />
           </Link>
           
@@ -45,15 +44,12 @@ export default async function PublicNavbar() {
           
           <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden sm:block">Sponsored By</span>
-            <div className="relative h-8 sm:h-12 w-[90px] sm:w-[120px]">
-              <Image 
-                src="/images/logo_ruang_tenang.png" 
-                alt="Ruang Tenang" 
-                fill 
-                className="object-contain object-left"
-                sizes="(max-width: 768px) 90px, 120px" 
-              />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src="/images/logo_ruang_tenang.png" 
+              alt="Ruang Tenang" 
+              className="w-[80px] sm:w-[110px] h-auto max-h-12 object-contain"
+            />
           </div>
           
         </div>
