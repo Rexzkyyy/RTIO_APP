@@ -74,7 +74,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
 
   // Recent Transactions (5 Latest Approved)
   const recentTransactions = approvedTx
-    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0, 5)
     .map(tx => ({
       id: tx.id,
@@ -82,7 +82,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
       buyerEmail: tx.buyerEmail,
       totalTickets: tx.totalTickets,
       totalPrice: tx.totalPrice,
-      updatedAt: tx.updatedAt,
+      updatedAt: tx.createdAt, // Fallback to createdAt
     }));
 
   const analyticsData = {

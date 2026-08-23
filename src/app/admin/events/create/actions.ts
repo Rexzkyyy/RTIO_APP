@@ -100,7 +100,7 @@ export async function createEvent(formData: FormData) {
       sponsors,
       whatsapp: whatsapp || null,
       instagram: instagram || null,
-      bankAccounts: bankAccounts.length > 0 ? bankAccounts : null,
+      bankAccounts: bankAccounts.length > 0 ? (bankAccounts as any) : undefined,
       bannerUrl,
       ticketDesignUrl,
       isActive: true,

@@ -64,7 +64,7 @@ export async function updateEvent(id: string, formData: FormData) {
     sponsors,
     whatsapp: whatsapp || null,
     instagram: instagram || null,
-    bankAccounts: bankAccounts.length > 0 ? bankAccounts : null,
+    bankAccounts: bankAccounts.length > 0 ? (bankAccounts as any) : undefined,
   };
 
   // Handle Image Upload locally if new image is provided
