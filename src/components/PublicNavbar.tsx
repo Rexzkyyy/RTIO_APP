@@ -26,17 +26,17 @@ export default async function PublicNavbar() {
   return (
     <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
       {/* Tightly packed container for mobile to maximize logo space without overflowing */}
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 h-20 sm:h-24 flex items-center justify-between overflow-hidden">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
         
         {/* Left Side (Logos) */}
         <div className="flex items-center gap-2 sm:gap-6 flex-shrink-0">
           
-          <Link href="/" className="flex items-center group relative h-12 sm:h-16 w-32 sm:w-48 flex-shrink-0">
+          <Link href="/" className="flex items-center group relative h-10 sm:h-12 w-28 sm:w-40 flex-shrink-0">
             <Image 
               src="/logo.png" 
               alt="RTIO TIX Logo" 
               fill
-              className="object-contain mix-blend-multiply scale-[1.5] sm:scale-125 origin-left transition-transform group-hover:scale-[1.6]" 
+              className="object-contain mix-blend-multiply scale-[2.2] sm:scale-125 origin-left transition-transform group-hover:scale-[2.3]" 
               priority
             />
           </Link>
@@ -50,7 +50,7 @@ export default async function PublicNavbar() {
                 src="/images/logo_ruang_tenang.png" 
                 alt="Ruang Tenang" 
                 fill 
-                className="object-contain scale-[1.3] origin-left"
+                className="object-contain scale-[1.6] sm:scale-[1.3] origin-left"
                 sizes="(max-width: 768px) 80px, 128px" 
               />
             </div>
