@@ -6,6 +6,7 @@ import { uploadPaymentProof } from "../actions";
 import InteractiveBackground from "@/components/InteractiveBackground";
 import WhatsAppSaveButton from "@/components/WhatsAppSaveButton";
 import PaymentFormClient from "./PaymentFormClient";
+import PublicNavbar from "@/components/PublicNavbar";
 
 export default async function PayPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
