@@ -29,31 +29,28 @@ export default async function PublicNavbar() {
       <div className="max-w-7xl mx-auto px-2 sm:px-6 h-20 sm:h-24 flex items-center justify-between overflow-hidden">
         
         {/* Left Side (Logos) */}
-        <div className="flex items-center gap-1.5 sm:gap-6 flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-6 flex-shrink-0">
           
-          <Link href="/" className="flex items-center group relative h-14 sm:h-[70px] w-32 sm:w-[160px]">
-            <Image 
+          <Link href="/" className="flex items-center group flex-shrink-0">
+            {/* Using standard img for natural aspect ratio scaling without fixed width bounds */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
               src="/logo.png" 
               alt="RTIO TIX Logo" 
-              fill
-              className="object-contain mix-blend-multiply transition-transform group-hover:scale-105" 
-              priority
+              className="h-12 sm:h-16 w-auto object-contain mix-blend-multiply transition-transform group-hover:scale-105" 
             />
           </Link>
           
-          <div className="h-6 sm:h-8 w-px bg-slate-200 mx-0.5 sm:mx-1 hidden sm:block"></div>
+          <div className="h-6 sm:h-8 w-px bg-slate-200 mx-1 hidden sm:block"></div>
           
-          <div className="flex items-center gap-1 sm:gap-3">
-            <span className="text-[6px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden sm:block">Sponsored By</span>
-            <div className="relative h-8 sm:h-12 w-20 sm:w-28">
-              <Image 
-                src="/images/logo_ruang_tenang.png" 
-                alt="Ruang Tenang" 
-                fill 
-                className="object-contain"
-                sizes="(max-width: 768px) 80px, 112px" 
-              />
-            </div>
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+            <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden sm:block">Sponsored By</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src="/images/logo_ruang_tenang.png" 
+              alt="Ruang Tenang" 
+              className="h-8 sm:h-12 w-auto object-contain"
+            />
           </div>
           
         </div>
