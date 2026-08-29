@@ -16,7 +16,7 @@ type TicketData = {
   };
   event: {
     title: string;
-    eventDate: Date;
+    eventDate: Date | string;
     location: string;
     bannerUrl: string | null;
     ticketDesignUrl: string | null;

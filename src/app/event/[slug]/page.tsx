@@ -58,5 +58,11 @@ export default async function PublicEventPage({ params }: { params: Promise<{ sl
     ? Math.min(...event.ticketCategories.map(t => t.price))
     : 0;
 
-  return <EventDetailClient event={event} lowestPrice={lowestPrice} navbar={<PublicNavbar />} isLoggedIn={!!session?.user} />;
+  const serializableEvent = {
+    ...event,
+    eventDate: event.eventDate.toISOString(),
+    createdAt: event.createdAt.toISOString(),
+  };
+
+  return <EventDetailClient event={serializableEvent} lowestPrice={lowestPrice} navbar={<PublicNavbar />} isLoggedIn={!!session?.user} />;
 }

@@ -82,7 +82,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
       buyerEmail: tx.buyerEmail,
       totalTickets: tx.totalTickets,
       totalPrice: tx.totalPrice,
-      updatedAt: tx.createdAt, // Fallback to createdAt
+      updatedAt: tx.createdAt.toISOString(), // Fallback to createdAt
     }));
 
   const analyticsData = {

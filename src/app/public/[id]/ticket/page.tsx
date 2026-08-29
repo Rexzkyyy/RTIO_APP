@@ -78,7 +78,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
               },
               event: {
                 title: transaction.event.title,
-                eventDate: transaction.event.eventDate,
+                eventDate: transaction.event.eventDate.toISOString(),
                 location: transaction.event.location,
                 bannerUrl: transaction.event.bannerUrl,
                 ticketDesignUrl: transaction.event.ticketDesignUrl,
