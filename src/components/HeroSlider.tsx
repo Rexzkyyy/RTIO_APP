@@ -9,7 +9,7 @@ type EventBanner = {
   title: string;
   slug: string;
   bannerUrl: string | null;
-  eventDate: Date;
+  eventDate: Date | string;
   location: string;
 };
 

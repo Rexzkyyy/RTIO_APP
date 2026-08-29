@@ -70,7 +70,13 @@ export default async function Home({ searchParams }: Props) {
       {/* Hero Section */}
       <div className="w-full relative z-10 max-w-7xl mx-auto px-2 sm:px-6 pt-4 sm:pt-10">
         <div className="rounded-xl sm:rounded-3xl overflow-hidden shadow-2xl bg-slate-900">
-          <HeroSlider events={featuredEvents} showIntroSlide={true} />
+          <HeroSlider 
+            events={featuredEvents.map(event => ({
+              ...event,
+              eventDate: event.eventDate.toISOString(),
+            }))} 
+            showIntroSlide={true} 
+          />
         </div>
       </div>
 

@@ -8,7 +8,7 @@ import { Save, RefreshCcw, Palette } from 'lucide-react';
 type EventWithConfig = {
   id: string;
   title: string;
-  eventDate: Date;
+  eventDate: Date | string;
   location: string;
   bannerUrl: string | null;
   ticketDesignUrl: string | null;

@@ -14,5 +14,11 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
     notFound();
   }
 
-  return <EditEventForm event={event} />;
+  const serializableEvent = {
+    ...event,
+    eventDate: event.eventDate.toISOString(),
+    createdAt: event.createdAt.toISOString(),
+  };
+
+  return <EditEventForm event={serializableEvent} />;
 }

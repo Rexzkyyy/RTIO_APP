@@ -22,7 +22,9 @@ export default async function TicketDesignPage({ params }: Props) {
   // Convert JSON to object if needed for the component
   const eventWithConfig = {
     ...event,
-    ticketConfig: event.ticketConfig ? (typeof event.ticketConfig === 'string' ? JSON.parse(event.ticketConfig) : event.ticketConfig) : null
+    ticketConfig: event.ticketConfig ? (typeof event.ticketConfig === 'string' ? JSON.parse(event.ticketConfig) : event.ticketConfig) : null,
+    eventDate: event.eventDate.toISOString(),
+    createdAt: event.createdAt.toISOString(),
   };
 
   return (
