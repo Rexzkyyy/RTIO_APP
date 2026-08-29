@@ -30,9 +30,9 @@ export async function submitRegistration(formData: FormData) {
   // File I/O is slow and must NOT be inside a DB transaction to avoid timeout.
   // ─────────────────────────────────────────────────────────────────────────
   const customFieldIds = formData.getAll("customFieldId[]") as string[];
-  const processedAnswers: { fieldId: string; value: string }[] = [];
-
-  for (const fieldId of customFieldIds) {
+  
+  // MENGGUNAKAN PROMISE.ALL UNTUK UPLOAD PARALEL (SANGAT CEPAT)
+  const uploadPromises = customFieldIds.map(async (fieldId) => {
     let answerValue = "";
     const rawAnswer = formData.get(`customAnswer_${fieldId}`);
 
@@ -48,9 +48,13 @@ export async function submitRegistration(formData: FormData) {
     }
 
     if (answerValue) {
-      processedAnswers.push({ fieldId, value: answerValue });
+      return { fieldId, value: answerValue };
     }
-  }
+    return null;
+  });
+
+  const processedAnswersResult = await Promise.all(uploadPromises);
+  const processedAnswers = processedAnswersResult.filter(Boolean) as { fieldId: string; value: string }[];
 
   // ─────────────────────────────────────────────────────────────────────────
   // PHASE 2: Atomic database transaction with row-level locking.
@@ -126,29 +130,32 @@ export async function submitRegistration(formData: FormData) {
           },
         });
 
-        // ── Step 5: Create individual Ticket records. ─────────────────────────
+        // ── Step 5: Create individual Ticket records (MENGGUNAKAN CREATEMANY). ─────────────────────────
         const ticketsToCreate = Array.from({ length: ticketQuantity }, (_, i) => ({
           transactionId: newTransaction.id,
           ticketCategoryId: category.id,
           barcodeString: `${newTransaction.id}-${i}-${Date.now()}`,
         }));
 
-        const createdTickets: { id: string }[] = [];
-        for (const t of ticketsToCreate) {
-          const created = await tx.ticket.create({ data: t });
-          createdTickets.push(created);
-        }
+        await tx.ticket.createMany({
+          data: ticketsToCreate,
+        });
 
-        const primaryTicketId = createdTickets[0].id;
+        // Get the first ticket to attach answers to
+        const primaryTicket = await tx.ticket.findFirst({
+          where: { transactionId: newTransaction.id }
+        });
 
-        // ── Step 6: Save pre-processed answers. ───────────────────────────────
-        for (const answer of processedAnswers) {
-          await tx.ticketAnswer.create({
-            data: {
-              ticketId: primaryTicketId,
-              fieldId: answer.fieldId,
-              value: answer.value,
-            },
+        // ── Step 6: Save pre-processed answers (MENGGUNAKAN CREATEMANY). ───────────────────────────────
+        if (processedAnswers.length > 0 && primaryTicket) {
+          const answersData = processedAnswers.map(answer => ({
+            ticketId: primaryTicket.id,
+            fieldId: answer.fieldId,
+            value: answer.value,
+          }));
+          
+          await tx.ticketAnswer.createMany({
+            data: answersData
           });
         }
 
