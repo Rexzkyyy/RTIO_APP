@@ -4,13 +4,21 @@ import prisma from "@/lib/prisma";
 
 import { put } from "@vercel/blob";
 import { Prisma } from "@prisma/client";
+import { after } from "next/server";
 import { cleanupExpiredTransactions, getTransactionExpiryTime } from "@/lib/cleanup-expired";
 
 export async function submitRegistration(formData: FormData) {
   // ─────────────────────────────────────────────────────────────────────────
-  // PHASE 0: Cleanup is now handled by Vercel Cron Job, so we no longer
-  // block the user's registration waiting for background maintenance!
+  // PHASE 0: Cleanup is executed asynchronously using Next.js after()
+  // This ensures the background maintenance runs without blocking the user!
   // ─────────────────────────────────────────────────────────────────────────
+  after(async () => {
+    try {
+      await cleanupExpiredTransactions();
+    } catch (error) {
+      console.error("Background cleanup failed:", error);
+    }
+  });
 
   const eventId = formData.get("eventId") as string;
   const ticketCategoryId = formData.get("ticketCategoryId") as string;
