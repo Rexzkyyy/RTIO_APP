@@ -6,6 +6,7 @@ const prismaClientSingleton = () => {
   const connectionString = process.env.DATABASE_URL
   const pool = new Pool({ 
     connectionString,
+    max: 1, // Limit connections per lambda to prevent exhaustion in serverless
     ssl: connectionString?.includes('supabase.com') ? { rejectUnauthorized: false } : undefined
   })
   const adapter = new PrismaPg(pool)
