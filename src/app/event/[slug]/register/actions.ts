@@ -2,8 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { put } from "@vercel/blob";
 import { Prisma } from "@prisma/client";
 import { cleanupExpiredTransactions, getTransactionExpiryTime } from "@/lib/cleanup-expired";
 
@@ -40,13 +39,9 @@ export async function submitRegistration(formData: FormData) {
     if (rawAnswer && typeof rawAnswer === "object" && "arrayBuffer" in rawAnswer) {
       const file = rawAnswer as File;
       if (file.size > 0) {
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        const filename = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-        const uploadDir = join(process.cwd(), "public", "uploads", "answers");
-        await mkdir(uploadDir, { recursive: true });
-        await writeFile(join(uploadDir, filename), buffer);
-        answerValue = `/uploads/answers/${filename}`;
+        const filename = `answers/${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+        const blob = await put(filename, file, { access: "public" });
+        answerValue = blob.url;
       }
     } else {
       answerValue = (rawAnswer as string) || "";

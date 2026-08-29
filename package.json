@@ -13,6 +13,7 @@
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "@types/pg": "^8.23.1",
+    "@vercel/blob": "^2.8.0",
     "browser-image-compression": "^2.0.2",
     "framer-motion": "^13.1.1",
     "html-to-image": "^1.11.13",
