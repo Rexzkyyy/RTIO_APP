@@ -72,10 +72,10 @@ export async function submitRegistration(formData: FormData) {
   //
   // IsolationLevel: RepeatableRead — ensures phantom reads are prevented.
   // ─────────────────────────────────────────────────────────────────────────
-  let transactionId: string;
+  let transactionResult: { id: string; isFree: boolean };
 
   try {
-    transactionId = await prisma.$transaction(
+    transactionResult = await prisma.$transaction(
       async (tx) => {
         // ── Step 1: Lock the row. All concurrent requests WAIT here. ──────────
         // $queryRaw returns typed results based on our SELECT columns.
@@ -159,8 +159,11 @@ export async function submitRegistration(formData: FormData) {
           });
         }
 
-        // Return the transaction ID to use after commit.
-        return newTransaction.id;
+        // Return the transaction data needed for direct navigation.
+        return {
+          id: newTransaction.id,
+          isFree: totalPrice === 0
+        };
       },
       {
         isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
@@ -174,7 +177,11 @@ export async function submitRegistration(formData: FormData) {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // PHASE 3: Return URL for client to navigate smoothly.
+  // PHASE 3: Return DIRECT URL for client to navigate smoothly, skipping intermediate redirects.
   // ─────────────────────────────────────────────────────────────────────────
-  return { success: true, url: `/public/${transactionId}` };
+  const finalUrl = transactionResult.isFree 
+    ? `/public/${transactionResult.id}/ticket` 
+    : `/public/${transactionResult.id}/pay`;
+    
+  return { success: true, url: finalUrl };
 }
