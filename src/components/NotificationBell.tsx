@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Bell, Ticket, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 
@@ -13,8 +13,11 @@ type Transaction = {
   };
 };
 
-export default function NotificationBell({ transactions }: { transactions: Transaction[] }) {
+export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click
@@ -28,12 +31,36 @@ export default function NotificationBell({ transactions }: { transactions: Trans
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Fetch transactions on-demand (only when bell is clicked)
+  const fetchNotifications = useCallback(async () => {
+    if (hasFetched) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/notifications");
+      if (res.ok) {
+        const data = await res.json();
+        setTransactions(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch notifications:", err);
+    } finally {
+      setIsLoading(false);
+      setHasFetched(true);
+    }
+  }, [hasFetched]);
+
+  const handleToggle = () => {
+    const next = !isOpen;
+    setIsOpen(next);
+    if (next) fetchNotifications();
+  };
+
   const unreadCount = transactions.filter(t => t.status === "PENDING").length;
 
   return (
     <div className="relative" ref={dropdownRef}>
       <button 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className="relative p-2 text-slate-500 hover:text-teal-600 transition-colors group focus:outline-none"
       >
         {unreadCount > 0 && (
@@ -50,7 +77,9 @@ export default function NotificationBell({ transactions }: { transactions: Trans
           <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
             <div>
               <h3 className="font-bold text-slate-800">Notifikasi Pesanan</h3>
-              <p className="text-xs text-slate-500">Anda memiliki {transactions.length} pesanan tiket.</p>
+              <p className="text-xs text-slate-500">
+                {isLoading ? "Memuat..." : `Anda memiliki ${transactions.length} pesanan tiket.`}
+              </p>
             </div>
             <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-slate-200 rounded-full text-slate-500 transition-colors">
               <X className="w-5 h-5" />
@@ -58,7 +87,12 @@ export default function NotificationBell({ transactions }: { transactions: Trans
           </div>
           
           <div className="max-h-[60vh] overflow-y-auto">
-            {transactions.length === 0 ? (
+            {isLoading ? (
+              <div className="p-6 text-center text-slate-500 text-sm">
+                <div className="w-6 h-6 border-2 border-slate-200 border-t-teal-500 rounded-full animate-spin mx-auto mb-2"></div>
+                Memuat notifikasi...
+              </div>
+            ) : transactions.length === 0 ? (
               <div className="p-6 text-center text-slate-500 text-sm flex flex-col items-center">
                 <Ticket className="w-8 h-8 text-slate-300 mb-2" />
                 Belum ada pesanan tiket.

@@ -1,28 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
-import { Ticket } from "lucide-react";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import prisma from "@/lib/prisma";
 import NotificationBell from "@/components/NotificationBell";
 
-export default async function PublicNavbar() {
-  const session = await getServerSession(authOptions);
-  
-  let userTransactions: any[] = [];
-  if (session?.user?.email) {
-    userTransactions = await prisma.transaction.findMany({
-      where: { buyerEmail: session.user.email },
-      select: {
-        id: true,
-        status: true,
-        paymentProofUrl: true,
-        event: { select: { title: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-  }
-
+export default function PublicNavbar() {
   return (
     <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
       {/* Tightly packed container for mobile to maximize logo space without overflowing */}
@@ -66,7 +45,7 @@ export default async function PublicNavbar() {
             <div className="h-4 w-px bg-slate-300"></div>
           </div>
           
-          <NotificationBell transactions={userTransactions} />
+          <NotificationBell />
           
           <Link href="/admin/events" className="text-[10px] sm:text-sm font-bold text-slate-500 hover:text-teal-600 transition-colors bg-slate-100 hover:bg-teal-50 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full whitespace-nowrap">
             Admin

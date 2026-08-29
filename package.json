@@ -15,7 +15,6 @@
     "@types/pg": "^8.23.1",
     "@vercel/blob": "^2.8.0",
     "browser-image-compression": "^2.0.2",
-    "framer-motion": "^13.1.1",
     "html-to-image": "^1.11.13",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.32.0",

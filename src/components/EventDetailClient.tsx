@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { signIn } from "next-auth/react";
-import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { Calendar as CalendarIcon, MapPin, Users, ChevronRight, ArrowLeft, Ticket, Crown, Star, Shield, HelpCircle, Flame } from "lucide-react";
-import PublicNavbar from "@/components/PublicNavbar";
 
 // Helper to determine ticket styling dynamically
 function getTicketStyle(name: string) {
@@ -18,7 +16,7 @@ function getTicketStyle(name: string) {
       textClass: 'text-indigo-700',
       borderClass: 'border-indigo-200 hover:border-indigo-400',
       shadowClass: 'shadow-indigo-900/10 hover:shadow-indigo-900/20',
-      icon: <Crown className="w-6 h-6 text-indigo-600" />
+      icon: <Crown className="w-6 h-6 text-indigo-600" />,
     };
   }
   if (lower.includes('gold') || lower.includes('emas')) {
@@ -28,7 +26,7 @@ function getTicketStyle(name: string) {
       textClass: 'text-amber-700',
       borderClass: 'border-amber-200 hover:border-amber-400',
       shadowClass: 'shadow-amber-900/10 hover:shadow-amber-900/20',
-      icon: <Star className="w-6 h-6 text-amber-600" />
+      icon: <Star className="w-6 h-6 text-amber-600" />,
     };
   }
   if (lower.includes('silver') || lower.includes('perak')) {
@@ -38,7 +36,7 @@ function getTicketStyle(name: string) {
       textClass: 'text-slate-700',
       borderClass: 'border-slate-200 hover:border-slate-400',
       shadowClass: 'shadow-slate-900/10 hover:shadow-slate-900/20',
-      icon: <Shield className="w-6 h-6 text-slate-600" />
+      icon: <Shield className="w-6 h-6 text-slate-600" />,
     };
   }
   // Default/Reguler
@@ -48,26 +46,46 @@ function getTicketStyle(name: string) {
     textClass: 'text-emerald-700',
     borderClass: 'border-emerald-200 hover:border-emerald-400',
     shadowClass: 'shadow-emerald-900/10 hover:shadow-emerald-900/20',
-    icon: <Ticket className="w-6 h-6 text-emerald-600" />
+    icon: <Ticket className="w-6 h-6 text-emerald-600" />,
   };
 }
 
+// Simple CSS-based fade-in-up animation hook using IntersectionObserver
+function useFadeInRef<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+}
+
 export default function EventDetailClient({ event, lowestPrice, navbar, isLoggedIn = false }: { event: any, lowestPrice: number, navbar: React.ReactNode, isLoggedIn?: boolean }) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingUrl, setPendingUrl] = useState("");
-  
-  // Parallax effect for the hero banner
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"]
-  });
-  
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  // Refs for fade-in animations
+  const descRef = useFadeInRef<HTMLDivElement>();
+  const artistsRef = useFadeInRef<HTMLDivElement>();
 
   return (
-    <div ref={containerRef} className="min-h-screen relative pb-32 md:pb-12 overflow-x-hidden bg-slate-50">
+    <div className="min-h-screen relative pb-32 md:pb-12 overflow-x-hidden bg-slate-50">
       
       {/* Gray Grid Pattern Background outside cards */}
       <div className="fixed inset-0 z-0 opacity-50 pointer-events-none" 
@@ -87,8 +105,8 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
       <div className="relative w-full min-h-[60vh] md:min-h-[75vh] flex flex-col overflow-hidden bg-slate-900 z-10">
         <div className="relative z-50 shrink-0">{navbar}</div>
         
-        {/* Banner Image with Parallax */}
-        <motion.div style={{ y, opacity }} className="absolute inset-0 z-0 bg-slate-900">
+        {/* Banner Image (static, no parallax for performance) */}
+        <div className="absolute inset-0 z-0 bg-slate-900">
           {event.bannerUrl ? (
             <>
               {/* Blurred Background to fill empty spaces */}
@@ -101,21 +119,15 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
           )}
           {/* Smooth Gradient Overlay fading to slate-50 (transparent) */}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-900/80 to-transparent"></div>
-        </motion.div>
+        </div>
 
         {/* Hero Content (Title & Info) */}
         <div className="relative z-10 flex-1 flex flex-col justify-end pb-24 sm:pb-32 pt-20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col gap-4 w-full">
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-2xl"
-            >
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-2xl animate-fade-in-up">
               {event.title}
-            </motion.h1>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-              className="flex flex-wrap gap-3 text-sm md:text-base font-semibold text-white"
-            >
+            </h1>
+            <div className="flex flex-wrap gap-3 text-sm md:text-base font-semibold text-white animate-fade-in-up animation-delay-100">
               <div className="flex items-center bg-white/10 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
                 <CalendarIcon className="w-4 h-4 mr-2 text-emerald-400" />
                 {new Date(event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -124,12 +136,9 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                 <MapPin className="w-4 h-4 mr-2 text-emerald-400" />
                 {event.location}
               </div>
-            </motion.div>
+            </div>
             
-            <motion.div
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-              className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6"
-            >
+            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 animate-fade-in-up animation-delay-200">
                <button 
                   onClick={() => document.getElementById('tickets-section')?.scrollIntoView({ behavior: 'smooth' })} 
                   className="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl shadow-[0_8px_32px_0_rgba(16,185,129,0.4)] hover:shadow-[0_8px_32px_0_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center justify-center w-max"
@@ -153,7 +162,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                    <p className="opacity-80">tertarik dengan event ini 🔥</p>
                  </div>
                </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -187,12 +196,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
             <hr className="border-slate-100" />
 
             {/* Description */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.6 }}
-            >
+            <div ref={descRef}>
               <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
                 <span className="w-8 h-1 bg-emerald-500 rounded-full mr-4"></span>
                 Tentang Event
@@ -202,17 +206,11 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                   <p key={i}>{paragraph}</p>
                 ))}
               </div>
-            </motion.div>
+            </div>
 
             {/* Artists & Sponsors - Seamless List */}
             {(event.artists.length > 0 || event.sponsors.length > 0) && (
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.6 }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t border-slate-100"
-              >
+              <div ref={artistsRef} className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t border-slate-100">
                 {event.artists.length > 0 && (
                   <div>
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Lineup & Penampil</h3>
@@ -237,7 +235,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                     </div>
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
           </div>
         </div>
@@ -247,12 +245,8 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-slate-800">Pilih Tiket Anda</h2>
           </div>
-          <div className="flex flex-nowrap md:flex-wrap overflow-x-auto md:overflow-x-visible justify-start md:justify-center gap-5 pb-8 snap-x snap-mandatory scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <style jsx>{`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
+          <div className="flex flex-nowrap md:flex-wrap overflow-x-auto md:overflow-x-visible justify-start md:justify-center gap-5 pb-8 snap-x snap-mandatory scroll-smooth hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+
             
             {event.ticketCategories.map((ticket: any, index: number) => {
               const style = getTicketStyle(ticket.name);
@@ -269,13 +263,10 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
               return (
                 isSoldOut ? (
                   // Sold-out card — not a Link, disabled appearance
-                  <motion.div
+                  <div
                     key={ticket.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    className="w-[80vw] sm:w-[320px] max-w-[320px] flex-none snap-center"
+                    className="w-[80vw] sm:w-[320px] max-w-[320px] flex-none snap-center animate-fade-in-up"
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div className="bg-slate-100 rounded-2xl p-5 border border-slate-200 relative overflow-hidden flex flex-col h-full opacity-70 grayscale cursor-not-allowed">
                       <div className="absolute top-0 left-0 right-0 h-1 bg-slate-300" />
@@ -294,7 +285,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 ) : (
                 <Link 
                   href={`/event/${event.slug}/register?ticketId=${ticket.id}`} 
@@ -306,24 +297,13 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                       setShowLoginModal(true);
                     }
                   }}
-                  className="block group/ticket outline-none w-[80vw] sm:w-[320px] max-w-[320px] flex-none snap-center"
+                  className="block group/ticket outline-none w-[80vw] sm:w-[320px] max-w-[320px] flex-none snap-center animate-fade-in-up"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    whileHover={{ y: -4 }}
-                    className={`bg-white rounded-2xl p-5 shadow-lg ${style.shadowClass} border ${isLowStock ? 'border-orange-400' : style.borderClass} relative overflow-hidden flex flex-col h-full transition-all duration-300`}
-                  >
+                  <div className={`bg-white rounded-2xl p-5 shadow-lg ${style.shadowClass} border ${isLowStock ? 'border-orange-400' : style.borderClass} relative overflow-hidden flex flex-col h-full transition-all duration-300 hover:-translate-y-1`}>
                     {isBestSeller && (
                       <div className="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-2xl z-10 flex items-center shadow-md">
-                        <motion.div
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ repeat: Infinity, duration: 1.5 }}
-                        >
-                          <Flame className="w-3 h-3 mr-1 text-yellow-200 fill-yellow-200" />
-                        </motion.div>
+                        <span className="animate-pulse mr-1">🔥</span>
                         PALING LARIS
                       </div>
                     )}
@@ -331,7 +311,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                     {/* Low Stock Warning Badge */}
                     {isLowStock && !isBestSeller && (
                       <div className="absolute top-0 right-0 bg-orange-500 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-2xl z-10 flex items-center">
-                        <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="mr-1">⚡</motion.span>
+                        <span className="animate-pulse mr-1">⚡</span>
                         HAMPIR HABIS
                       </div>
                     )}
@@ -405,7 +385,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                         Beli Tiket
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 </Link>
                 )
               );
@@ -468,6 +448,28 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
         </div>,
         document.body
       )}
+
+      {/* CSS Animations (replacing framer-motion) */}
+      <style jsx global>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.5s ease-out both;
+        }
+        .animation-delay-100 { animation-delay: 100ms; }
+        .animation-delay-200 { animation-delay: 200ms; }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
 
     </div>
   );

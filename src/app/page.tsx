@@ -3,9 +3,6 @@ import Link from "next/link";
 import { Calendar, MapPin, Users, Ticket, Search, Filter, ChevronLeft, ChevronRight, Bell } from "lucide-react";
 import HeroSlider from "@/components/HeroSlider";
 import InteractiveBackground from "@/components/InteractiveBackground";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import NotificationBell from "@/components/NotificationBell";
 import PublicNavbar from "@/components/PublicNavbar";
 
 type Props = {
@@ -13,7 +10,6 @@ type Props = {
 }
 
 export default async function Home({ searchParams }: Props) {
-  const session = await getServerSession(authOptions);
   const params = await searchParams;
   const q = typeof params.q === 'string' ? params.q : '';
   const sort = typeof params.sort === 'string' ? params.sort : 'newest';
@@ -25,41 +21,29 @@ export default async function Home({ searchParams }: Props) {
   // Build where clause
   const where = {
     isActive: true,
-    ...(q ? { title: { contains: q, mode: 'insensitive' as const } } : {})
+    ...(q ? { title: { contains: q, mode: 'insensitive' as const } } : {}),
   };
 
-  const totalEvents = await prisma.event.count({ where });
-  const totalPages = Math.ceil(totalEvents / limit);
-
-  const events = await prisma.event.findMany({
-    where,
-    orderBy: { createdAt: sort === 'oldest' ? 'asc' : 'desc' },
-    skip,
-    take: limit,
-    include: {
-      ticketCategories: true,
-    }
-  });
-
-  const featuredEvents = await prisma.event.findMany({
-    where: { isActive: true, bannerUrl: { not: null } },
-    orderBy: { createdAt: 'desc' },
-    take: 5,
-  });
-
-  let userTransactions: any[] = [];
-  if (session?.user?.email) {
-    userTransactions = await prisma.transaction.findMany({
-      where: { buyerEmail: session.user.email },
-      select: {
-        id: true,
-        status: true,
-        paymentProofUrl: true,
-        event: { select: { title: true } }
+  // Run ALL independent queries in parallel instead of sequentially
+  const [totalEvents, events, featuredEvents] = await Promise.all([
+    prisma.event.count({ where }),
+    prisma.event.findMany({
+      where,
+      orderBy: { createdAt: sort === 'oldest' ? 'asc' : 'desc' },
+      skip,
+      take: limit,
+      include: {
+        ticketCategories: true,
       },
-      orderBy: { createdAt: 'desc' }
-    });
-  }
+    }),
+    prisma.event.findMany({
+      where: { isActive: true, bannerUrl: { not: null } },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    }),
+  ]);
+
+  const totalPages = Math.ceil(totalEvents / limit);
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col relative z-0">
