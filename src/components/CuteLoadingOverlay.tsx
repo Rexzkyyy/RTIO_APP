@@ -48,10 +48,16 @@ export default function CuteLoadingOverlay({ isVisible }: { isVisible: boolean }
           </div>
 
           {/* Uang Terbang (Tengah) - Bergerak dari kiri ke kanan dengan efek memudar */}
-          <div className="absolute left-16 top-4 animate-[ping_1.5s_cubic-bezier(0,0,0.2,1)_infinite]">
+          <div 
+            className="absolute left-16 top-4" 
+            style={{ animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' }}
+          >
             <Banknote className="w-6 h-6 text-emerald-500 opacity-50" />
           </div>
-          <div className="absolute left-12 animate-[slideRight_1.5s_ease-in-out_infinite] z-20">
+          <div 
+            className="absolute left-12 z-20"
+            style={{ animation: 'slideRight 1.5s ease-in-out infinite' }}
+          >
             <div className="bg-white p-1 rounded-full shadow-md animate-spin">
               <Banknote className="w-8 h-8 text-emerald-500" />
             </div>
@@ -77,7 +83,8 @@ export default function CuteLoadingOverlay({ isVisible }: { isVisible: boolean }
           <div className="h-8 flex items-center justify-center text-center">
             <p 
               key={messageIndex}
-              className="text-slate-500 text-sm font-medium animate-[fadeInUp_0.5s_ease-out]"
+              className="text-slate-500 text-sm font-medium"
+              style={{ animation: 'fadeInUp 0.5s ease-out' }}
             >
               {FUNNY_MESSAGES[messageIndex]}
             </p>
