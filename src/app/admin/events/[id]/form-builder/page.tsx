@@ -16,5 +16,11 @@ export default async function FormBuilderPage({ params }: { params: Promise<{ id
     notFound();
   }
 
-  return <FormBuilder event={event} initialFields={event.fields} />;
+  const serializableEvent = {
+    ...event,
+    eventDate: event.eventDate.toISOString(),
+    createdAt: event.createdAt.toISOString(),
+  };
+
+  return <FormBuilder event={serializableEvent} initialFields={event.fields} />;
 }

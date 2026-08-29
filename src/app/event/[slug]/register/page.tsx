@@ -45,7 +45,14 @@ export default async function RegisterPage({
           </div>
         </div>
 
-        <RegisterFormClient event={event} initialTicketId={initialTicketId} />
+        <RegisterFormClient 
+          event={{
+            ...event,
+            eventDate: event.eventDate.toISOString(),
+            createdAt: event.createdAt.toISOString(),
+          } as any} 
+          initialTicketId={initialTicketId} 
+        />
       </div>
     </div>
   );
