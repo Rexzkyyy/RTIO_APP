@@ -3,10 +3,13 @@
 import { useState } from "react";
 import imageCompression from "browser-image-compression";
 import { uploadPaymentProof } from "../actions";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 export default function PaymentFormClient({ transactionId }: { transactionId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const router = useRouter();
 
   return (
     <form action={async (formData) => {
@@ -20,7 +23,11 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
           const compressedFile = await imageCompression(file, options);
           formData.set("paymentProof", compressedFile, file.name);
         }
-        await uploadPaymentProof(formData);
+        const result = await uploadPaymentProof(formData);
+        if (result && result.success) {
+          // Do NOT reset isSubmitting, let it spin until navigation completes
+          router.push(result.url);
+        }
       } catch (error) {
         console.error(error);
         setErrorMsg("Gagal memproses gambar. Pastikan format gambar valid.");
@@ -55,7 +62,14 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
         disabled={isSubmitting}
         className={`hidden md:flex w-full justify-center items-center px-6 py-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all shadow-lg shadow-emerald-500/30 ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
       >
-        {isSubmitting ? 'Memproses...' : 'Proses Pembayaran'}
+        {isSubmitting ? (
+          <>
+            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            Memproses...
+          </>
+        ) : (
+          'Proses Pembayaran'
+        )}
       </button>
 
       {/* Mobile Sticky Bottom Button */}
@@ -65,7 +79,14 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
           disabled={isSubmitting}
           className={`w-full flex justify-center items-center px-6 py-3.5 bg-emerald-500 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
         >
-          {isSubmitting ? 'Memproses...' : 'Proses Pembayaran'}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Memproses...
+            </>
+          ) : (
+            'Proses Pembayaran'
+          )}
         </button>
       </div>
     </form>

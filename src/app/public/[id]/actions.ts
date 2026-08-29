@@ -3,7 +3,6 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { put } from "@vercel/blob";
-import { redirect } from "next/navigation";
 
 export async function uploadPaymentProof(formData: FormData) {
   const transactionId = formData.get("transactionId") as string;
@@ -21,7 +20,7 @@ export async function uploadPaymentProof(formData: FormData) {
     });
   }
 
-  // Revalidate and redirect to verify page
+  // Revalidate and return URL for client navigation
   revalidatePath(`/public/${transactionId}`);
-  redirect(`/public/${transactionId}/verify`);
+  return { success: true, url: `/public/${transactionId}/verify` };
 }

@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Ticket, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
+import { Ticket, CheckCircle2, AlertCircle, XCircle, Loader2 } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { submitRegistration } from "./actions";
+import { useRouter } from "next/navigation";
 
 export default function RegisterFormClient({ event, initialTicketId }: { event: any, initialTicketId?: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'general' | 'quota'>('general');
+  const router = useRouter();
 
   return (
     <form action={async (formData) => {
@@ -29,7 +31,11 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           }
         }
         
-        await submitRegistration(formData);
+        const result = await submitRegistration(formData);
+        if (result && result.success) {
+          // Do NOT set isSubmitting to false, keep the button spinning while navigating!
+          router.push(result.url);
+        }
       } catch (error: any) {
         const message = error?.message || "Gagal memproses pendaftaran. Coba lagi.";
         // Detect quota-specific errors for special UI treatment
@@ -231,7 +237,10 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           className={`w-full flex justify-center items-center px-6 py-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-lg shadow-lg shadow-emerald-500/30 ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
         >
           {isSubmitting ? (
-            <span>Memproses...</span>
+            <>
+              <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+              <span>Memproses...</span>
+            </>
           ) : (
             <>
               <CheckCircle2 className="w-6 h-6 mr-2" />

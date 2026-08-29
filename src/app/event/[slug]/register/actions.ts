@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { redirect } from "next/navigation";
+
 import { put } from "@vercel/blob";
 import { Prisma } from "@prisma/client";
 import { cleanupExpiredTransactions, getTransactionExpiryTime } from "@/lib/cleanup-expired";
@@ -167,8 +167,7 @@ export async function submitRegistration(formData: FormData) {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // PHASE 3: Redirect to payment page (after successful commit).
-  // redirect() must be called OUTSIDE try/catch in Next.js.
+  // PHASE 3: Return URL for client to navigate smoothly.
   // ─────────────────────────────────────────────────────────────────────────
-  redirect(`/public/${transactionId}`);
+  return { success: true, url: `/public/${transactionId}` };
 }
