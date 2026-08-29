@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar as CalendarIcon, MapPin, Users, ChevronRight, ArrowLeft, Ticket, Crown, Star, Shield, HelpCircle, Flame } from "lucide-react";
 
 // Helper to determine ticket styling dynamically
@@ -109,10 +110,28 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
         <div className="absolute inset-0 z-0 bg-slate-900">
           {event.bannerUrl ? (
             <>
-              {/* Blurred Background to fill empty spaces */}
-              <img src={event.bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30 blur-2xl scale-110" />
+              {/* Blurred Background to fill empty spaces - low res for performance */}
+              <div className="absolute inset-0 w-full h-full opacity-30 blur-2xl scale-110 -z-10">
+                <Image 
+                  src={event.bannerUrl} 
+                  alt="" 
+                  fill
+                  sizes="10vw"
+                  className="object-cover" 
+                  priority
+                />
+              </div>
               {/* Actual Image without cropping */}
-              <img src={event.bannerUrl} alt={event.title} className="absolute inset-0 w-full h-full object-contain drop-shadow-2xl" />
+              <div className="absolute inset-0 w-full h-full">
+                <Image 
+                  src={event.bannerUrl} 
+                  alt={event.title} 
+                  fill
+                  sizes="(max-width: 768px) 100vw, 80vw"
+                  className="object-contain drop-shadow-2xl" 
+                  priority
+                />
+              </div>
             </>
           ) : (
             <div className="w-full h-full bg-gradient-to-tr from-emerald-900 to-slate-900 opacity-80"></div>
@@ -150,9 +169,15 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                {/* Social Proof Marketing UI */}
                <div className="flex items-center">
                  <div className="flex -space-x-3 mr-3">
-                   <img className="w-9 h-9 rounded-full border-2 border-slate-900 shadow-sm" src="https://i.pravatar.cc/100?img=33" alt="User 1"/>
-                   <img className="w-9 h-9 rounded-full border-2 border-slate-900 shadow-sm" src="https://i.pravatar.cc/100?img=47" alt="User 2"/>
-                   <img className="w-9 h-9 rounded-full border-2 border-slate-900 shadow-sm" src="https://i.pravatar.cc/100?img=12" alt="User 3"/>
+                   <div className="relative w-9 h-9 rounded-full border-2 border-slate-900 shadow-sm overflow-hidden">
+                     <Image src="https://i.pravatar.cc/100?img=33" alt="User 1" fill sizes="40px" className="object-cover"/>
+                   </div>
+                   <div className="relative w-9 h-9 rounded-full border-2 border-slate-900 shadow-sm overflow-hidden">
+                     <Image src="https://i.pravatar.cc/100?img=47" alt="User 2" fill sizes="40px" className="object-cover"/>
+                   </div>
+                   <div className="relative w-9 h-9 rounded-full border-2 border-slate-900 shadow-sm overflow-hidden">
+                     <Image src="https://i.pravatar.cc/100?img=12" alt="User 3" fill sizes="40px" className="object-cover"/>
+                   </div>
                    <div className="w-9 h-9 rounded-full border-2 border-slate-900 bg-slate-800 text-slate-300 text-xs font-bold flex items-center justify-center shadow-sm">
                      +
                    </div>

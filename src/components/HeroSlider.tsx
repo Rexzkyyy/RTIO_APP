@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronRight, Calendar, MapPin } from "lucide-react";
 
 type EventBanner = {
@@ -97,13 +98,13 @@ export default function HeroSlider({ events, showIntroSlide = false }: { events:
           <div key={event.id} className="min-w-full h-full relative flex-shrink-0">
             {/* Background Image */}
             {event.bannerUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img 
+              <Image 
                 src={event.bannerUrl} 
                 alt={event.title} 
-                loading={idx === 0 && !showIntroSlide ? "eager" : "lazy"}
-                decoding="async"
-                className="w-full h-full object-cover"
+                fill
+                priority={idx === 0 && !showIntroSlide}
+                sizes="100vw"
+                className="object-cover"
               />
             ) : (
               <div className="w-full h-full bg-slate-800"></div>
