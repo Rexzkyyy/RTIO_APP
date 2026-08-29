@@ -5,6 +5,7 @@ import imageCompression from "browser-image-compression";
 import { uploadPaymentProof } from "../actions";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import CuteLoadingOverlay from "@/components/CuteLoadingOverlay";
 
 export default function PaymentFormClient({ transactionId }: { transactionId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,6 +36,7 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
         setIsSubmitting(false);
       }
     }} className="space-y-6">
+      <CuteLoadingOverlay isVisible={isSubmitting} />
       <input type="hidden" name="transactionId" value={transactionId} />
       
       {errorMsg && (

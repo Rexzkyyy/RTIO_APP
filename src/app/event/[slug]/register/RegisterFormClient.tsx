@@ -5,6 +5,7 @@ import { Ticket, CheckCircle2, AlertCircle, XCircle, Loader2 } from "lucide-reac
 import imageCompression from "browser-image-compression";
 import { submitRegistration } from "./actions";
 import { useRouter } from "next/navigation";
+import CuteLoadingOverlay from "@/components/CuteLoadingOverlay";
 
 export default function RegisterFormClient({ event, initialTicketId }: { event: any, initialTicketId?: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,6 +46,7 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
         setIsSubmitting(false);
       }
     }} className="space-y-8">
+      <CuteLoadingOverlay isVisible={isSubmitting} />
       <input type="hidden" name="eventId" value={event.id} />
       
       {errorMsg && (
