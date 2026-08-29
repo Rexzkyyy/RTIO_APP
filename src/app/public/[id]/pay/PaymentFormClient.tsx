@@ -13,9 +13,11 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
   const router = useRouter();
 
   return (
-    <form action={async (formData) => {
+    <form 
+      onSubmit={() => setIsSubmitting(true)}
+      action={async (formData) => {
       setErrorMsg(null);
-      setIsSubmitting(true);
+      // setIsSubmitting(true); handled by onSubmit
       
       try {
         const file = formData.get("paymentProof") as File;

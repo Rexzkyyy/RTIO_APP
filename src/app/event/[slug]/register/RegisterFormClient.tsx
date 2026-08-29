@@ -14,9 +14,11 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
   const router = useRouter();
 
   return (
-    <form action={async (formData) => {
+    <form 
+      onSubmit={() => setIsSubmitting(true)}
+      action={async (formData) => {
       setErrorMsg(null);
-      setIsSubmitting(true);
+      // setIsSubmitting(true); is handled by onSubmit
       
       try {
         const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: true };
