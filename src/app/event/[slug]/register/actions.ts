@@ -8,14 +8,9 @@ import { cleanupExpiredTransactions, getTransactionExpiryTime } from "@/lib/clea
 
 export async function submitRegistration(formData: FormData) {
   // ─────────────────────────────────────────────────────────────────────────
-  // PHASE 0: Cleanup any expired pending transactions before taking new orders
+  // PHASE 0: Cleanup is now handled by Vercel Cron Job, so we no longer
+  // block the user's registration waiting for background maintenance!
   // ─────────────────────────────────────────────────────────────────────────
-  try {
-    await cleanupExpiredTransactions();
-  } catch (error) {
-    console.error("Failed to cleanup expired transactions:", error);
-    // Non-fatal, we can still proceed with the current transaction
-  }
 
   const eventId = formData.get("eventId") as string;
   const ticketCategoryId = formData.get("ticketCategoryId") as string;
