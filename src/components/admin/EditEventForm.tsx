@@ -6,6 +6,20 @@ import { useState } from "react";
 import { updateEvent } from "@/app/admin/events/[id]/edit/actions";
 import imageCompression from "browser-image-compression";
 
+// Sanitizer for CodeQL (XSS Prevention)
+const sanitizeImageUrl = (url: string | null) => {
+  if (!url) return undefined;
+  if (
+    url.startsWith('data:image/') ||
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('/')
+  ) {
+    return url;
+  }
+  return undefined;
+};
+
 export function EditEventForm({ event }: { event: any }) {
   const formatPrice = (value: string | number) => {
     if (value == null) return "";
@@ -193,7 +207,7 @@ export function EditEventForm({ event }: { event: any }) {
                   <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors overflow-hidden relative">
                     {imagePreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={imagePreview} alt="Preview Banner" className="w-full h-full object-cover" />
+                      <img src={sanitizeImageUrl(imagePreview)} alt="Preview Banner" className="w-full h-full object-cover" />
                     ) : (
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <ImageIcon className="w-8 h-8 mb-3 text-slate-400" />
@@ -215,7 +229,7 @@ export function EditEventForm({ event }: { event: any }) {
                   <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors overflow-hidden relative">
                     {ticketImagePreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={ticketImagePreview} alt="Preview Tiket" className="w-full h-full object-cover" />
+                      <img src={sanitizeImageUrl(ticketImagePreview)} alt="Preview Tiket" className="w-full h-full object-cover" />
                     ) : (
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <ImageIcon className="w-8 h-8 mb-3 text-slate-400" />
