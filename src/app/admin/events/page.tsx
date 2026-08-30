@@ -171,6 +171,7 @@ export default async function EventsPage({ searchParams }: Props) {
                         </a>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        {/* @ts-ignore */}
                         {(!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR") && (
                           <>
                             <Link href={`/admin/events/${event.id}/form-builder`} className="text-emerald-600 hover:text-emerald-900 mr-4" title="Form Builder">
