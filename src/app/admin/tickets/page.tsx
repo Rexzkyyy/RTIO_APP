@@ -22,6 +22,23 @@ export default async function TicketsPage({ searchParams }: Props) {
     ];
   }
 
+  // Get current user session
+  const { getServerSession } = await import("next-auth");
+  const { authOptions } = await import("@/lib/auth");
+  const session = await getServerSession(authOptions);
+
+  // If user is VALIDATOR, filter by assigned events
+  // @ts-ignore
+  if (session?.user?.adminRole === "VALIDATOR" && session?.user?.adminId) {
+    const assignedEvents = await prisma.adminEventAccess.findMany({
+      // @ts-ignore
+      where: { adminId: session.user.adminId },
+      select: { eventId: true }
+    });
+    const eventIds = assignedEvents.map(a => a.eventId);
+    where.id = { in: eventIds };
+  }
+
   const totalEvents = await prisma.event.count({ where });
   const totalPages = Math.ceil(totalEvents / limit);
 

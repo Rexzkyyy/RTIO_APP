@@ -2,10 +2,19 @@
 
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
 export async function createEvent(formData: FormData) {
+  const { getServerSession } = await import("next-auth/next");
+  const { authOptions } = await import("@/lib/auth");
+  const session = await getServerSession(authOptions);
+  // @ts-ignore
+  if (session?.user?.adminRole === "VALIDATOR") {
+    return { error: "Anda tidak memiliki izin untuk membuat event." };
+  }
+
   const title = formData.get("title") as string;
   const slug = formData.get("slug") as string;
   const description = formData.get("description") as string;
@@ -36,6 +45,10 @@ export async function createEvent(formData: FormData) {
   const ticketPrices = formData.getAll("ticketPrice[]") as string[];
   const ticketOriginalPrices = formData.getAll("ticketOriginalPrice[]") as string[];
   const ticketQuotas = formData.getAll("ticketQuota[]") as string[];
+  const hasDiscounts = formData.getAll("hasDiscount[]") as string[];
+  const discountPrices = formData.getAll("discountPrice[]") as string[];
+  const discountStartDates = formData.getAll("discountStartDate[]") as string[];
+  const discountEndDates = formData.getAll("discountEndDate[]") as string[];
 
   // Construct ticket categories data for nested write
   const ticketCategories = ticketNames.map((name, idx) => {
@@ -47,6 +60,10 @@ export async function createEvent(formData: FormData) {
       originalPrice: originalPriceStr ? parseInt(originalPriceStr) : null,
       quota: quota,
       initialQuota: quota,
+      hasDiscount: hasDiscounts[idx] === "true",
+      discountPrice: discountPrices[idx] ? parseInt(discountPrices[idx].replace(/\D/g, '')) : null,
+      discountStartDate: discountStartDates[idx] ? new Date(discountStartDates[idx]) : null,
+      discountEndDate: discountEndDates[idx] ? new Date(discountEndDates[idx]) : null,
     };
   });
 
@@ -109,6 +126,9 @@ export async function createEvent(formData: FormData) {
       }
     },
   });
+
+  revalidatePath("/");
+  revalidatePath("/admin/events");
 
   redirect("/admin/events");
 }

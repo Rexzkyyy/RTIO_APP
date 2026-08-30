@@ -48,8 +48,18 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
       )}
 
       <div>
-        <label className="block text-sm font-bold text-slate-800 mb-2">Konfirmasi Pembayaran</label>
-        <p className="text-xs text-slate-500 mb-4">Upload foto/screenshot bukti transfer Anda di sini agar kami dapat memproses tiket Anda.</p>
+        <label className="block text-sm font-bold text-slate-800 mb-2">Nama Pemilik Rekening</label>
+        <p className="text-xs text-slate-500 mb-3">Masukkan nama lengkap pemilik rekening yang digunakan untuk transfer.</p>
+        <input 
+          type="text" 
+          name="senderAccountName"
+          required
+          placeholder="Contoh: Budi Santoso"
+          className="w-full text-sm text-slate-800 border border-slate-200 rounded-xl p-3 mb-6 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+
+        <label className="block text-sm font-bold text-slate-800 mb-2">Bukti Transfer</label>
+        <p className="text-xs text-slate-500 mb-4">Upload foto/screenshot struk bukti transfer Anda di sini.</p>
         
         <input 
           type="file" 

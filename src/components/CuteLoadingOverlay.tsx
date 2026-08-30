@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Smartphone, Landmark, Banknote, Rocket, Coffee } from "lucide-react";
 
 const FUNNY_MESSAGES = [
@@ -16,6 +17,12 @@ const FUNNY_MESSAGES = [
 export default function CuteLoadingOverlay({ isVisible }: { isVisible: boolean }) {
   const [messageIndex, setMessageIndex] = useState(0);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!isVisible) return;
     
@@ -27,10 +34,10 @@ export default function CuteLoadingOverlay({ isVisible }: { isVisible: boolean }
     return () => clearInterval(interval);
   }, [isVisible]);
 
-  if (!isVisible) return null;
+  if (!isVisible || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300">
       <div className="bg-white p-8 rounded-3xl shadow-2xl flex flex-col items-center max-w-sm w-[90%] border-4 border-emerald-100 relative overflow-hidden">
         
         {/* Dekorasi Latar Belakang */}
@@ -105,6 +112,7 @@ export default function CuteLoadingOverlay({ isVisible }: { isVisible: boolean }
           to { opacity: 1; transform: translateY(0); }
         }
       `}} />
-    </div>
+    </div>,
+    document.body
   );
 }

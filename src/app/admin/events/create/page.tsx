@@ -7,12 +7,51 @@ import imageCompression from "browser-image-compression";
 import { createEvent } from "./actions";
 
 export default function CreateEventPage() {
-  const [tickets, setTickets] = useState([{ id: 1, name: "", price: "", quota: "" }]);
+  const [tickets, setTickets] = useState([{ 
+    id: 1, 
+    name: "", 
+    price: "", 
+    quota: "", 
+    hasDiscount: false,
+    discountPrice: "",
+    discountStartDate: "",
+    discountEndDate: ""
+  }]);
+
+  const formatPrice = (value: string) => {
+    const numberString = value.replace(/\D/g, "");
+    if (!numberString) return "";
+    return parseInt(numberString, 10).toLocaleString("id-ID");
+  };
+
+  const handleTicketChange = (id: number, field: string, value: string) => {
+    setTickets(tickets.map(t => {
+      if (t.id === id) {
+        if (field === "price" || field === "discountPrice") {
+          return { ...t, [field]: formatPrice(value) };
+        }
+        return { ...t, [field]: value };
+      }
+      return t;
+    }));
+  };
   const [bankAccounts, setBankAccounts] = useState([{ id: 1, bank: "", number: "", name: "" }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [ticketImagePreview, setTicketImagePreview] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [slug, setSlug] = useState("");
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const title = e.target.value;
+    const generatedSlug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9 -]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+    setSlug(generatedSlug);
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,13 +68,26 @@ export default function CreateEventPage() {
   };
 
   const addTicket = () => {
-    setTickets([...tickets, { id: Date.now(), name: "", price: "", quota: "" }]);
+    setTickets([...tickets, { 
+      id: Date.now(), 
+      name: "", 
+      price: "", 
+      quota: "",
+      hasDiscount: false,
+      discountPrice: "",
+      discountStartDate: "",
+      discountEndDate: ""
+    }]);
   };
 
   const removeTicket = (id: number) => {
     if (tickets.length > 1) {
       setTickets(tickets.filter(t => t.id !== id));
     }
+  };
+
+  const toggleDiscount = (id: number) => {
+    setTickets(tickets.map(t => t.id === id ? { ...t, hasDiscount: !t.hasDiscount } : t));
   };
 
   const addBankAccount = () => {
@@ -49,7 +101,7 @@ export default function CreateEventPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Buat Event Baru</h1>
@@ -158,30 +210,18 @@ export default function CreateEventPage() {
                 <input 
                   type="text" 
                   name="title"
+                  onChange={handleTitleChange}
                   required
                   placeholder="Misal: Konser Kemerdekaan 2026"
                   className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                 />
               </div>
               
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-2">URL Slug</label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 text-slate-500 sm:text-sm">
-                    rtiotix.com/event/
-                  </span>
-                  <input 
-                    type="text" 
-                    name="slug"
-                    required
-                    pattern="[a-z0-9-]+"
-                    title="Hanya huruf kecil, angka, dan tanda hubung (-)"
-                    placeholder="konser-kemerdekaan"
-                    className="flex-1 block w-full px-4 py-3 rounded-none rounded-r-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                  />
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Hanya huruf kecil, angka, dan tanda hubung (-) yang diperbolehkan.</p>
-              </div>
+              <input 
+                type="hidden" 
+                name="slug"
+                value={slug}
+              />
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-2">Deskripsi Event</label>
@@ -288,11 +328,13 @@ export default function CreateEventPage() {
                         <Tag className="h-4 w-4 text-slate-400" />
                       </div>
                       <input 
-                        type="number" 
+                        type="text"
+                        inputMode="numeric"
                         name="ticketPrice[]"
                         required
-                        min="0"
-                        placeholder="0 jika gratis"
+                        value={ticket.price}
+                        onChange={(e) => handleTicketChange(ticket.id, 'price', e.target.value)}
+                        placeholder="Misal: 150.000"
                         className="w-full pl-8 px-3 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
                       />
                     </div>
@@ -323,6 +365,64 @@ export default function CreateEventPage() {
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
+                  
+                  {/* Discount Checkbox */}
+                  <div className="md:col-span-12 mt-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={ticket.hasDiscount}
+                        onChange={() => toggleDiscount(ticket.id)}
+                        className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                      />
+                      <span className="text-sm font-medium text-slate-700">Aktifkan Diskon Berbatas Waktu?</span>
+                    </label>
+                    <input type="hidden" name="hasDiscount[]" value={ticket.hasDiscount ? "true" : "false"} />
+                  </div>
+
+                  {/* Discount Inputs */}
+                  {ticket.hasDiscount && (
+                    <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+                      <div>
+                        <label className="block text-xs font-medium text-emerald-800 mb-1">Harga Diskon (Rp)</label>
+                        <input 
+                          type="text" 
+                          inputMode="numeric"
+                          name="discountPrice[]" 
+                          required 
+                          value={ticket.discountPrice}
+                          onChange={(e) => handleTicketChange(ticket.id, 'discountPrice', e.target.value)}
+                          placeholder="Misal: 100.000"
+                          className="w-full px-3 py-2 rounded-md border border-emerald-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-emerald-800 mb-1">Mulai Diskon (WIB)</label>
+                        <input 
+                          type="datetime-local" 
+                          name="discountStartDate[]" 
+                          required 
+                          className="w-full px-3 py-2 rounded-md border border-emerald-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-emerald-800 mb-1">Selesai Diskon (WIB)</label>
+                        <input 
+                          type="datetime-local" 
+                          name="discountEndDate[]" 
+                          required 
+                          className="w-full px-3 py-2 rounded-md border border-emerald-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {!ticket.hasDiscount && (
+                    <>
+                      <input type="hidden" name="discountPrice[]" value="" />
+                      <input type="hidden" name="discountStartDate[]" value="" />
+                      <input type="hidden" name="discountEndDate[]" value="" />
+                    </>
+                  )}
                 </div>
               ))}
             </div>

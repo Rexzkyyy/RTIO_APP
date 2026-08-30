@@ -6,6 +6,7 @@ import { put } from "@vercel/blob";
 
 export async function uploadPaymentProof(formData: FormData) {
   const transactionId = formData.get("transactionId") as string;
+  const senderAccountName = formData.get("senderAccountName") as string;
   const file = formData.get("paymentProof") as File;
   
   if (file && file.size > 0) {
@@ -16,6 +17,7 @@ export async function uploadPaymentProof(formData: FormData) {
       where: { id: transactionId },
       data: {
         paymentProofUrl: blob.url,
+        senderAccountName: senderAccountName || null,
       }
     });
   }

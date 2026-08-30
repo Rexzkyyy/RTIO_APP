@@ -7,16 +7,28 @@ import { updateEvent } from "@/app/admin/events/[id]/edit/actions";
 import imageCompression from "browser-image-compression";
 
 export function EditEventForm({ event }: { event: any }) {
+  const formatPrice = (value: string | number) => {
+    if (value == null) return "";
+    const numberString = value.toString().replace(/\D/g, "");
+    if (!numberString) return "";
+    return parseInt(numberString, 10).toLocaleString("id-ID");
+  };
+
   // Initialize ticket states from database, or fallback to one empty ticket
   const initialTickets = event.ticketCategories.length > 0 
     ? event.ticketCategories.map((t: any) => ({
         id: t.id,
         name: t.name,
-        price: t.price.toString(),
+        price: formatPrice(t.price),
+        originalPrice: t.originalPrice ? formatPrice(t.originalPrice) : "",
         quota: t.quota.toString(),
+        hasDiscount: t.hasDiscount || false,
+        discountPrice: t.discountPrice ? formatPrice(t.discountPrice) : "",
+        discountStartDate: t.discountStartDate ? new Date(t.discountStartDate.getTime() - (t.discountStartDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : "",
+        discountEndDate: t.discountEndDate ? new Date(t.discountEndDate.getTime() - (t.discountEndDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : "",
         isNew: false
       }))
-    : [{ id: Date.now().toString(), name: "", price: "", quota: "", isNew: true }];
+    : [{ id: Date.now().toString(), name: "", price: "", originalPrice: "", quota: "", hasDiscount: false, discountPrice: "", discountStartDate: "", discountEndDate: "", isNew: true }];
 
   const initialBankAccounts = (event.bankAccounts && Array.isArray(event.bankAccounts) && event.bankAccounts.length > 0)
     ? event.bankAccounts.map((b: any, index: number) => ({
@@ -33,6 +45,30 @@ export function EditEventForm({ event }: { event: any }) {
   const [imagePreview, setImagePreview] = useState<string | null>(event.bannerUrl || null);
   const [ticketImagePreview, setTicketImagePreview] = useState<string | null>(event.ticketDesignUrl || null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [slug, setSlug] = useState(event.slug || "");
+  
+  const handleTicketChange = (id: string, field: string, value: string) => {
+    setTickets(tickets.map((t: any) => {
+      if (t.id === id) {
+        if (field === "price" || field === "originalPrice" || field === "discountPrice") {
+          return { ...t, [field]: formatPrice(value) };
+        }
+        return { ...t, [field]: value };
+      }
+      return t;
+    }));
+  };
+  
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const title = e.target.value;
+    const generatedSlug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9 -]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+    setSlug(generatedSlug);
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,13 +85,28 @@ export function EditEventForm({ event }: { event: any }) {
   };
 
   const addTicket = () => {
-    setTickets([...tickets, { id: Date.now().toString(), name: "", price: "", quota: "", isNew: true }]);
+    setTickets([...tickets, { 
+      id: Date.now().toString(), 
+      name: "", 
+      price: "",
+      originalPrice: "",
+      quota: "", 
+      hasDiscount: false,
+      discountPrice: "",
+      discountStartDate: "",
+      discountEndDate: "",
+      isNew: true 
+    }]);
   };
 
   const removeTicket = (id: string) => {
     if (tickets.length > 1) {
-      setTickets(tickets.filter((t: any) => t.id !== id));
+      setTickets(tickets.filter(t => t.id !== id));
     }
+  };
+
+  const toggleDiscount = (id: string) => {
+    setTickets(tickets.map(t => t.id === id ? { ...t, hasDiscount: !t.hasDiscount } : t));
   };
 
   const addBankAccount = () => {
@@ -186,26 +237,17 @@ export function EditEventForm({ event }: { event: any }) {
                   type="text" 
                   name="title"
                   defaultValue={event.title}
+                  onChange={handleTitleChange}
                   required
                   className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                 />
               </div>
               
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-2">URL Slug</label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 text-slate-500 sm:text-sm">
-                    rtiotix.com/event/
-                  </span>
-                  <input 
-                    type="text" 
-                    name="slug"
-                    defaultValue={event.slug}
-                    required
-                    className="flex-1 block w-full px-4 py-3 rounded-none rounded-r-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                  />
-                </div>
-              </div>
+              <input 
+                type="hidden" 
+                name="slug"
+                value={slug}
+              />
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-2">Deskripsi Event</label>
@@ -319,11 +361,13 @@ export function EditEventForm({ event }: { event: any }) {
                         <Tag className="h-4 w-4 text-slate-400" />
                       </div>
                       <input 
-                        type="text" 
+                        type="text"
+                        inputMode="numeric"
                         name="ticketPrice[]"
-                        defaultValue={ticket.price}
+                        value={ticket.price}
+                        onChange={(e) => handleTicketChange(ticket.id, 'price', e.target.value)}
                         required
-                        placeholder="150000"
+                        placeholder="150.000"
                         className="w-full pl-8 px-3 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
                       />
                     </div>
@@ -335,10 +379,12 @@ export function EditEventForm({ event }: { event: any }) {
                         <Tag className="h-4 w-4 text-slate-400 opacity-50" />
                       </div>
                       <input 
-                        type="text" 
+                        type="text"
+                        inputMode="numeric"
                         name="ticketOriginalPrice[]"
-                        defaultValue={ticket.originalPrice || ""}
-                        placeholder="250000"
+                        value={ticket.originalPrice}
+                        onChange={(e) => handleTicketChange(ticket.id, 'originalPrice', e.target.value)}
+                        placeholder="250.000"
                         className="w-full pl-8 px-3 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
                       />
                     </div>
@@ -369,6 +415,66 @@ export function EditEventForm({ event }: { event: any }) {
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
+                  
+                  {/* Discount Checkbox */}
+                  <div className="md:col-span-12 mt-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={ticket.hasDiscount}
+                        onChange={() => toggleDiscount(ticket.id)}
+                        className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                      />
+                      <span className="text-sm font-medium text-slate-700">Aktifkan Diskon Berbatas Waktu?</span>
+                    </label>
+                    <input type="hidden" name="hasDiscount[]" value={ticket.hasDiscount ? "true" : "false"} />
+                  </div>
+
+                  {/* Discount Inputs */}
+                  {ticket.hasDiscount && (
+                    <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+                      <div>
+                        <label className="block text-xs font-medium text-emerald-800 mb-1">Harga Diskon (Rp)</label>
+                        <input 
+                          type="text" 
+                          inputMode="numeric"
+                          name="discountPrice[]"
+                          value={ticket.discountPrice}
+                          onChange={(e) => handleTicketChange(ticket.id, 'discountPrice', e.target.value)}
+                          required 
+                          placeholder="Misal: 100.000"
+                          className="w-full px-3 py-2 rounded-md border border-emerald-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-emerald-800 mb-1">Mulai Diskon (WIB)</label>
+                        <input 
+                          type="datetime-local" 
+                          name="discountStartDate[]"
+                          defaultValue={ticket.discountStartDate || ""}
+                          required 
+                          className="w-full px-3 py-2 rounded-md border border-emerald-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-emerald-800 mb-1">Selesai Diskon (WIB)</label>
+                        <input 
+                          type="datetime-local" 
+                          name="discountEndDate[]"
+                          defaultValue={ticket.discountEndDate || ""}
+                          required 
+                          className="w-full px-3 py-2 rounded-md border border-emerald-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {!ticket.hasDiscount && (
+                    <>
+                      <input type="hidden" name="discountPrice[]" value="" />
+                      <input type="hidden" name="discountStartDate[]" value="" />
+                      <input type="hidden" name="discountEndDate[]" value="" />
+                    </>
+                  )}
                 </div>
               ))}
             </div>

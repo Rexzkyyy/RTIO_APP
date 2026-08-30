@@ -2,10 +2,19 @@
 
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
 export async function updateEvent(id: string, formData: FormData) {
+  const { getServerSession } = await import("next-auth/next");
+  const { authOptions } = await import("@/lib/auth");
+  const session = await getServerSession(authOptions);
+  // @ts-ignore
+  if (session?.user?.adminRole === "VALIDATOR") {
+    return { error: "Anda tidak memiliki izin untuk mengedit event." };
+  }
+
   const title = formData.get("title") as string;
   const slug = formData.get("slug") as string;
   const description = formData.get("description") as string;
@@ -33,6 +42,10 @@ export async function updateEvent(id: string, formData: FormData) {
   const ticketPrices = formData.getAll("ticketPrice[]") as string[];
   const ticketOriginalPrices = formData.getAll("ticketOriginalPrice[]") as string[];
   const ticketQuotas = formData.getAll("ticketQuota[]") as string[];
+  const hasDiscounts = formData.getAll("hasDiscount[]") as string[];
+  const discountPrices = formData.getAll("discountPrice[]") as string[];
+  const discountStartDates = formData.getAll("discountStartDate[]") as string[];
+  const discountEndDates = formData.getAll("discountEndDate[]") as string[];
 
   const bankNames = formData.getAll("bankName[]") as string[];
   const bankNumbers = formData.getAll("bankNumber[]") as string[];
@@ -118,6 +131,10 @@ export async function updateEvent(id: string, formData: FormData) {
       originalPrice: originalPriceStr ? parseInt(originalPriceStr) : null,
       quota: quota,
       eventId: id,
+      hasDiscount: hasDiscounts[i] === "true",
+      discountPrice: discountPrices[i] ? parseInt(discountPrices[i].replace(/\D/g, '')) : null,
+      discountStartDate: discountStartDates[i] ? new Date(discountStartDates[i]) : null,
+      discountEndDate: discountEndDates[i] ? new Date(discountEndDates[i]) : null,
     };
 
     if (tId === "NEW") {
@@ -132,5 +149,9 @@ export async function updateEvent(id: string, formData: FormData) {
     }
   }
 
+  revalidatePath("/");
+  revalidatePath("/admin/events");
+  revalidatePath(`/event/${slug}`);
+  
   redirect("/admin/events");
 }

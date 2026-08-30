@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, MapPin, Users, Ticket, Search, Filter, ChevronLeft, ChevronRight, Bell } from "lucide-react";
 import HeroSlider from "@/components/HeroSlider";
 import InteractiveBackground from "@/components/InteractiveBackground";
@@ -8,6 +9,8 @@ import PublicNavbar from "@/components/PublicNavbar";
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
+
+export const revalidate = 60; // Cache for 60 seconds
 
 export default async function Home({ searchParams }: Props) {
   const params = await searchParams;
@@ -127,8 +130,7 @@ export default async function Home({ searchParams }: Props) {
                     {/* Card Image */}
                     <div className="h-28 sm:h-48 bg-slate-200 relative overflow-hidden">
                       {event.bannerUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={event.bannerUrl} alt={event.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <Image src={event.bannerUrl} alt={event.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-tr from-blue-800 to-teal-400 group-hover:scale-105 transition-transform duration-500"></div>
                       )}

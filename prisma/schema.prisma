@@ -18,7 +18,28 @@ model Admin {
   email     String   @unique
   password  String   // Akan di-hash
   name      String
+  role      AdminRole @default(SUPER_ADMIN)
   createdAt DateTime @default(now())
+
+  eventAccess AdminEventAccess[]
+
+  @@index([email])
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  VALIDATOR
+}
+
+model AdminEventAccess {
+  id       String @id @default(uuid())
+  adminId  String
+  eventId  String
+
+  admin    Admin  @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([adminId, eventId])
 }
 
 // 2. Tabel Utama Event
@@ -44,6 +65,11 @@ model Event {
   fields           EventField[]
   transactions     Transaction[]
   ticketCategories TicketCategory[]
+  adminAccess      AdminEventAccess[]
+
+  @@index([slug])
+  @@index([isActive, eventDate])
+  @@index([createdAt])
 }
 
 // 2.5 Tabel Kategori Tiket
@@ -53,6 +79,10 @@ model TicketCategory {
   name          String   // Misal: "VIP", "Regular"
   price         Int      // Harga tiket
   originalPrice Int?     // Harga Coret (Harga Asli sebelum diskon)
+  hasDiscount   Boolean  @default(false)
+  discountPrice Int?     // Harga saat diskon
+  discountStartDate DateTime? // Waktu mulai diskon
+  discountEndDate   DateTime? // Waktu selesai diskon
   quota         Int      // Batas kuota untuk kategori ini saat ini
   initialQuota  Int?     // Kuota saat pertama dibuat (untuk hitung % progress bar)
 
@@ -92,12 +122,17 @@ model Transaction {
   totalTickets    Int
   totalPrice      Int
   paymentProofUrl String?   // Link gambar bukti transfer (Supabase Storage)
+  senderAccountName String? // Nama pemilik rekening bank pengirim
   status          TxStatus  @default(PENDING)
   expiresAt       DateTime? // Batas waktu pembayaran (null = tidak ada batas)
   createdAt       DateTime  @default(now())
 
   event   Event    @relation(fields: [eventId], references: [id])
   tickets Ticket[]
+
+  @@index([eventId, status])
+  @@index([buyerEmail])
+  @@index([createdAt])
 }
 
 enum TxStatus {
@@ -114,6 +149,8 @@ model Ticket {
   ticketCategoryId String
   barcodeString    String   @unique // String unik untuk digenerate jadi QR/Barcode
   isValidated      Boolean  @default(false)
+  holderName       String?  // Nama pemegang tiket individu
+  holderPhone      String?  // Nomor HP pemegang tiket individu
 
   transaction      Transaction    @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   ticketCategory   TicketCategory @relation(fields: [ticketCategoryId], references: [id], onDelete: Restrict)

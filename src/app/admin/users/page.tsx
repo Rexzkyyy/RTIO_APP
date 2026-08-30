@@ -1,8 +1,10 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { ShieldAlert, Trash2, Mail, PlusCircle, ShieldCheck, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShieldAlert, Trash2, Mail, PlusCircle, ShieldCheck, Search, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { Sidebar } from "@/components/admin/Sidebar";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import AddAdminForm from "@/components/admin/AddAdminForm";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +13,15 @@ type Props = {
 }
 
 export default async function AdminUsersPage({ searchParams }: Props) {
+  const session = await getServerSession(authOptions);
+  const currentUserEmail = session?.user?.email;
+
+  // @ts-ignore
+  if (session?.user?.adminRole === "VALIDATOR") {
+    const { redirect } = await import("next/navigation");
+    redirect("/admin/events");
+  }
+
   const params = await searchParams;
   const q = typeof params.q === 'string' ? params.q : '';
   const pageStr = typeof params.page === 'string' ? params.page : '1';
@@ -31,34 +42,74 @@ export default async function AdminUsersPage({ searchParams }: Props) {
 
   const admins = await prisma.admin.findMany({
     where,
+    include: { eventAccess: { include: { event: { select: { id: true, title: true } } } } },
     orderBy: { createdAt: 'desc' },
     skip,
     take: limit,
   });
 
+  const allEvents = await prisma.event.findMany({
+    select: { id: true, title: true },
+    orderBy: { createdAt: 'desc' }
+  });
+
   async function addAdminAction(formData: FormData) {
     "use server";
     const email = formData.get("email") as string;
+    const role = formData.get("role") as "SUPER_ADMIN" | "VALIDATOR";
+    const eventIds = formData.getAll("eventIds") as string[];
     
     if (!email) return;
 
     // Cek apakah sudah ada
     const existing = await prisma.admin.findUnique({ where: { email } });
     if (!existing) {
-      await prisma.admin.create({
+      const newAdmin = await prisma.admin.create({
         data: {
           email,
           name: email.split('@')[0],
-          password: "GOOGLE_AUTH_ONLY" // dummy password
+          password: "GOOGLE_AUTH_ONLY",
+          role: role || "SUPER_ADMIN"
         }
       });
+
+      if (role === "VALIDATOR" && eventIds.length > 0) {
+        await prisma.adminEventAccess.createMany({
+          data: eventIds.map(id => ({ adminId: newAdmin.id, eventId: id }))
+        });
+      }
+    } else {
+      // If updating existing admin
+      await prisma.admin.update({
+        where: { email },
+        data: { role: role || "SUPER_ADMIN" }
+      });
+
+      // Clear existing access
+      await prisma.adminEventAccess.deleteMany({ where: { adminId: existing.id } });
+
+      if (role === "VALIDATOR" && eventIds.length > 0) {
+        await prisma.adminEventAccess.createMany({
+          data: eventIds.map(id => ({ adminId: existing.id, eventId: id }))
+        });
+      }
     }
     revalidatePath("/admin/users");
   }
 
   async function deleteAdminAction(formData: FormData) {
     "use server";
+    const session = await getServerSession(authOptions);
+    const currentUserEmail = session?.user?.email;
+
     const id = formData.get("id") as string;
+    const adminEmail = formData.get("email") as string;
+
+    // Prevent self-deletion
+    if (adminEmail === currentUserEmail) {
+      return;
+    }
+
     if (id) {
       await prisma.admin.delete({ where: { id } });
       revalidatePath("/admin/users");
@@ -66,11 +117,9 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 md:pl-64 flex flex-col">
-      <Sidebar />
-      <div className="flex-1 p-6 md:p-8 max-w-5xl mx-auto w-full pt-24 md:pt-8 pb-32">
-        <div className="mb-8">
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight flex items-center">
+    <div className="w-full space-y-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-black text-slate-800 tracking-tight flex items-center">
             <ShieldCheck className="w-8 h-8 mr-3 text-emerald-500" />
             Kelola Akses Admin
           </h1>
@@ -79,39 +128,8 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           </p>
         </div>
 
-        {/* Add Admin Form */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
-            <PlusCircle className="w-5 h-5 mr-2 text-emerald-500" />
-            Daftarkan Admin Baru
-          </h2>
-          <form action={addAdminAction} className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                <Mail className="h-5 w-5" />
-              </div>
-              <input 
-                type="email" 
-                name="email"
-                required
-                placeholder="Masukkan email Google (misal: budi@gmail.com)"
-                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-slate-700 placeholder:text-slate-400"
-              />
-            </div>
-            <button 
-              type="submit"
-              className="py-3 px-6 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-md transition-all whitespace-nowrap active:scale-95"
-            >
-              Simpan Akses
-            </button>
-          </form>
-          <div className="mt-4 p-3 bg-blue-50 text-blue-700 text-sm rounded-lg flex items-start">
-            <ShieldAlert className="w-5 h-5 mr-2 shrink-0 mt-0.5 opacity-70" />
-            <p>
-              <strong>Informasi:</strong> Akun yang didaftarkan wajib menggunakan email Google (Gmail atau Google Workspace). Sistem otomatis memverifikasi melalui Google Login.
-            </p>
-          </div>
-        </div>
+        {/* Add Admin Form Component */}
+        <AddAdminForm events={allEvents} action={addAdminAction} />
 
         {/* List of Admins */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -146,28 +164,62 @@ export default async function AdminUsersPage({ searchParams }: Props) {
             ) : (
               admins.map(admin => (
                 <div key={admin.id} className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-slate-50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-black text-lg shrink-0">
+                  <div className="flex items-center gap-4 w-full sm:w-auto flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-lg shrink-0 ${
+                      admin.role === 'SUPER_ADMIN' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'
+                    }`}>
                       {admin.name.charAt(0).toUpperCase()}
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-slate-800 truncate">{admin.email}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-slate-800 truncate">
+                          {admin.email}
+                          {admin.email === currentUserEmail && (
+                            <span className="ml-2 text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-bold">
+                              Anda
+                            </span>
+                          )}
+                        </p>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                          admin.role === 'SUPER_ADMIN' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {admin.role === 'SUPER_ADMIN' ? 'SUPER ADMIN' : 'VALIDATOR'}
+                        </span>
+                      </div>
                       <p className="text-xs text-slate-400 font-medium mt-0.5">
                         Ditambahkan pada {new Date(admin.createdAt).toLocaleDateString('id-ID')}
                       </p>
+                      {admin.role === 'VALIDATOR' && admin.eventAccess && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {admin.eventAccess.map((access: any) => (
+                            <span key={access.eventId} className="inline-flex items-center gap-1 text-[10px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                              {access.event.title}
+                            </span>
+                          ))}
+                          {admin.eventAccess.length === 0 && (
+                            <span className="text-[10px] text-red-500 font-medium italic">Belum ada event yang di-assign</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
-                  <form action={deleteAdminAction}>
-                    <input type="hidden" name="id" value={admin.id} />
-                    <button 
-                      type="submit"
-                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Cabut Akses"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </form>
+                  {admin.email !== currentUserEmail ? (
+                    <form action={deleteAdminAction}>
+                      <input type="hidden" name="id" value={admin.id} />
+                      <input type="hidden" name="email" value={admin.email} />
+                      <button 
+                        type="submit"
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Cabut Akses"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="p-2 w-9 h-9" />
+                  )}
                 </div>
               ))
             )}
@@ -202,8 +254,6 @@ export default async function AdminUsersPage({ searchParams }: Props) {
             )}
           </div>
         )}
-
-      </div>
     </div>
   );
 }

@@ -25,6 +25,23 @@ export default async function EventsPage({ searchParams }: Props) {
     ];
   }
 
+  // Get current user session
+  const { getServerSession } = await import("next-auth");
+  const { authOptions } = await import("@/lib/auth");
+  const session = await getServerSession(authOptions);
+
+  // If user is VALIDATOR, filter by assigned events
+  // @ts-ignore
+  if (session?.user?.adminRole === "VALIDATOR" && session?.user?.adminId) {
+    const assignedEvents = await prisma.adminEventAccess.findMany({
+      // @ts-ignore
+      where: { adminId: session.user.adminId },
+      select: { eventId: true }
+    });
+    const eventIds = assignedEvents.map(a => a.eventId);
+    where.id = { in: eventIds };
+  }
+
   const totalEvents = await prisma.event.count({ where });
   const totalPages = Math.ceil(totalEvents / limit);
 
@@ -63,13 +80,15 @@ export default async function EventsPage({ searchParams }: Props) {
             />
             <input type="hidden" name="page" value="1" />
           </form>
-          <Link 
-            href="/admin/events/create" 
-            className="flex items-center justify-center px-4 py-2 bg-emerald-500 text-white font-medium rounded-lg hover:bg-emerald-600 transition-colors whitespace-nowrap"
-          >
-            <PlusCircle className="w-5 h-5 mr-2" />
-            Buat Event Baru
-          </Link>
+          {!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR" ? (
+            <Link 
+              href="/admin/events/create" 
+              className="flex items-center justify-center px-4 py-2 bg-emerald-500 text-white font-medium rounded-lg hover:bg-emerald-600 transition-colors whitespace-nowrap"
+            >
+              <PlusCircle className="w-5 h-5 mr-2" />
+              Buat Event Baru
+            </Link>
+          ) : null}
         </div>
       </div>
 
@@ -82,13 +101,15 @@ export default async function EventsPage({ searchParams }: Props) {
             <h3 className="text-lg font-medium text-slate-900">Belum ada event</h3>
             <p className="mt-1 text-slate-500">Mulai buat event pertama Anda untuk mengundang peserta.</p>
             <div className="mt-6">
-              <Link 
-                href="/admin/events/create" 
-                className="inline-flex items-center px-4 py-2 bg-emerald-500 text-white font-medium rounded-lg hover:bg-emerald-600 transition-colors"
-              >
-                <PlusCircle className="w-5 h-5 mr-2" />
-                Buat Event
-              </Link>
+              {!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR" ? (
+                <Link 
+                  href="/admin/events/create" 
+                  className="inline-flex items-center px-4 py-2 bg-emerald-500 text-white font-medium rounded-lg hover:bg-emerald-600 transition-colors"
+                >
+                  <PlusCircle className="w-5 h-5 mr-2" />
+                  Buat Event
+                </Link>
+              ) : null}
             </div>
           </div>
         ) : (
@@ -150,13 +171,21 @@ export default async function EventsPage({ searchParams }: Props) {
                         </a>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Link href={`/admin/events/${event.id}/form-builder`} className="text-emerald-600 hover:text-emerald-900 mr-4" title="Form Builder">
-                          <ListPlus className="w-5 h-5 inline-block" />
+                        {(!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR") && (
+                          <>
+                            <Link href={`/admin/events/${event.id}/form-builder`} className="text-emerald-600 hover:text-emerald-900 mr-4" title="Form Builder">
+                              <ListPlus className="w-5 h-5 inline-block" />
+                            </Link>
+                            <Link href={`/admin/events/${event.id}/edit`} className="text-indigo-600 hover:text-indigo-900 mr-4" title="Edit Event">
+                              Edit
+                            </Link>
+                            <DeleteEventButton id={event.id} />
+                          </>
+                        )}
+                        <Link href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="text-blue-600 hover:text-blue-900 ml-4 border border-blue-200 px-3 py-1.5 rounded-lg inline-flex items-center" title="Validasi Tiket">
+                          <Receipt className="w-4 h-4 mr-1.5" />
+                          <span>Validasi ({event._count.transactions})</span>
                         </Link>
-                        <Link href={`/admin/events/${event.id}/edit`} className="text-indigo-600 hover:text-indigo-900 mr-4" title="Edit Event">
-                          Edit
-                        </Link>
-                        <DeleteEventButton id={event.id} />
                       </td>
                     </tr>
                   ))}
@@ -208,14 +237,23 @@ export default async function EventsPage({ searchParams }: Props) {
                       Lihat Web <ExternalLink className="w-3 h-3 ml-1.5" />
                     </a>
                     
-                    <div className="flex items-center gap-2">
-                      <Link href={`/admin/events/${event.id}/form-builder`} className="p-1.5 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors" title="Form Builder">
-                        <ListPlus className="w-4 h-4" />
+                    <div className="flex gap-2 w-full mt-2 pt-4 border-t border-slate-100">
+                      {(!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR") && (
+                        <>
+                          <Link href={`/admin/events/${event.id}/form-builder`} className="flex-1 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 text-center flex items-center justify-center transition-colors">
+                            <ListPlus className="w-4 h-4 mr-1.5" />
+                            Form
+                          </Link>
+                          <Link href={`/admin/events/${event.id}/edit`} className="flex-1 py-2 bg-indigo-50 text-indigo-700 text-sm font-medium rounded-lg hover:bg-indigo-100 text-center transition-colors">
+                            Edit
+                          </Link>
+                          <DeleteEventButton id={event.id} />
+                        </>
+                      )}
+                      <Link href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="flex-1 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-100 text-center flex items-center justify-center transition-colors">
+                        <Receipt className="w-4 h-4 mr-1.5" />
+                        Validasi ({event._count.transactions})
                       </Link>
-                      <Link href={`/admin/events/${event.id}/edit`} className="px-3 py-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 font-medium text-xs rounded-lg transition-colors">
-                        Edit
-                      </Link>
-                      <DeleteEventButton id={event.id} />
                     </div>
                   </div>
                 </div>

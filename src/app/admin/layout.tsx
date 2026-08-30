@@ -1,15 +1,27 @@
 import { ReactNode } from "react";
 import { Sidebar } from "@/components/admin/Sidebar";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { cookies } from "next/headers";
 
 export const metadata = {
   title: "Admin Dashboard - RTIO TIX",
   description: "Sistem Manajemen Event & Tiket Digital",
 };
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default async function AdminLayout({ children }: { children: ReactNode }) {
+  const session = await getServerSession(authOptions);
+  
+  // Also check dev bypass cookie for E2E testing
+  const cookieStore = await cookies();
+  const bypassRole = process.env.NODE_ENV !== 'production' ? cookieStore.get('dev-admin-bypass')?.value : null;
+
+  // @ts-ignore
+  const isValidator = session?.user?.adminRole === "VALIDATOR" || bypassRole === "VALIDATOR";
+
   return (
     <div className="flex h-[100dvh] bg-slate-50 overflow-hidden">
-      <Sidebar />
+      <Sidebar isValidatorServer={isValidator} />
       {/* On mobile, we add pt-20 for top branding bar (h-20) and pb-16 for bottom navigation (h-16). */}
       <div className="flex-1 flex flex-col min-w-0 pt-20 pb-16 md:pt-0 md:pb-0 h-full">
         {/* Header/Top Navigation - Desktop only */}

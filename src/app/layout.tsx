@@ -56,6 +56,7 @@ export const viewport = {
 };
 
 import MobileBottomNav from "@/components/MobileBottomNav";
+import AuthProvider from "@/components/AuthProvider";
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -65,8 +66,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <NextTopLoader color="#10b981" showSpinner={false} />
-        {children}
-        <MobileBottomNav />
+        <AuthProvider>
+          {children}
+          <MobileBottomNav />
+        </AuthProvider>
       </body>
     </html>
   );

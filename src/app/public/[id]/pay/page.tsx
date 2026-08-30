@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Copy, Receipt, Clock, ArrowLeft, Ticket } from "lucide-react";
+import CopyButton from "@/components/CopyButton";
 import { uploadPaymentProof } from "../actions";
 import InteractiveBackground from "@/components/InteractiveBackground";
 import WhatsAppSaveButton from "@/components/WhatsAppSaveButton";
@@ -104,9 +105,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
                     <div className="font-mono text-slate-600 mt-1">{account.number}</div>
                     <div className="text-xs text-slate-500 mt-1">a.n. {account.name}</div>
                   </div>
-                  <button className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Salin Rekening">
-                    <Copy className="w-5 h-5" />
-                  </button>
+                  <CopyButton text={account.number} />
                 </div>
               ))
             ) : (
@@ -116,9 +115,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
                   <div className="font-mono text-slate-600 mt-1">1234 5678 90</div>
                   <div className="text-xs text-slate-500 mt-1">a.n. PT RTIO Ticketing</div>
                 </div>
-                <button className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Salin Rekening">
-                  <Copy className="w-5 h-5" />
-                </button>
+                <CopyButton text="1234567890" />
               </div>
             )}
           </div>

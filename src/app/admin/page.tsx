@@ -4,14 +4,38 @@ import prisma from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
+  const { getServerSession } = await import("next-auth/next");
+  const { authOptions } = await import("@/lib/auth");
+  const session = await getServerSession(authOptions);
+  
+  // @ts-ignore
+  const isValidator = session?.user?.adminRole === "VALIDATOR";
+  // @ts-ignore
+  const adminId = session?.user?.adminId;
+
+  let eventWhere: any = {};
+  let transactionWhere: any = { status: "APPROVED" };
+  let pendingWhere: any = { status: "PENDING" };
+
+  if (isValidator && adminId) {
+    const assignedEvents = await prisma.adminEventAccess.findMany({
+      where: { adminId },
+      select: { eventId: true }
+    });
+    const eventIds = assignedEvents.map(a => a.eventId);
+    eventWhere = { id: { in: eventIds } };
+    transactionWhere = { status: "APPROVED", eventId: { in: eventIds } };
+    pendingWhere = { status: "PENDING", eventId: { in: eventIds } };
+  }
+
   // Fetch real global aggregate data
-  const totalEvents = await prisma.event.count();
+  const totalEvents = await prisma.event.count({ where: eventWhere });
   const totalPeserta = await prisma.ticket.count({
-    where: { transaction: { status: "APPROVED" } }
+    where: { transaction: transactionWhere }
   });
   const revenueResult = await prisma.transaction.aggregate({
     _sum: { totalPrice: true },
-    where: { status: "APPROVED" }
+    where: transactionWhere
   });
   const pendapatan = revenueResult._sum.totalPrice || 0;
 
@@ -31,7 +55,7 @@ export default async function AdminDashboard() {
 
   // Fetch recent pending transactions
   const recentTransactions = await prisma.transaction.findMany({
-    where: { status: "PENDING" },
+    where: pendingWhere,
     orderBy: { createdAt: "desc" },
     take: 5,
     include: { event: { select: { title: true } } }

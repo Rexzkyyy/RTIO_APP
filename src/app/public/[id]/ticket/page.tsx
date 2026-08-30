@@ -60,13 +60,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
 
         {/* Ticket Card */}
         <div className="w-full max-w-6xl">
-          <div className="flex justify-center mb-6 no-print">
-            <img 
-              src="/logo.png" 
-              alt="RTIO TIX Logo" 
-              className="h-[140px] w-auto max-w-none object-contain mix-blend-multiply opacity-80" 
-            />
-          </div>
+
           <TicketCard 
             data={{
               transaction: {

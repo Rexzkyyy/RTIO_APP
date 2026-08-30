@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ticket, CheckCircle2, AlertCircle, XCircle, Loader2 } from "lucide-react";
+import { Ticket, CheckCircle2, AlertCircle, XCircle, Loader2, Users } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { submitRegistration } from "./actions";
 import { useRouter } from "next/navigation";
@@ -9,13 +9,50 @@ import CuteLoadingOverlay from "@/components/CuteLoadingOverlay";
 
 export default function RegisterFormClient({ event, initialTicketId }: { event: any, initialTicketId?: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'general' | 'quota'>('general');
   const router = useRouter();
+  const [step, setStep] = useState(1);
+  const totalSteps = event.fields.length > 0 ? 3 : 2;
+
+  const handleNext = () => {
+    const currentStepEl = document.getElementById(`step-${step}`);
+    if (!currentStepEl) return;
+    
+    const inputs = currentStepEl.querySelectorAll('input, select, textarea') as NodeListOf<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>;
+    let isValid = true;
+    
+    for (let i = 0; i < inputs.length; i++) {
+      if (!inputs[i].checkValidity()) {
+        inputs[i].reportValidity();
+        isValid = false;
+        break;
+      }
+    }
+    
+    if (isValid) {
+      setStep(prev => Math.min(prev + 1, totalSteps));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrev = () => {
+    setStep(prev => Math.max(prev - 1, 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <form 
-      onSubmit={() => setIsSubmitting(true)}
+      id="register-form"
+      onSubmit={(e) => {
+        if (step < totalSteps) {
+          e.preventDefault();
+          handleNext();
+        } else {
+          setIsSubmitting(true);
+        }
+      }}
       action={async (formData) => {
       setErrorMsg(null);
       // setIsSubmitting(true); is handled by onSubmit
@@ -74,37 +111,79 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
         </div>
       )}
 
-      {/* Section 1: Pilih Tiket */}
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+      {/* Stepper Header */}
+      <div className="mb-10 mt-2">
+        <div className="flex items-center justify-between relative px-2">
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full z-0"></div>
+          <div 
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-emerald-500 rounded-full z-0 transition-all duration-300"
+            style={{ width: `${((step - 1) / (totalSteps - 1)) * 100}%` }}
+          ></div>
+          
+          {[1, 2, totalSteps === 3 ? 3 : null].filter(Boolean).map((s) => (
+            <div key={s as number} className="relative z-10 flex flex-col items-center">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 transition-colors ${
+                step >= (s as number) ? 'bg-emerald-500 border-emerald-100 text-white' : 'bg-white border-slate-200 text-slate-400'
+              }`}>
+                {step > (s as number) ? <CheckCircle2 className="w-5 h-5" /> : s}
+              </div>
+              <span className={`text-xs font-bold mt-2 absolute -bottom-6 whitespace-nowrap ${
+                step >= (s as number) ? 'text-emerald-700' : 'text-slate-400'
+              }`}>
+                {s === 1 ? 'Pilih Tiket' : s === 2 ? 'Data Diri' : 'Tambahan'}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* STEP 1: Pilih Tiket */}
+      <div id="step-1" className={step === 1 ? 'block' : 'hidden'}>
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
         <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center">
           <Ticket className="w-5 h-5 mr-2 text-emerald-500" />
           1. Pilih Kategori Tiket
         </h2>
         
         <div className="space-y-4">
-          {event.ticketCategories.map((ticket: any, index: number) => (
-            <label key={ticket.id} className="relative flex items-center justify-between p-4 border rounded-xl cursor-pointer hover:border-emerald-500 transition-colors bg-slate-50">
-              <div className="flex items-center">
-                <input 
-                  type="radio" 
-                  name="ticketCategoryId" 
-                  value={ticket.id}
-                  required
-                  defaultChecked={initialTicketId ? ticket.id === initialTicketId : index === 0}
-                  className="w-5 h-5 text-emerald-600 border-slate-300 focus:ring-emerald-500"
-                />
-                <div className="ml-4">
-                  <span className="block text-sm font-bold text-slate-800">{ticket.name}</span>
-                  <span className="block text-sm text-emerald-600 font-medium">
-                    {ticket.price === 0 ? "Gratis" : `Rp ${ticket.price.toLocaleString('id-ID')}`}
-                  </span>
+          {event.ticketCategories.map((ticket: any, index: number) => {
+            const now = new Date();
+            const discountStart = ticket.discountStartDate ? new Date(ticket.discountStartDate) : null;
+            const discountEnd = ticket.discountEndDate ? new Date(ticket.discountEndDate) : null;
+            const isDiscountActive = ticket.hasDiscount && ticket.discountPrice != null && 
+              (!discountStart || now >= discountStart) && 
+              (!discountEnd || now <= discountEnd);
+            const activePrice = isDiscountActive ? ticket.discountPrice : ticket.price;
+
+            return (
+              <label key={ticket.id} className="relative flex items-center justify-between p-4 border rounded-xl cursor-pointer hover:border-emerald-500 transition-colors bg-slate-50">
+                <div className="flex items-center">
+                  <input 
+                    type="radio" 
+                    name="ticketCategoryId" 
+                    value={ticket.id}
+                    required
+                    defaultChecked={initialTicketId ? ticket.id === initialTicketId : index === 0}
+                    className="w-5 h-5 text-emerald-600 border-slate-300 focus:ring-emerald-500"
+                  />
+                  <div className="ml-4">
+                    <span className="block text-sm font-bold text-slate-800">{ticket.name}</span>
+                    <span className="block text-sm text-emerald-600 font-medium">
+                      {activePrice === 0 ? "Gratis" : `Rp ${activePrice.toLocaleString('id-ID')}`}
+                    </span>
+                    {isDiscountActive && (
+                      <span className="inline-block mt-1 text-[10px] font-bold text-white bg-emerald-500 px-1.5 py-0.5 rounded-full">
+                        🔥 FLASH SALE
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="text-sm text-slate-500">
-                Sisa: {ticket.quota}
-              </div>
-            </label>
-          ))}
+                <div className="text-sm text-slate-500">
+                  Sisa: {ticket.quota}
+                </div>
+              </label>
+            );
+          })}
         </div>
 
         <div className="mt-6">
@@ -112,7 +191,8 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           <input 
             type="number" 
             name="ticketQuantity"
-            defaultValue={1}
+            value={quantity}
+            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
             min={1}
             max={5}
             required
@@ -120,9 +200,12 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           />
         </div>
       </div>
+      </div>
 
-      {/* Section 2: Data Pemesan */}
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+      {/* STEP 2: Data Diri */}
+      <div id="step-2" className={step === 2 ? 'block space-y-8' : 'hidden'}>
+        {/* Section 2: Data Pemesan */}
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
         <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center">
           <span className="w-5 h-5 mr-2 flex justify-center items-center rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold">2</span>
           Informasi Pemesan
@@ -162,9 +245,54 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
         </div>
       </div>
 
-      {/* Section 3: Custom Form Fields */}
-      {event.fields.length > 0 && (
+      {/* Section 2.5: Data Pemegang Tiket (Jika > 1) */}
+      {quantity > 1 && (
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+          <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center">
+            <span className="w-5 h-5 mr-2 flex justify-center items-center rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold"><Users className="w-3 h-3"/></span>
+            Data Pemegang Tiket
+          </h2>
+          <p className="text-sm text-slate-500 mb-4">Anda memesan {quantity} tiket. Data pemesan utama otomatis menjadi pemegang Tiket 1. Silakan lengkapi data untuk tiket tambahannya.</p>
+          
+          <div className="space-y-6">
+            {Array.from({ length: quantity - 1 }).map((_, idx) => {
+              const i = idx + 1; // Start from 1 for Ticket 2
+              return (
+              <div key={i} className="p-5 border rounded-xl bg-slate-50 relative">
+                <h3 className="font-bold text-slate-800 mb-4">Pemegang Tiket {i + 1}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Nama Lengkap <span className="text-red-500">*</span></label>
+                    <input 
+                      type="text" 
+                      name={`holderName_${i}`}
+                      required
+                      placeholder="Nama sesuai identitas"
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Nomor WhatsApp <span className="text-red-500">*</span></label>
+                    <input 
+                      type="tel" 
+                      name={`holderPhone_${i}`}
+                      required
+                      placeholder="0812..."
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+            )})}
+          </div>
+        </div>
+      )}
+      </div>
+
+      {/* STEP 3: Pertanyaan Tambahan */}
+      {totalSteps === 3 && (
+        <div id="step-3" className={step === 3 ? 'block' : 'hidden'}>
+          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
           <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center">
             <span className="w-5 h-5 mr-2 flex justify-center items-center rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold">3</span>
             Pertanyaan Tambahan
@@ -232,26 +360,49 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
             ))}
           </div>
         </div>
+      </div>
       )}
 
-      <div className="pt-4">
-        <button 
-          type="submit"
-          disabled={isSubmitting}
-          className={`w-full flex justify-center items-center px-6 py-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-lg shadow-lg shadow-emerald-500/30 ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-6 h-6 mr-2 animate-spin" />
-              <span>Memproses...</span>
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="w-6 h-6 mr-2" />
-              Proses Pembayaran
-            </>
-          )}
-        </button>
+      {/* Navigation Buttons */}
+      <div className="pt-6 flex gap-4">
+        {step > 1 && (
+          <button 
+            type="button"
+            onClick={handlePrev}
+            disabled={isSubmitting}
+            className="w-1/3 md:w-1/4 flex justify-center items-center px-6 py-4 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-all text-lg border border-slate-300"
+          >
+            Kembali
+          </button>
+        )}
+        
+        {step < totalSteps ? (
+          <button 
+            type="button"
+            onClick={handleNext}
+            className="flex-1 flex justify-center items-center px-6 py-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-lg shadow-lg shadow-emerald-500/30"
+          >
+            Selanjutnya
+          </button>
+        ) : (
+          <button 
+            type="submit"
+            disabled={isSubmitting}
+            className={`w-full flex justify-center items-center px-6 py-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-lg shadow-lg shadow-emerald-500/30 ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                <span>Memproses...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-6 h-6 mr-2" />
+                Proses Pembayaran
+              </>
+            )}
+          </button>
+        )}
       </div>
     </form>
   );

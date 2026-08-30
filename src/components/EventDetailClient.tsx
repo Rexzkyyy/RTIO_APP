@@ -279,10 +279,24 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
               const isSoldOut = ticket.quota <= 0;
               const isLowStock = ticket.quota > 0 && ticket.quota <= 5;
               
+              const now = new Date();
+              const discountStart = ticket.discountStartDate ? new Date(ticket.discountStartDate) : null;
+              const discountEnd = ticket.discountEndDate ? new Date(ticket.discountEndDate) : null;
+              const isDiscountActive = ticket.hasDiscount && ticket.discountPrice != null && 
+                (!discountStart || now >= discountStart) && 
+                (!discountEnd || now <= discountEnd);
+
+              const activePrice = isDiscountActive ? ticket.discountPrice : ticket.price;
+              const displayOriginalPrice = isDiscountActive ? ticket.price : ticket.originalPrice;
+              
               // Tentukan best seller (tiket paling murah = paling sering dibeli)
               const cheapestTicketId = [...event.ticketCategories]
                 .filter((t: any) => t.quota > 0)
-                .sort((a: any, b: any) => a.price - b.price)[0]?.id;
+                .sort((a: any, b: any) => {
+                  const aActivePrice = a.hasDiscount && a.discountPrice != null && (!a.discountStartDate || now >= new Date(a.discountStartDate)) && (!a.discountEndDate || now <= new Date(a.discountEndDate)) ? a.discountPrice : a.price;
+                  const bActivePrice = b.hasDiscount && b.discountPrice != null && (!b.discountStartDate || now >= new Date(b.discountStartDate)) && (!b.discountEndDate || now <= new Date(b.discountEndDate)) ? b.discountPrice : b.price;
+                  return aActivePrice - bActivePrice;
+                })[0]?.id;
               const isBestSeller = ticket.id === cheapestTicketId && !isSoldOut;
               
               return (
@@ -298,11 +312,11 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                       <div className="absolute top-0 right-0 bg-slate-700 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-2xl z-10">HABIS TERJUAL</div>
                       <div className="flex justify-between items-center mb-4">
                         <div className="p-2.5 rounded-xl bg-slate-200">{style.icon}</div>
-                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-md border border-slate-300 bg-slate-200 text-slate-500">0 sisa</span>
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-md border border-slate-300 bg-slate-200 text-slate-500">0 sisa</span>
                       </div>
                       <h3 className="text-lg font-bold text-slate-500 mb-1">{ticket.name}</h3>
                       <div className="text-xl font-black text-slate-500 mb-4">
-                        {ticket.price === 0 ? "Gratis" : `Rp ${ticket.price.toLocaleString('id-ID')}`}
+                        {activePrice === 0 ? "Gratis" : `Rp ${activePrice.toLocaleString('id-ID')}`}
                       </div>
                       <div className="mt-auto pt-4 border-t border-slate-200">
                         <div className="w-full py-2.5 bg-slate-300 text-slate-500 font-bold rounded-xl flex items-center justify-center text-sm">
@@ -351,7 +365,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                           <div className={`p-2.5 rounded-xl ${style.bgClass}`}>
                             {style.icon}
                           </div>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
                             isLowStock ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-600'
                           }`}>
                             Sisa {ticket.quota}
@@ -375,7 +389,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                         <div className={`p-2.5 rounded-xl ${style.bgClass}`}>
                           {style.icon}
                         </div>
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border ${
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-md border ${
                           isLowStock 
                             ? 'border-orange-300 bg-orange-50 text-orange-600'
                             : `${style.borderClass} ${style.bgClass} ${style.textClass}`
@@ -389,18 +403,25 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                     
                     {/* Price with Anchoring (Harga Coret) */}
                     <div className="mb-4">
-                      {ticket.originalPrice && ticket.originalPrice > ticket.price && (
+                      {displayOriginalPrice && displayOriginalPrice > activePrice && (
                         <div className="flex items-center gap-2 mb-0.5">
                           <span className="text-xs text-slate-400 line-through decoration-slate-400">
-                            Rp {ticket.originalPrice.toLocaleString('id-ID')}
+                            Rp {displayOriginalPrice.toLocaleString('id-ID')}
                           </span>
                           <span className="text-[9px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
-                            HEMAT {Math.round(((ticket.originalPrice - ticket.price) / ticket.originalPrice) * 100)}%
+                            HEMAT {Math.round(((displayOriginalPrice - activePrice) / displayOriginalPrice) * 100)}%
+                          </span>
+                        </div>
+                      )}
+                      {isDiscountActive && (
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="text-[10px] font-bold text-white bg-emerald-500 px-1.5 py-0.5 rounded-full animate-pulse">
+                            🔥 FLASH SALE
                           </span>
                         </div>
                       )}
                       <div className="text-xl font-black text-slate-800">
-                        {ticket.price === 0 ? "Gratis" : `Rp ${ticket.price.toLocaleString('id-ID')}`}
+                        {activePrice === 0 ? "Gratis" : `Rp ${activePrice.toLocaleString('id-ID')}`}
                       </div>
                     </div>
 

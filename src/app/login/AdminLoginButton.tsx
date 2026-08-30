@@ -33,6 +33,22 @@ export default function AdminLoginButton() {
         </button>
       </div>
       
+      {process.env.NODE_ENV !== "production" && (
+        <div className="pt-4">
+          <button
+            onClick={async () => {
+              const res = await signIn("credentials", { redirect: false, email: "admin@rtio.com", role: "SUPER_ADMIN", callbackUrl: "/admin/events" });
+              if (res?.url) window.location.href = res.url;
+            }}
+            type="button"
+            className="w-full flex justify-center items-center py-4 px-4 rounded-xl text-base font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-300 transition-all"
+            data-testid="dev-login-button"
+          >
+            Dev Login (Admin)
+          </button>
+        </div>
+      )}
+      
       <div className="mt-8 pt-6 border-t border-slate-800 flex justify-center">
         <p className="text-xs text-slate-500 font-medium text-center">
           &copy; {new Date().getFullYear()} RTIO TIX & Ruang Tenang.<br />All rights reserved.

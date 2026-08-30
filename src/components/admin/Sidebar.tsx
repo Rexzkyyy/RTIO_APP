@@ -4,10 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Calendar, CreditCard, Ticket, LogOut, Users, Menu, ChevronLeft, BarChart, LayoutDashboard, MoreHorizontal } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
-export function Sidebar() {
+export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  // @ts-ignore
+  const isValidator = isValidatorServer ?? session?.user?.adminRole === 'VALIDATOR';
+
   // For desktop sidebar collapse
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -50,31 +54,35 @@ export function Sidebar() {
             {!isCollapsed && <span>Dashboard</span>}
           </Link>
 
-          <Link 
-            href="/admin/events" 
-            className={`flex items-center p-3 transition-colors rounded-xl ${
-              pathname.includes('/admin/events') 
-                ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
-                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-            }`}
-            title="Event"
-          >
-            <Calendar className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
-            {!isCollapsed && <span>Event</span>}
-          </Link>
+          {!isValidator && (
+            <Link 
+              href="/admin/events" 
+              className={`flex items-center p-3 transition-colors rounded-xl ${
+                pathname.includes('/admin/events') 
+                  ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+              }`}
+              title="Event"
+            >
+              <Calendar className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
+              {!isCollapsed && <span>Event</span>}
+            </Link>
+          )}
 
-          <Link 
-            href="/admin/tickets" 
-            className={`flex items-center p-3 transition-colors rounded-xl ${
-              pathname.includes('/admin/tickets') 
-                ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
-                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-            }`}
-            title="Desain Tiket"
-          >
-            <Ticket className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
-            {!isCollapsed && <span>Desain Tiket</span>}
-          </Link>
+          {!isValidator && (
+            <Link 
+              href="/admin/tickets" 
+              className={`flex items-center p-3 transition-colors rounded-xl ${
+                pathname.includes('/admin/tickets') 
+                  ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+              }`}
+              title="Desain Tiket"
+            >
+              <Ticket className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
+              {!isCollapsed && <span>Desain Tiket</span>}
+            </Link>
+          )}
 
           <Link 
             href="/admin/transactions" 
@@ -89,42 +97,59 @@ export function Sidebar() {
             {!isCollapsed && <span>Validasi Pembayaran</span>}
           </Link>
 
-          <Link 
-            href="/admin/users" 
-            className={`flex items-center p-3 transition-colors rounded-xl ${
-              pathname.includes('/admin/users') 
-                ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
-                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-            }`}
-            title="Kelola User"
-          >
-            <Users className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
-            {!isCollapsed && <span>Kelola User</span>}
-          </Link>
+          {!isValidator && (
+            <Link 
+              href="/admin/users" 
+              className={`flex items-center p-3 transition-colors rounded-xl ${
+                pathname.includes('/admin/users') 
+                  ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+              }`}
+              title="Kelola User"
+            >
+              <Users className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
+              {!isCollapsed && <span>Kelola User</span>}
+            </Link>
+          )}
 
-          <Link 
-            href="/admin/analytics" 
-            className={`flex items-center p-3 transition-colors rounded-xl ${
-              pathname.includes('/admin/analytics') 
-                ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
-                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-            }`}
-            title="Analisis Penjualan"
-          >
-            <BarChart className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
-            {!isCollapsed && <span>Analisis Penjualan</span>}
-          </Link>
+          {!isValidator && (
+            <Link 
+              href="/admin/analytics" 
+              className={`flex items-center p-3 transition-colors rounded-xl ${
+                pathname.includes('/admin/analytics') 
+                  ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+              }`}
+              title="Analisis Penjualan"
+            >
+              <BarChart className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
+              {!isCollapsed && <span>Analisis Penjualan</span>}
+            </Link>
+          )}
         </nav>
 
-        {/* Logout Button */}
+        {/* User Profile & Logout */}
         <div className="p-4 border-t border-slate-800">
+          {!isCollapsed && session?.user && (
+            <div className="flex items-center gap-3 mb-4 px-1">
+              <div className="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold shrink-0">
+                {session.user.email?.charAt(0).toUpperCase() || 'A'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-slate-200 truncate">{session.user.email}</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mt-0.5">
+                  {isValidator ? 'Validator' : 'Super Admin'}
+                </p>
+              </div>
+            </div>
+          )}
           <button 
             onClick={() => signOut({ callbackUrl: "/login" })}
             title="Keluar"
-            className={`flex items-center justify-center w-full p-3 bg-slate-800 hover:bg-red-500/10 hover:text-red-400 text-slate-400 rounded-xl transition-colors font-medium`}
+            className={`flex items-center justify-center w-full ${isCollapsed ? 'p-3' : 'py-2.5 px-3'} bg-slate-800/50 hover:bg-red-500/10 hover:text-red-400 text-slate-400 rounded-xl transition-colors font-medium border border-slate-700/50`}
           >
             <LogOut className={`w-5 h-5 shrink-0 ${isCollapsed ? '' : 'mr-2'}`} />
-            {!isCollapsed && <span>Keluar</span>}
+            {!isCollapsed && <span className="text-sm">Keluar Aplikasi</span>}
           </button>
         </div>
       </div>
@@ -149,7 +174,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation (4 Items) */}
+      {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 w-full h-16 bg-white border-t border-slate-200 z-50 flex items-center justify-around pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <Link 
           href="/admin" 
@@ -161,16 +186,18 @@ export function Sidebar() {
           <LayoutDashboard className="w-5 h-5 mb-1" />
           <span className="text-[10px] font-medium">Dasbor</span>
         </Link>
-        <Link 
-          href="/admin/events" 
-          className={`flex flex-col items-center justify-center w-1/4 h-full ${
-            pathname.includes('/admin/events') && !isMobileMenuOpen ? 'text-emerald-600' : 'text-slate-400'
-          }`}
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          <Calendar className="w-5 h-5 mb-1" />
-          <span className="text-[10px] font-medium">Event</span>
-        </Link>
+        {!isValidator && (
+          <Link 
+            href="/admin/events" 
+            className={`flex flex-col items-center justify-center w-1/4 h-full ${
+              pathname.includes('/admin/events') && !isMobileMenuOpen ? 'text-emerald-600' : 'text-slate-400'
+            }`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <Calendar className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-medium">Event</span>
+          </Link>
+        )}
         <Link 
           href="/admin/transactions" 
           className={`flex flex-col items-center justify-center w-1/4 h-full ${
@@ -181,19 +208,30 @@ export function Sidebar() {
           <CreditCard className="w-5 h-5 mb-1" />
           <span className="text-[10px] font-medium">Validasi</span>
         </Link>
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className={`flex flex-col items-center justify-center w-1/4 h-full ${
-            isMobileMenuOpen ? 'text-emerald-600' : 'text-slate-400'
-          }`}
-        >
-          <MoreHorizontal className="w-5 h-5 mb-1" />
-          <span className="text-[10px] font-medium">Lainnya</span>
-        </button>
+        {!isValidator && (
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`flex flex-col items-center justify-center w-1/4 h-full ${
+              isMobileMenuOpen ? 'text-emerald-600' : 'text-slate-400'
+            }`}
+          >
+            <MoreHorizontal className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-medium">Lainnya</span>
+          </button>
+        )}
+        {isValidator && (
+          <button 
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className={`flex flex-col items-center justify-center w-1/4 h-full text-slate-400 hover:text-red-500`}
+          >
+            <LogOut className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-medium">Keluar</span>
+          </button>
+        )}
       </div>
 
       {/* Mobile "More" Menu Overlay */}
-      {isMobileMenuOpen && (
+      {isMobileMenuOpen && !isValidator && (
         <div className="md:hidden fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
           <div 
             className="absolute bottom-16 left-0 w-full bg-white rounded-t-3xl shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.1)] overflow-hidden transition-transform animate-in slide-in-from-bottom-10"

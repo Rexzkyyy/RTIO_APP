@@ -83,9 +83,19 @@ export async function submitRegistration(formData: FormData) {
         // ── Step 1: Lock the row. All concurrent requests WAIT here. ──────────
         // $queryRaw returns typed results based on our SELECT columns.
         const locked = await tx.$queryRaw<
-          { id: string; name: string; price: number; quota: number; eventId: string }[]
+          { 
+            id: string; 
+            name: string; 
+            price: number; 
+            quota: number; 
+            eventId: string;
+            hasDiscount: boolean;
+            discountPrice: number | null;
+            discountStartDate: Date | null;
+            discountEndDate: Date | null;
+          }[]
         >`
-          SELECT id, name, price, quota, "eventId"
+          SELECT id, name, price, quota, "eventId", "hasDiscount", "discountPrice", "discountStartDate", "discountEndDate"
           FROM "TicketCategory"
           WHERE id = ${ticketCategoryId}
           FOR UPDATE
@@ -107,7 +117,13 @@ export async function submitRegistration(formData: FormData) {
           );
         }
 
-        const totalPrice = category.price * ticketQuantity;
+        const now = new Date();
+        const isDiscountActive = category.hasDiscount && category.discountPrice != null && 
+          (!category.discountStartDate || now >= category.discountStartDate) && 
+          (!category.discountEndDate || now <= category.discountEndDate);
+
+        const activePrice = isDiscountActive ? category.discountPrice! : category.price;
+        const totalPrice = activePrice * ticketQuantity;
 
         // ── Step 3: Create Transaction record. ────────────────────────────────
         const newTransaction = await tx.transaction.create({
@@ -134,11 +150,17 @@ export async function submitRegistration(formData: FormData) {
         });
 
         // ── Step 5: Create individual Ticket records (MENGGUNAKAN CREATEMANY). ─────────────────────────
-        const ticketsToCreate = Array.from({ length: ticketQuantity }, (_, i) => ({
-          transactionId: newTransaction.id,
-          ticketCategoryId: category.id,
-          barcodeString: `${newTransaction.id}-${i}-${Date.now()}`,
-        }));
+        const ticketsToCreate = Array.from({ length: ticketQuantity }, (_, i) => {
+          const hName = formData.get(`holderName_${i}`) as string;
+          const hPhone = formData.get(`holderPhone_${i}`) as string;
+          return {
+            transactionId: newTransaction.id,
+            ticketCategoryId: category.id,
+            barcodeString: `${newTransaction.id}-${i}-${Date.now()}`,
+            holderName: hName || buyerName,
+            holderPhone: hPhone || buyerPhone,
+          };
+        });
 
         await tx.ticket.createMany({
           data: ticketsToCreate,
