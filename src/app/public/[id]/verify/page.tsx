@@ -29,7 +29,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-amber-100 flex flex-col relative z-0 pb-24 md:pb-0">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-amber-100 flex flex-col relative z-0 pb-32 md:pb-0">
       <PublicNavbar />
 
       <div className="flex-1 w-full max-w-3xl mx-auto px-4 py-8 space-y-6 flex flex-col items-center relative z-10">
@@ -61,7 +61,22 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
               Pastikan Anda tidak kehilangan halaman ini. Silakan simpan tautannya ke WhatsApp Anda dengan menekan tombol di bawah, sehingga Anda bisa dengan mudah mengecek status tiket kapan saja.
             </p>
             <div className="flex justify-center">
-              <WhatsAppSaveButton eventTitle={transaction.event.title} transactionId={transaction.id} buyerName={transaction.buyerName} isPending={true} />
+              <WhatsAppSaveButton 
+                eventTitle={transaction.event.title} 
+                buyerName={transaction.buyerName} 
+                isPending={true}
+                buyerGender={transaction.buyerGender || undefined}
+                ticketName={transaction.tickets[0]?.ticketCategory.name}
+                ticketQuantity={transaction.tickets.length}
+                eventLocation={transaction.event.location}
+                eventDate={new Date(transaction.event.eventDate).toLocaleDateString('id-ID', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+                tickets={transaction.tickets}
+              />
             </div>
           </div>
         </div>

@@ -46,71 +46,73 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
   return (
     <form 
       id="register-form"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
+        e.preventDefault();
+        
         if (step < totalSteps) {
-          e.preventDefault();
           handleNext();
         } else {
           setIsSubmitting(true);
           showCuteLoader(); // Panggil loader global
-        }
-      }}
-      action={async (formData) => {
-      setErrorMsg(null);
-      // setIsSubmitting(true); is handled by onSubmit
-      
-      try {
-        const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: true };
-        
-        const formatPhone = (val: string | null) => {
-          if (!val) return val;
-          let cleaned = val.toString().replace(/\D/g, '');
-          if (cleaned.startsWith('62')) return '+' + cleaned;
-          if (cleaned.startsWith('0')) return '+62' + cleaned.substring(1);
-          return '+62' + cleaned;
-        };
+          
+          const formData = new FormData(e.currentTarget);
+          setErrorMsg(null);
+          
+          try {
+            const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: true };
+            
+            const formatPhone = (val: string | null) => {
+              if (!val) return val;
+              let cleaned = val.toString().replace(/\D/g, '');
+              if (cleaned.startsWith('62')) return '+' + cleaned;
+              if (cleaned.startsWith('0')) return '+62' + cleaned.substring(1);
+              return '+62' + cleaned;
+            };
 
-        const buyerPhone = formData.get('buyerPhone');
-        if (buyerPhone) formData.set('buyerPhone', formatPhone(buyerPhone as string)!);
+            const buyerPhone = formData.get('buyerPhone');
+            if (buyerPhone) formData.set('buyerPhone', formatPhone(buyerPhone as string)!);
 
-        for (let i = 1; i < Number(quantity); i++) {
-          const holderPhone = formData.get(`holderPhone_${i}`);
-          if (holderPhone) formData.set(`holderPhone_${i}`, formatPhone(holderPhone as string)!);
-        }
-
-        // Compress image files client-side before upload
-        for (const field of event.fields) {
-          if (field.type === 'PHONE') {
-            const customPhone = formData.get(`customAnswer_${field.id}`);
-            if (customPhone) formData.set(`customAnswer_${field.id}`, formatPhone(customPhone as string)!);
-          }
-          if (field.type === 'FILE') {
-            const file = formData.get(`customAnswer_${field.id}`) as File;
-            if (file && file.size > 0) {
-              const compressedFile = await imageCompression(file, options);
-              formData.set(`customAnswer_${field.id}`, compressedFile, file.name);
+            for (let i = 1; i < Number(quantity); i++) {
+              const holderPhone = formData.get(`holderPhone_${i}`);
+              if (holderPhone) formData.set(`holderPhone_${i}`, formatPhone(holderPhone as string)!);
             }
+
+            // Compress image files client-side before upload
+            for (const field of event.fields) {
+              if (field.type === 'PHONE') {
+                const customPhone = formData.get(`customAnswer_${field.id}`);
+                if (customPhone) formData.set(`customAnswer_${field.id}`, formatPhone(customPhone as string)!);
+              }
+              if (field.type === 'FILE') {
+                const file = formData.get(`customAnswer_${field.id}`) as File;
+                if (file && file.size > 0) {
+                  const compressedFile = await imageCompression(file, options);
+                  formData.set(`customAnswer_${field.id}`, compressedFile, file.name);
+                }
+              }
+            }
+            
+            const result = await submitRegistration(formData);
+            if (result && result.success) {
+              // Do NOT set isSubmitting to false, keep the button spinning while navigating!
+              startTransition(() => {
+                router.push(result.url);
+              });
+            }
+          } catch (error: any) {
+            const message = error?.message || "Gagal memproses pendaftaran. Coba lagi.";
+            // Detect quota-specific errors for special UI treatment
+            const isQuotaError = message.toLowerCase().includes('habis') || message.toLowerCase().includes('kuota') || message.toLowerCase().includes('sisa');
+            setErrorType(isQuotaError ? 'quota' : 'general');
+            setErrorMsg(message);
+            setIsSubmitting(false);
+            // Jangan lupa matikan loader global jika error
+            if (typeof window !== 'undefined') window.dispatchEvent(new Event('hideCuteLoader'));
           }
         }
-        
-        const result = await submitRegistration(formData);
-        if (result && result.success) {
-          // Do NOT set isSubmitting to false, keep the button spinning while navigating!
-          startTransition(() => {
-            router.push(result.url);
-          });
-        }
-      } catch (error: any) {
-        const message = error?.message || "Gagal memproses pendaftaran. Coba lagi.";
-        // Detect quota-specific errors for special UI treatment
-        const isQuotaError = message.toLowerCase().includes('habis') || message.toLowerCase().includes('kuota') || message.toLowerCase().includes('sisa');
-        setErrorType(isQuotaError ? 'quota' : 'general');
-        setErrorMsg(message);
-        setIsSubmitting(false);
-        // Jangan lupa matikan loader global jika error
-        if (typeof window !== 'undefined') window.dispatchEvent(new Event('hideCuteLoader'));
-      }
-    }} className="space-y-8">
+      }} 
+      className="space-y-8"
+    >
       <input type="hidden" name="eventId" value={event.id} />
       
       {errorMsg && (
@@ -278,6 +280,18 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
               />
             </div>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Jenis Kelamin</label>
+            <select
+              name="buyerGender"
+              required
+              className="w-full px-4 py-3 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors appearance-none"
+            >
+              <option value="">Pilih Jenis Kelamin</option>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -327,6 +341,18 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
                         }}
                       />
                     </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Jenis Kelamin <span className="text-red-500">*</span></label>
+                    <select
+                      name={`holderGender_${i}`}
+                      required
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none transition-colors appearance-none"
+                    >
+                      <option value="">Pilih Jenis Kelamin</option>
+                      <option value="Laki-laki">Laki-laki</option>
+                      <option value="Perempuan">Perempuan</option>
+                    </select>
                   </div>
                 </div>
               </div>

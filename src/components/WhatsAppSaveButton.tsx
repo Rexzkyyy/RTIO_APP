@@ -2,12 +2,38 @@
 
 import React from 'react';
 
-export default function WhatsAppSaveButton({ eventTitle, transactionId, buyerName, isPending }: { eventTitle: string, transactionId: string, buyerName?: string, isPending: boolean }) {
+export default function WhatsAppSaveButton({ 
+  eventTitle, 
+  buyerName, 
+  isPending,
+  buyerGender,
+  ticketName,
+  ticketQuantity,
+  eventLocation,
+  eventDate,
+  tickets
+}: { 
+  eventTitle: string, 
+  buyerName?: string, 
+  isPending: boolean,
+  buyerGender?: string,
+  ticketName?: string,
+  ticketQuantity?: number,
+  eventLocation?: string,
+  eventDate?: string,
+  tickets?: { holderName: string | null, holderGender: string | null }[]
+}) {
   const handleShare = () => {
     const url = window.location.href;
+    
+    let participantsList = '';
+    if (tickets && tickets.length > 0) {
+      participantsList = `\n\n*Daftar Peserta:*\n${tickets.map((t, i) => `${i + 1}. ${t.holderName || '-'} (${t.holderGender || '-'})`).join('\n')}`;
+    }
+
     const text = isPending 
-      ? `Assalamualaikum,\n\nBerikut adalah informasi pendaftaran Anda yang sedang diproses:\n\n*Detail Pendaftaran:*\n- Nama: ${buyerName || 'Pemesan'}\n- Acara: *${eventTitle}*\n- ID Transaksi: ${transactionId}\n\nSilakan simpan pesan ini. Untuk melanjutkan pembayaran atau mengecek status validasi tiket Anda, kunjungi tautan resmi berikut:\n${url}\n\nTerima kasih.`
-      : `Assalamualaikum,\n\nE-Ticket Anda untuk acara *${eventTitle}* sudah terbit!\n\n*Detail Pendaftaran:*\n- Nama: ${buyerName || 'Pemesan'}\n- ID Transaksi: ${transactionId}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${url}\n\nTerima kasih.`;
+      ? `Assalamualaikum,\n\nBerikut adalah informasi pendaftaran Anda yang sedang diproses:\n\n*Detail Pendaftaran:*\n- Nama: ${buyerName || 'Pemesan'}\n- Acara: *${eventTitle}*\n- Jenis Kelamin: ${buyerGender || '-'}\n- Jenis Tiket: ${ticketName || '-'}\n- Jumlah: ${ticketQuantity || 1} Tiket\n- Tanggal: ${eventDate || '-'}\n- Lokasi: ${eventLocation || '-'}${participantsList}\n\nSilakan simpan pesan ini. Untuk mengecek status validasi tiket Anda, kunjungi tautan resmi berikut:\n${url}\n\nTerima kasih.`
+      : `Assalamualaikum,\n\nPembayaran Anda untuk acara *${eventTitle}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${buyerName || 'Pemesan'}\n- Acara: *${eventTitle}*\n- Jenis Kelamin: ${buyerGender || '-'}\n- Jenis Tiket: ${ticketName || '-'}\n- Jumlah: ${ticketQuantity || 1} Tiket\n- Tanggal: ${eventDate || '-'}\n- Lokasi: ${eventLocation || '-'}${participantsList}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${url}\n\nTerima kasih.`;
       
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };

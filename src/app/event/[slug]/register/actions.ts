@@ -27,6 +27,7 @@ export async function submitRegistration(formData: FormData) {
   const buyerName = formData.get("buyerName") as string;
   const buyerEmail = formData.get("buyerEmail") as string;
   const buyerPhone = formData.get("buyerPhone") as string;
+  const buyerGender = formData.get("buyerGender") as string;
 
   // ─────────────────────────────────────────────────────────────────────────
   // PHASE 1: Handle file uploads BEFORE the transaction.
@@ -132,6 +133,7 @@ export async function submitRegistration(formData: FormData) {
             buyerName,
             buyerEmail,
             buyerPhone,
+            buyerGender,
             totalTickets: ticketQuantity,
             totalPrice,
             status: "PENDING",
@@ -153,12 +155,14 @@ export async function submitRegistration(formData: FormData) {
         const ticketsToCreate = Array.from({ length: ticketQuantity }, (_, i) => {
           const hName = formData.get(`holderName_${i}`) as string;
           const hPhone = formData.get(`holderPhone_${i}`) as string;
+          const hGender = formData.get(`holderGender_${i}`) as string;
           return {
             transactionId: newTransaction.id,
             ticketCategoryId: category.id,
             barcodeString: `${newTransaction.id}-${i}-${Date.now()}`,
             holderName: hName || buyerName,
             holderPhone: hPhone || buyerPhone,
+            holderGender: hGender || buyerGender,
           };
         });
 

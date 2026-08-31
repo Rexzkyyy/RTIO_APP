@@ -121,6 +121,7 @@ model Transaction {
   buyerName       String    // Nama perwakilan yang mentransfer
   buyerEmail      String
   buyerPhone      String    // Nomor WA perwakilan
+  buyerGender     String?   // Jenis Kelamin perwakilan (L/P)
   totalTickets    Int
   totalPrice      Int
   paymentProofUrl String?   // Link gambar bukti transfer (Supabase Storage)
@@ -153,6 +154,7 @@ model Ticket {
   isValidated      Boolean  @default(false)
   holderName       String?  // Nama pemegang tiket individu
   holderPhone      String?  // Nomor HP pemegang tiket individu
+  holderGender     String?  // Jenis Kelamin pemegang tiket (L/P)
 
   transaction      Transaction    @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   ticketCategory   TicketCategory @relation(fields: [ticketCategoryId], references: [id], onDelete: Restrict)
