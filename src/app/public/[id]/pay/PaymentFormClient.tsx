@@ -1,23 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
 import imageCompression from "browser-image-compression";
 import { uploadPaymentProof } from "../actions";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import CuteLoadingOverlay from "@/components/CuteLoadingOverlay";
+import { showCuteLoader, hideCuteLoader } from "@/components/CuteLoadingOverlay";
 
 export default function PaymentFormClient({ transactionId }: { transactionId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const router = useRouter();
 
+  // Matikan loader global saat halaman Pay berhasil dimuat
+  useEffect(() => {
+    hideCuteLoader();
+  }, []);
+
   return (
     <form 
-      onSubmit={() => setIsSubmitting(true)}
+      onSubmit={() => {
+        setIsSubmitting(true);
+        showCuteLoader();
+      }}
       action={async (formData) => {
       setErrorMsg(null);
-      // setIsSubmitting(true); handled by onSubmit
       
       try {
         const file = formData.get("paymentProof") as File;
@@ -28,16 +35,15 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
         }
         const result = await uploadPaymentProof(formData);
         if (result && result.success) {
-          // Do NOT reset isSubmitting, let it spin until navigation completes
           router.push(result.url);
         }
       } catch (error) {
         console.error(error);
         setErrorMsg("Gagal memproses gambar. Pastikan format gambar valid.");
         setIsSubmitting(false);
+        hideCuteLoader();
       }
     }} className="space-y-6">
-      <CuteLoadingOverlay isVisible={isSubmitting} />
       <input type="hidden" name="transactionId" value={transactionId} />
       
       {errorMsg && (
@@ -75,14 +81,7 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
         disabled={isSubmitting}
         className={`flex w-full justify-center items-center px-4 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-base shadow-lg shadow-emerald-500/30 ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
       >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-            Memproses...
-          </>
-        ) : (
-          'Proses Pembayaran'
-        )}
+        Proses Pembayaran
       </button>
     </form>
   );

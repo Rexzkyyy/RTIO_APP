@@ -5,7 +5,16 @@ import { createPortal } from "react-dom";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { Calendar as CalendarIcon, MapPin, Users, ChevronRight, ArrowLeft, Ticket, Crown, Star, Shield, HelpCircle, Flame, CheckCircle2, Rocket, Zap, Target, Award, Sparkles, Building2, Briefcase, Globe } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Calendar as CalendarIcon, MapPin, Users, ChevronRight, ArrowLeft, Ticket, Crown, Star, Shield, HelpCircle, Flame, CheckCircle2, Rocket, Zap, Target, Award, Sparkles, Building2, Briefcase, Globe, MessageCircle, Loader2 } from "lucide-react";
+
+const InstagramIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
+  </svg>
+);
 
 // Dynamic Themes for Artists
 const artistThemes = [
@@ -221,6 +230,24 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                   <p key={i}>{paragraph}</p>
                 ))}
               </div>
+
+              {/* Kontak & Sosial Media */}
+              {(event.whatsapp || event.instagram) && (
+                <div className="mt-8 flex flex-wrap gap-4">
+                  {event.whatsapp && (
+                    <a href={`https://wa.me/${event.whatsapp.replace(/[^0-9]/g, '').replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="flex items-center px-5 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 hover:bg-emerald-100 hover:shadow-sm transition-all group">
+                      <MessageCircle className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform" />
+                      <span className="font-bold text-sm">Hubungi Admin (WA)</span>
+                    </a>
+                  )}
+                  {event.instagram && (
+                    <a href={event.instagram.startsWith('http') ? event.instagram : `https://instagram.com/${event.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center px-5 py-2.5 bg-pink-50 text-pink-700 rounded-xl border border-pink-200 hover:bg-pink-100 hover:shadow-sm transition-all group">
+                      <InstagramIcon className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform" />
+                      <span className="font-bold text-sm">{event.instagram.startsWith('http') ? 'Instagram' : (event.instagram.startsWith('@') ? event.instagram : `@${event.instagram}`)}</span>
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Artists & Sponsors - Seamless List */}

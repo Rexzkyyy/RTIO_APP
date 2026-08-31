@@ -30,7 +30,7 @@ export default async function ProfilePage() {
               <div className="flex flex-col items-center justify-center">
                 {session.user?.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={session.user.image} alt="Profile" className="w-20 h-20 rounded-full mb-4 shadow-md ring-4 ring-slate-50" />
+                  <img src={session.user.image} alt="Profile" referrerPolicy="no-referrer" className="w-20 h-20 rounded-full mb-4 shadow-md ring-4 ring-slate-50" />
                 ) : (
                   <div className="w-20 h-20 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4 shadow-md">
                     {session.user?.name?.charAt(0) || session.user?.email?.charAt(0) || "U"}

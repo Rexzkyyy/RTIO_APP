@@ -112,7 +112,7 @@ export default async function Home({ searchParams }: Props) {
             <h3 className="text-base sm:text-lg font-bold text-slate-700">Event Tidak Ditemukan</h3>
             <p className="text-sm text-slate-500 mt-2">Coba ubah kata kunci pencarian atau filter Anda.</p>
             {(q || sort !== 'newest') && (
-              <Link href="/" className="mt-4 inline-block text-sm text-emerald-600 font-medium hover:underline">
+              <Link href="/" prefetch={false} className="mt-4 inline-block text-sm text-emerald-600 font-medium hover:underline">
                 Reset Pencarian
               </Link>
             )}
@@ -126,7 +126,7 @@ export default async function Home({ searchParams }: Props) {
                   : 0;
 
                 return (
-                  <Link key={event.id} href={`/event/${event.slug}`} className="group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden transition-all duration-300 transform sm:hover:-translate-y-1 flex flex-col h-full active:scale-[0.98] sm:active:scale-100">
+                  <Link key={event.id} href={`/event/${event.slug}`} prefetch={false} className="group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden transition-all duration-300 transform sm:hover:-translate-y-1 flex flex-col h-full active:scale-[0.98] sm:active:scale-100">
                     {/* Card Image */}
                     <div className="h-28 sm:h-48 bg-slate-200 relative overflow-hidden">
                       {event.bannerUrl ? (
@@ -168,7 +168,7 @@ export default async function Home({ searchParams }: Props) {
             {totalPages > 1 && (
               <div className="mt-10 flex justify-center items-center gap-2">
                 {page > 1 ? (
-                  <Link href={`/?q=${encodeURIComponent(q)}&sort=${sort}&page=${page - 1}`} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600">
+                  <Link href={`/?q=${encodeURIComponent(q)}&sort=${sort}&page=${page - 1}`} prefetch={false} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600">
                     <ChevronLeft className="w-5 h-5" />
                   </Link>
                 ) : (
@@ -182,7 +182,7 @@ export default async function Home({ searchParams }: Props) {
                 </span>
 
                 {page < totalPages ? (
-                  <Link href={`/?q=${encodeURIComponent(q)}&sort=${sort}&page=${page + 1}`} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600">
+                  <Link href={`/?q=${encodeURIComponent(q)}&sort=${sort}&page=${page + 1}`} prefetch={false} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600">
                     <ChevronRight className="w-5 h-5" />
                   </Link>
                 ) : (

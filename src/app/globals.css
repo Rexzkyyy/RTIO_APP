@@ -47,3 +47,8 @@ body {
   60% { transform: rotate(5deg); }
   80% { transform: rotate(-5deg); }
 }
+
+html.hide-global-loader #global-loader {
+  display: none !important;
+}  
+ 

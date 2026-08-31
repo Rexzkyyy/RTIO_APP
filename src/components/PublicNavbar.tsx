@@ -10,7 +10,7 @@ export default function PublicNavbar() {
         
         {/* Left Side (Logos) */}
         <div className="flex items-center gap-2 sm:gap-6 flex-shrink-0">
-          <Link href="/" className="flex items-center flex-shrink-0 w-[100px] sm:w-[130px] h-10 sm:h-14 relative group mr-2 sm:mr-4">
+          <Link href="/" prefetch={false} className="flex items-center flex-shrink-0 w-[100px] sm:w-[130px] h-10 sm:h-14 relative group mr-2 sm:mr-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
               src="/logo.png" 
@@ -36,11 +36,11 @@ export default function PublicNavbar() {
         {/* Right Side (Actions) */}
         <div className="flex items-center gap-1.5 sm:gap-6 flex-shrink-0">
           <div className="hidden sm:flex items-center gap-4">
-            <Link href="/my-tickets" className="flex items-center gap-1.5 text-sm font-bold text-slate-600 hover:text-teal-600 transition-colors">
+            <Link href="/my-tickets" prefetch={false} className="flex items-center gap-1.5 text-sm font-bold text-slate-600 hover:text-teal-600 transition-colors">
               <Ticket className="w-4 h-4" />
               Tiket Saya
             </Link>
-            <Link href="/profile" className="flex items-center gap-1.5 text-sm font-bold text-slate-600 hover:text-teal-600 transition-colors">
+            <Link href="/profile" prefetch={false} className="flex items-center gap-1.5 text-sm font-bold text-slate-600 hover:text-teal-600 transition-colors">
               <User className="w-4 h-4" />
               Profil
             </Link>
@@ -49,7 +49,7 @@ export default function PublicNavbar() {
           
           <NotificationBell />
           
-          <Link href="/admin/events" className="text-[10px] sm:text-sm font-bold text-slate-500 hover:text-teal-600 transition-colors bg-slate-100 hover:bg-teal-50 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full whitespace-nowrap">
+          <Link href="/admin/events" prefetch={false} className="text-[10px] sm:text-sm font-bold text-slate-500 hover:text-teal-600 transition-colors bg-slate-100 hover:bg-teal-50 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full whitespace-nowrap">
             Admin
           </Link>
         </div>

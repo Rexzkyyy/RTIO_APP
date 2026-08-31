@@ -102,7 +102,7 @@ export default function HeroSlider({ events, showIntroSlide = false }: { events:
                 src={event.bannerUrl} 
                 alt={event.title} 
                 fill
-                priority={idx === 0 && !showIntroSlide}
+                priority={idx === 0}
                 sizes="100vw"
                 className="object-cover"
               />
@@ -141,6 +141,7 @@ export default function HeroSlider({ events, showIntroSlide = false }: { events:
                 </div>
 
                 <Link 
+                  prefetch={false}
                   href={`/event/${event.slug}`}
                   className="inline-flex items-center px-5 py-2.5 text-sm bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all duration-300 shadow-[0_8px_30px_rgb(16,185,129,0.3)] hover:shadow-[0_8px_30px_rgb(16,185,129,0.5)] hover:-translate-y-1 group"
                 >

@@ -70,7 +70,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {events.map(event => (
-            <Link key={event.id} href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all group">
+            <Link prefetch={false} key={event.id} href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all group">
               <h3 className="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors">{event.title}</h3>
               <div className="mt-4 flex items-center text-sm font-medium text-slate-500">
                 <span className={`px-2 py-0.5 rounded-md mr-2 ${event._count.transactions > 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
@@ -97,7 +97,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
           <XCircle className="w-6 h-6 mr-3 shrink-0" />
           Anda tidak memiliki akses ke event ini.
         </div>
-        <Link href="/admin/transactions" className="inline-flex items-center px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium">
+        <Link prefetch={false} href="/admin/transactions" className="inline-flex items-center px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium">
           <ChevronLeft className="w-4 h-4 mr-2" /> Kembali
         </Link>
       </div>
@@ -145,7 +145,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
     <div className="w-full space-y-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
         <div>
-          <Link href="/admin/events" className="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-2">
+          <Link prefetch={false} href="/admin/events" className="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-2">
             <ChevronLeft className="w-4 h-4 mr-1" /> Kembali ke Event
           </Link>
           <h1 className="text-2xl font-bold text-slate-800">Validasi Pembayaran</h1>
@@ -180,6 +180,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
           { id: 'ALL', label: 'Semua', icon: Search }
         ].map(tab => (
           <Link 
+            prefetch={false}
             key={tab.id}
             href={`/admin/transactions?eventId=${eventId}&q=${encodeURIComponent(q)}&status=${tab.id}`}
             className={`flex items-center px-4 py-2.5 text-sm font-bold rounded-lg whitespace-nowrap transition-colors flex-1 justify-center ${
@@ -218,7 +219,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
               </thead>
               <tbody className="divide-y-2 divide-slate-200">
                 {transactions.map((tx, index) => (
-                  <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={tx.id} className="hover:bg-bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 align-top text-sm font-bold text-slate-400">
                       {skip + index + 1}
                     </td>
@@ -424,7 +425,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 pt-4">
           {page > 1 ? (
-            <Link href={`/admin/transactions?eventId=${eventId}&q=${encodeURIComponent(q)}&status=${statusParam}&page=${page - 1}`} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 shadow-sm">
+            <Link prefetch={false} href={`/admin/transactions?eventId=${eventId}&q=${encodeURIComponent(q)}&status=${statusParam}&page=${page - 1}`} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 shadow-sm">
               <ChevronLeft className="w-5 h-5" />
             </Link>
           ) : (
@@ -438,7 +439,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
           </span>
 
           {page < totalPages ? (
-            <Link href={`/admin/transactions?eventId=${eventId}&q=${encodeURIComponent(q)}&status=${statusParam}&page=${page + 1}`} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 shadow-sm">
+            <Link prefetch={false} href={`/admin/transactions?eventId=${eventId}&q=${encodeURIComponent(q)}&status=${statusParam}&page=${page + 1}`} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 shadow-sm">
               <ChevronRight className="w-5 h-5" />
             </Link>
           ) : (

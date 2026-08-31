@@ -57,6 +57,7 @@ export const viewport = {
 
 import MobileBottomNav from "@/components/MobileBottomNav";
 import AuthProvider from "@/components/AuthProvider";
+import CuteLoadingOverlay from "@/components/CuteLoadingOverlay";
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -70,6 +71,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <MobileBottomNav />
         </AuthProvider>
+        <CuteLoadingOverlay />
       </body>
     </html>
   );

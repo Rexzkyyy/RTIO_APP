@@ -42,6 +42,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
         
         <nav className="mt-6 flex-1 flex flex-col gap-2 overflow-y-auto overflow-x-hidden px-3">
           <Link 
+            prefetch={false}
             href="/admin" 
             className={`flex items-center p-3 transition-colors rounded-xl ${
               pathname === '/admin' 
@@ -56,6 +57,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
 
           {!isValidator && (
             <Link 
+              prefetch={false}
               href="/admin/events" 
               className={`flex items-center p-3 transition-colors rounded-xl ${
                 pathname.includes('/admin/events') 
@@ -71,6 +73,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
 
           {!isValidator && (
             <Link 
+              prefetch={false}
               href="/admin/tickets" 
               className={`flex items-center p-3 transition-colors rounded-xl ${
                 pathname.includes('/admin/tickets') 
@@ -85,6 +88,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
           )}
 
           <Link 
+            prefetch={false}
             href="/admin/transactions" 
             className={`flex items-center p-3 transition-colors rounded-xl ${
               pathname.includes('/admin/transactions') 
@@ -99,6 +103,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
 
           {!isValidator && (
             <Link 
+              prefetch={false}
               href="/admin/users" 
               className={`flex items-center p-3 transition-colors rounded-xl ${
                 pathname.includes('/admin/users') 
@@ -114,6 +119,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
 
           {!isValidator && (
             <Link 
+              prefetch={false}
               href="/admin/analytics" 
               className={`flex items-center p-3 transition-colors rounded-xl ${
                 pathname.includes('/admin/analytics') 
@@ -177,6 +183,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 w-full h-16 bg-white border-t border-slate-200 z-50 flex items-center justify-around pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <Link 
+          prefetch={false}
           href="/admin" 
           className={`flex flex-col items-center justify-center w-1/4 h-full ${
             pathname === '/admin' ? 'text-emerald-600' : 'text-slate-400'
@@ -188,6 +195,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
         </Link>
         {!isValidator && (
           <Link 
+            prefetch={false}
             href="/admin/events" 
             className={`flex flex-col items-center justify-center w-1/4 h-full ${
               pathname.includes('/admin/events') && !isMobileMenuOpen ? 'text-emerald-600' : 'text-slate-400'
@@ -199,6 +207,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
           </Link>
         )}
         <Link 
+          prefetch={false}
           href="/admin/transactions" 
           className={`flex flex-col items-center justify-center w-1/4 h-full ${
             pathname.includes('/admin/transactions') && !isMobileMenuOpen ? 'text-emerald-600' : 'text-slate-400'
@@ -243,6 +252,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
             
             <div className="grid grid-cols-3 gap-4 p-6 pt-4 pb-8">
               <Link 
+                prefetch={false}
                 href="/admin/tickets" 
                 className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -254,6 +264,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
               </Link>
               
               <Link 
+                prefetch={false}
                 href="/admin/users" 
                 className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -265,6 +276,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
               </Link>
 
               <Link 
+                prefetch={false}
                 href="/admin/analytics" 
                 className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}

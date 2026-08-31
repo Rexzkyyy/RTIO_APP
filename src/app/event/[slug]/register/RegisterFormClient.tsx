@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Ticket, CheckCircle2, AlertCircle, XCircle, Loader2, Users } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { submitRegistration } from "./actions";
 import { useRouter } from "next/navigation";
-import CuteLoadingOverlay from "@/components/CuteLoadingOverlay";
+import { showCuteLoader } from "@/components/CuteLoadingOverlay";
 
 export default function RegisterFormClient({ event, initialTicketId }: { event: any, initialTicketId?: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -13,6 +13,7 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'general' | 'quota'>('general');
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState(1);
   const totalSteps = event.fields.length > 0 ? 3 : 2;
 
@@ -51,6 +52,7 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           handleNext();
         } else {
           setIsSubmitting(true);
+          showCuteLoader(); // Panggil loader global
         }
       }}
       action={async (formData) => {
@@ -94,7 +96,9 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
         const result = await submitRegistration(formData);
         if (result && result.success) {
           // Do NOT set isSubmitting to false, keep the button spinning while navigating!
-          router.push(result.url);
+          startTransition(() => {
+            router.push(result.url);
+          });
         }
       } catch (error: any) {
         const message = error?.message || "Gagal memproses pendaftaran. Coba lagi.";
@@ -103,9 +107,10 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
         setErrorType(isQuotaError ? 'quota' : 'general');
         setErrorMsg(message);
         setIsSubmitting(false);
+        // Jangan lupa matikan loader global jika error
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('hideCuteLoader'));
       }
     }} className="space-y-8">
-      <CuteLoadingOverlay isVisible={isSubmitting} />
       <input type="hidden" name="eventId" value={event.id} />
       
       {errorMsg && (

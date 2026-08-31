@@ -82,6 +82,7 @@ export default async function EventsPage({ searchParams }: Props) {
           </form>
           {!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR" ? (
             <Link 
+              prefetch={false}
               href="/admin/events/create" 
               className="flex items-center justify-center px-4 py-2 bg-emerald-500 text-white font-medium rounded-lg hover:bg-emerald-600 transition-colors whitespace-nowrap"
             >
@@ -103,6 +104,7 @@ export default async function EventsPage({ searchParams }: Props) {
             <div className="mt-6">
               {!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR" ? (
                 <Link 
+                  prefetch={false}
                   href="/admin/events/create" 
                   className="inline-flex items-center px-4 py-2 bg-emerald-500 text-white font-medium rounded-lg hover:bg-emerald-600 transition-colors"
                 >
@@ -174,16 +176,16 @@ export default async function EventsPage({ searchParams }: Props) {
                         {/* @ts-ignore */}
                         {(!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR") && (
                           <>
-                            <Link href={`/admin/events/${event.id}/form-builder`} className="text-emerald-600 hover:text-emerald-900 mr-4" title="Form Builder">
+                            <Link prefetch={false} href={`/admin/events/${event.id}/form-builder`} className="text-emerald-600 hover:text-emerald-900 mr-4" title="Form Builder">
                               <ListPlus className="w-5 h-5 inline-block" />
                             </Link>
-                            <Link href={`/admin/events/${event.id}/edit`} className="text-indigo-600 hover:text-indigo-900 mr-4" title="Edit Event">
+                            <Link prefetch={false} href={`/admin/events/${event.id}/edit`} className="text-indigo-600 hover:text-indigo-900 mr-4" title="Edit Event">
                               Edit
                             </Link>
                             <DeleteEventButton id={event.id} />
                           </>
                         )}
-                        <Link href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="text-blue-600 hover:text-blue-900 ml-4 border border-blue-200 px-3 py-1.5 rounded-lg inline-flex items-center" title="Validasi Tiket">
+                        <Link prefetch={false} href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="text-blue-600 hover:text-blue-900 ml-4 border border-blue-200 px-3 py-1.5 rounded-lg inline-flex items-center" title="Validasi Tiket">
                           <Receipt className="w-4 h-4 mr-1.5" />
                           <span>Validasi ({event._count.transactions})</span>
                         </Link>
@@ -241,17 +243,17 @@ export default async function EventsPage({ searchParams }: Props) {
                     <div className="flex gap-2 w-full mt-2 pt-4 border-t border-slate-100">
                       {(!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR") && (
                         <>
-                          <Link href={`/admin/events/${event.id}/form-builder`} className="flex-1 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 text-center flex items-center justify-center transition-colors">
+                          <Link prefetch={false} href={`/admin/events/${event.id}/form-builder`} className="flex-1 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 text-center flex items-center justify-center transition-colors">
                             <ListPlus className="w-4 h-4 mr-1.5" />
                             Form
                           </Link>
-                          <Link href={`/admin/events/${event.id}/edit`} className="flex-1 py-2 bg-indigo-50 text-indigo-700 text-sm font-medium rounded-lg hover:bg-indigo-100 text-center transition-colors">
+                          <Link prefetch={false} href={`/admin/events/${event.id}/edit`} className="flex-1 py-2 bg-indigo-50 text-indigo-700 text-sm font-medium rounded-lg hover:bg-indigo-100 text-center transition-colors">
                             Edit
                           </Link>
                           <DeleteEventButton id={event.id} />
                         </>
                       )}
-                      <Link href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="flex-1 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-100 text-center flex items-center justify-center transition-colors">
+                      <Link prefetch={false} href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="flex-1 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-100 text-center flex items-center justify-center transition-colors">
                         <Receipt className="w-4 h-4 mr-1.5" />
                         Validasi ({event._count.transactions})
                       </Link>
@@ -268,7 +270,7 @@ export default async function EventsPage({ searchParams }: Props) {
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 pt-4">
           {page > 1 ? (
-            <Link href={`/admin/events?q=${encodeURIComponent(q)}&page=${page - 1}`} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 shadow-sm">
+            <Link prefetch={false} href={`/admin/events?q=${encodeURIComponent(q)}&page=${page - 1}`} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 shadow-sm">
               <ChevronLeft className="w-5 h-5" />
             </Link>
           ) : (
@@ -282,7 +284,7 @@ export default async function EventsPage({ searchParams }: Props) {
           </span>
 
           {page < totalPages ? (
-            <Link href={`/admin/events?q=${encodeURIComponent(q)}&page=${page + 1}`} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 shadow-sm">
+            <Link prefetch={false} href={`/admin/events?q=${encodeURIComponent(q)}&page=${page + 1}`} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 shadow-sm">
               <ChevronRight className="w-5 h-5" />
             </Link>
           ) : (
