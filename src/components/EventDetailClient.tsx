@@ -5,7 +5,27 @@ import { createPortal } from "react-dom";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { Calendar as CalendarIcon, MapPin, Users, ChevronRight, ArrowLeft, Ticket, Crown, Star, Shield, HelpCircle, Flame } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, Users, ChevronRight, ArrowLeft, Ticket, Crown, Star, Shield, HelpCircle, Flame, CheckCircle2, Rocket, Zap, Target, Award, Sparkles, Building2, Briefcase, Globe } from "lucide-react";
+
+// Dynamic Themes for Artists
+const artistThemes = [
+  { icon: Star, colors: 'from-emerald-400 to-teal-500', border: 'border-emerald-200', text: 'text-emerald-700' },
+  { icon: Crown, colors: 'from-amber-400 to-orange-500', border: 'border-amber-200', text: 'text-amber-700' },
+  { icon: Sparkles, colors: 'from-purple-400 to-indigo-500', border: 'border-purple-200', text: 'text-purple-700' },
+  { icon: Flame, colors: 'from-rose-400 to-red-500', border: 'border-rose-200', text: 'text-rose-700' },
+  { icon: Users, colors: 'from-cyan-400 to-blue-500', border: 'border-cyan-200', text: 'text-cyan-700' },
+];
+
+// Dynamic Themes for Sponsors
+const sponsorThemes = [
+  { icon: Building2, text: 'text-blue-700', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', border: 'border-blue-200', glow: 'from-blue-100', shadow: 'shadow-blue-900/10' },
+  { icon: Rocket, text: 'text-orange-700', iconBg: 'bg-orange-100', iconColor: 'text-orange-600', border: 'border-orange-200', glow: 'from-orange-100', shadow: 'shadow-orange-900/10' },
+  { icon: Target, text: 'text-emerald-700', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', border: 'border-emerald-200', glow: 'from-emerald-100', shadow: 'shadow-emerald-900/10' },
+  { icon: Award, text: 'text-purple-700', iconBg: 'bg-purple-100', iconColor: 'text-purple-600', border: 'border-purple-200', glow: 'from-purple-100', shadow: 'shadow-purple-900/10' },
+  { icon: Zap, text: 'text-amber-700', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', border: 'border-amber-200', glow: 'from-amber-100', shadow: 'shadow-amber-900/10' },
+  { icon: Globe, text: 'text-cyan-700', iconBg: 'bg-cyan-100', iconColor: 'text-cyan-600', border: 'border-cyan-200', glow: 'from-cyan-100', shadow: 'shadow-cyan-900/10' },
+  { icon: Briefcase, text: 'text-rose-700', iconBg: 'bg-rose-100', iconColor: 'text-rose-600', border: 'border-rose-200', glow: 'from-rose-100', shadow: 'shadow-rose-900/10' },
+];
 
 // Helper to determine ticket styling dynamically
 function getTicketStyle(name: string) {
@@ -32,12 +52,12 @@ function getTicketStyle(name: string) {
   }
   if (lower.includes('silver') || lower.includes('perak')) {
     return {
-      colors: 'from-slate-400 to-slate-500',
-      bgClass: 'bg-slate-50',
-      textClass: 'text-slate-700',
-      borderClass: 'border-slate-200 hover:border-slate-400',
-      shadowClass: 'shadow-slate-900/10 hover:shadow-slate-900/20',
-      icon: <Shield className="w-6 h-6 text-slate-600" />,
+      colors: 'from-slate-700 to-slate-900',
+      bgClass: 'bg-slate-100',
+      textClass: 'text-slate-800',
+      borderClass: 'border-slate-300 hover:border-slate-500',
+      shadowClass: 'shadow-slate-900/20 hover:shadow-slate-900/30',
+      icon: <Shield className="w-6 h-6 text-slate-800" />,
     };
   }
   // Default/Reguler
@@ -80,6 +100,7 @@ function useFadeInRef<T extends HTMLElement>() {
 export default function EventDetailClient({ event, lowestPrice, navbar, isLoggedIn = false }: { event: any, lowestPrice: number, navbar: React.ReactNode, isLoggedIn?: boolean }) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingUrl, setPendingUrl] = useState("");
+  const [selectedTicketBenefits, setSelectedTicketBenefits] = useState<any>(null);
 
   // Refs for fade-in animations
   const descRef = useFadeInRef<HTMLDivElement>();
@@ -96,10 +117,10 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
            }}>
       </div>
 
-      {/* Aurora Glow Background Effect */}
+      {/* Aurora Glow Background Effect (Optimized for Mobile GPU) */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-5%] w-[40rem] h-[40rem] rounded-full bg-emerald-400/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[35rem] h-[35rem] rounded-full bg-teal-400/10 blur-[100px]" />
+        <div className="absolute top-0 right-0 w-[150vw] md:w-[60vw] h-[60vh] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-400/20 via-transparent to-transparent" />
+        <div className="absolute bottom-0 left-0 w-[150vw] md:w-[60vw] h-[60vh] bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-teal-400/20 via-transparent to-transparent" />
       </div>
 
       {/* Immersive Hero Section */}
@@ -107,84 +128,70 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
         <div className="relative z-50 shrink-0">{navbar}</div>
         
         {/* Banner Image (static, no parallax for performance) */}
-        <div className="absolute inset-0 z-0 bg-slate-900">
-          {event.bannerUrl ? (
-            <>
-              {/* Blurred Background to fill empty spaces - low res for performance */}
-              <div className="absolute inset-0 w-full h-full opacity-30 blur-2xl scale-110 -z-10">
-                <Image 
-                  src={event.bannerUrl} 
-                  alt="" 
-                  fill
-                  sizes="10vw"
-                  className="object-cover" 
-                  priority
-                />
-              </div>
-              {/* Actual Image without cropping */}
-              <div className="absolute inset-0 w-full h-full">
-                <Image 
-                  src={event.bannerUrl} 
-                  alt={event.title} 
-                  fill
-                  sizes="(max-width: 768px) 100vw, 80vw"
-                  className="object-contain drop-shadow-2xl" 
-                  priority
-                />
-              </div>
-            </>
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0 bg-slate-950 overflow-hidden">
+          {event.imageUrl || event.bannerUrl ? (
+            <Image 
+              src={event.imageUrl || event.bannerUrl}
+              alt={event.title}
+              fill
+              className="object-cover object-center"
+              priority
+            />
           ) : (
             <div className="w-full h-full bg-gradient-to-tr from-emerald-900 to-slate-900 opacity-80"></div>
           )}
-          {/* Smooth Gradient Overlay fading to slate-50 (transparent) */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-900/80 to-transparent"></div>
+          {/* Background Overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent z-10 pointer-events-none"></div>
         </div>
 
         {/* Hero Content (Title & Info) */}
-        <div className="relative z-10 flex-1 flex flex-col justify-end pb-24 sm:pb-32 pt-20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col gap-4 w-full">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-2xl animate-fade-in-up">
-              {event.title}
+        <div className="relative z-10 flex-1 flex flex-col justify-end pb-16 sm:pb-32 pt-24">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col gap-6 w-full">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tighter animate-fade-in-up py-2">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-white to-teal-100 drop-shadow-lg">
+                {event.title}
+              </span>
             </h1>
-            <div className="flex flex-wrap gap-3 text-sm md:text-base font-semibold text-white animate-fade-in-up animation-delay-100">
-              <div className="flex items-center bg-white/10 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
-                <CalendarIcon className="w-4 h-4 mr-2 text-emerald-400" />
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 text-base md:text-lg font-semibold text-white animate-fade-in-up animation-delay-100">
+              <div className="flex items-center w-max bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+                <CalendarIcon className="w-5 h-5 mr-3 text-emerald-400" />
                 {new Date(event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
-              <div className="flex items-center bg-white/10 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
-                <MapPin className="w-4 h-4 mr-2 text-emerald-400" />
+              <div className="flex items-center w-max bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+                <MapPin className="w-5 h-5 mr-3 text-emerald-400" />
                 {event.location}
               </div>
             </div>
             
-            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 animate-fade-in-up animation-delay-200">
+            <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 animate-fade-in-up animation-delay-200">
                <button 
                   onClick={() => document.getElementById('tickets-section')?.scrollIntoView({ behavior: 'smooth' })} 
-                  className="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl shadow-[0_8px_32px_0_rgba(16,185,129,0.4)] hover:shadow-[0_8px_32px_0_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center justify-center w-max"
+                  className="px-10 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-lg font-black rounded-2xl shadow-[0_8px_32px_0_rgba(16,185,129,0.4)] hover:shadow-[0_8px_32px_0_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center justify-center w-max"
                 >
-                  <Ticket className="w-5 h-5 mr-2" />
+                  <Ticket className="w-6 h-6 mr-3" />
                   Dapatkan Tiket
                </button>
                
                {/* Social Proof Marketing UI */}
-               <div className="flex items-center">
-                 <div className="flex -space-x-3 mr-3">
-                   <div className="relative w-9 h-9 rounded-full border-2 border-slate-900 shadow-sm overflow-hidden">
+               <div className="flex items-center bg-slate-900/40 backdrop-blur-sm p-3 rounded-2xl border border-slate-700/50">
+                 <div className="flex -space-x-3 mr-4">
+                   <div className="relative w-10 h-10 rounded-full border-2 border-slate-800 shadow-sm overflow-hidden">
                      <Image src="https://i.pravatar.cc/100?img=33" alt="User 1" fill sizes="40px" className="object-cover"/>
                    </div>
-                   <div className="relative w-9 h-9 rounded-full border-2 border-slate-900 shadow-sm overflow-hidden">
+                   <div className="relative w-10 h-10 rounded-full border-2 border-slate-800 shadow-sm overflow-hidden">
                      <Image src="https://i.pravatar.cc/100?img=47" alt="User 2" fill sizes="40px" className="object-cover"/>
                    </div>
-                   <div className="relative w-9 h-9 rounded-full border-2 border-slate-900 shadow-sm overflow-hidden">
+                   <div className="relative w-10 h-10 rounded-full border-2 border-slate-800 shadow-sm overflow-hidden">
                      <Image src="https://i.pravatar.cc/100?img=12" alt="User 3" fill sizes="40px" className="object-cover"/>
                    </div>
-                   <div className="w-9 h-9 rounded-full border-2 border-slate-900 bg-slate-800 text-slate-300 text-xs font-bold flex items-center justify-center shadow-sm">
+                   <div className="w-10 h-10 rounded-full border-2 border-slate-800 bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center shadow-sm">
                      +
                    </div>
                  </div>
-                 <div className="text-white text-xs sm:text-sm drop-shadow-md">
+                 <div className="text-white text-sm sm:text-base drop-shadow-md">
                    <p className="font-bold">Lebih dari <span className="text-yellow-400">500+ orang</span></p>
-                   <p className="opacity-80">tertarik dengan event ini 🔥</p>
+                   <p className="opacity-80 text-xs sm:text-sm mt-0.5">tertarik dengan event ini 🔥</p>
                  </div>
                </div>
             </div>
@@ -201,30 +208,13 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
           <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -z-10 group-hover:bg-emerald-50/50 transition-colors duration-700"></div>
           
           <div className="flex flex-col gap-8">
-            {/* Event Title inside the card */}
-            <div>
-              <h1 className="text-4xl md:text-5xl font-black text-slate-800 mb-6 leading-tight tracking-tight">
-                {event.title}
-              </h1>
-              <div className="flex flex-wrap gap-4 text-sm md:text-base font-semibold text-slate-600">
-                <div className="flex items-center bg-slate-100 px-5 py-2.5 rounded-full border border-slate-200">
-                  <CalendarIcon className="w-4 h-4 mr-2 text-emerald-500" />
-                  {new Date(event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                </div>
-                <div className="flex items-center bg-slate-100 px-5 py-2.5 rounded-full border border-slate-200">
-                  <MapPin className="w-4 h-4 mr-2 text-emerald-500" />
-                  {event.location}
-                </div>
-              </div>
-            </div>
-
-            <hr className="border-slate-100" />
+            {/* Removed duplicated title and badges */}
 
             {/* Description */}
             <div ref={descRef}>
-              <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
-                <span className="w-8 h-1 bg-emerald-500 rounded-full mr-4"></span>
-                Tentang Event
+              <h2 className="text-3xl font-black mb-6 flex items-center">
+                <span className="w-8 h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full mr-4 shadow-sm"></span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 to-teal-600">Tentang Event</span>
               </h2>
               <div className="prose prose-slate md:prose-lg max-w-none text-slate-600 leading-relaxed font-medium">
                 {event.description.split('\n').map((paragraph: string, i: number) => (
@@ -238,25 +228,45 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
               <div ref={artistsRef} className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t border-slate-100">
                 {event.artists.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Lineup & Penampil</h3>
-                    <div className="flex flex-wrap gap-3">
-                      {event.artists.map((artist: string, idx: number) => (
-                        <div key={idx} className="px-5 py-2.5 bg-white text-slate-800 rounded-full text-sm font-bold shadow-sm border border-slate-200 hover:border-emerald-400 transition-colors">
-                          {artist}
-                        </div>
-                      ))}
+                    <h3 className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400 uppercase tracking-widest mb-4">Lineup & Penampil</h3>
+                    <div className="flex flex-wrap gap-4">
+                      {event.artists.map((artist: string, idx: number) => {
+                        const theme = artistThemes[idx % artistThemes.length];
+                        const Icon = theme.icon;
+                        return (
+                          <div key={idx} className={`pr-6 pl-2 py-2 bg-gradient-to-r from-white to-slate-50 rounded-full shadow-sm border ${theme.border} hover:shadow-md transition-all flex items-center cursor-default group`}>
+                            <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${theme.colors} text-white flex items-center justify-center mr-3 shadow-inner group-hover:scale-110 group-hover:rotate-12 transition-transform`}>
+                              <Icon className="w-4 h-4 fill-white/20" />
+                            </div>
+                            <span className={`text-sm font-black ${theme.text} transition-colors`}>
+                              {artist}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
                 {event.sponsors.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Didukung Oleh</h3>
-                    <div className="flex flex-wrap gap-3">
-                      {event.sponsors.map((sponsor: string, idx: number) => (
-                        <div key={idx} className="px-5 py-2.5 bg-slate-50 text-slate-600 rounded-full text-sm font-bold border border-slate-200">
-                          {sponsor}
-                        </div>
-                      ))}
+                    <h3 className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400 uppercase tracking-widest mb-4">Didukung Oleh</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {event.sponsors.map((sponsor: string, idx: number) => {
+                        const theme = sponsorThemes[idx % sponsorThemes.length];
+                        const Icon = theme.icon;
+                        return (
+                          <div key={idx} className={`p-4 bg-white rounded-2xl text-center border ${theme.border} shadow-sm hover:shadow-md ${theme.shadow} transition-all flex flex-col items-center justify-center min-h-[90px] group cursor-default relative overflow-hidden`}>
+                            <div className={`absolute -right-6 -bottom-6 w-20 h-20 bg-gradient-to-tl ${theme.glow} to-transparent rounded-full opacity-60 group-hover:opacity-100 transition-all duration-500`}></div>
+                            
+                            <div className={`w-10 h-10 rounded-xl ${theme.iconBg} ${theme.iconColor} flex items-center justify-center mb-3 transition-transform border ${theme.border} z-10 group-hover:scale-110`}>
+                              <Icon className="w-5 h-5" />
+                            </div>
+                            <span className={`text-xs font-black ${theme.text} relative z-10 leading-snug`}>
+                              {sponsor}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -267,8 +277,9 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
 
         {/* Bottom Section: Compact Tickets Row */}
         <div id="tickets-section" className="w-full pb-8 pt-8 -mt-8 scroll-mt-24">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-slate-800">Pilih Tiket Anda</h2>
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 mb-3 drop-shadow-sm">Pilih Tiket Anda</h2>
+            <div className="w-20 h-1.5 bg-gradient-to-r from-emerald-400 to-teal-400 mx-auto rounded-full shadow-sm"></div>
           </div>
           <div className="flex flex-nowrap md:flex-wrap overflow-x-auto md:overflow-x-visible justify-start md:justify-center gap-5 pb-8 snap-x snap-mandatory scroll-smooth hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
 
@@ -277,7 +288,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
               const style = getTicketStyle(ticket.name);
               
               const isSoldOut = ticket.quota <= 0;
-              const isLowStock = ticket.quota > 0 && ticket.quota <= 5;
+              const isLowStock = ticket.quota > 0 && ticket.quota <= 50;
               
               const now = new Date();
               const discountStart = ticket.discountStartDate ? new Date(ticket.discountStartDate) : null;
@@ -299,33 +310,30 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                 })[0]?.id;
               const isBestSeller = ticket.id === cheapestTicketId && !isSoldOut;
               
-              return (
-                isSoldOut ? (
-                  // Sold-out card — not a Link, disabled appearance
-                  <div
-                    key={ticket.id}
-                    className="w-[80vw] sm:w-[320px] max-w-[320px] flex-none snap-center animate-fade-in-up"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="bg-slate-100 rounded-2xl p-5 border border-slate-200 relative overflow-hidden flex flex-col h-full opacity-70 grayscale cursor-not-allowed">
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-slate-300" />
+              if (isSoldOut) {
+                return (
+                  <div key={ticket.id} className="block shrink-0 w-[310px] sm:w-[340px] snap-center opacity-60 grayscale cursor-not-allowed">
+                    <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 relative overflow-hidden flex flex-col h-full">
                       <div className="absolute top-0 right-0 bg-slate-700 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-2xl z-10">HABIS TERJUAL</div>
                       <div className="flex justify-between items-center mb-4">
                         <div className="p-2.5 rounded-xl bg-slate-200">{style.icon}</div>
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-md border border-slate-300 bg-slate-200 text-slate-500">0 sisa</span>
+                        <span className="text-sm font-bold px-2.5 py-1 rounded-md border border-slate-300 bg-slate-200 text-slate-500">Habis</span>
                       </div>
-                      <h3 className="text-lg font-bold text-slate-500 mb-1">{ticket.name}</h3>
-                      <div className="text-xl font-black text-slate-500 mb-4">
+                      <h3 className="text-xl font-bold text-slate-500 mb-1">{ticket.name}</h3>
+                      <div className="text-2xl font-black text-slate-500 mb-4">
                         {activePrice === 0 ? "Gratis" : `Rp ${activePrice.toLocaleString('id-ID')}`}
                       </div>
                       <div className="mt-auto pt-4 border-t border-slate-200">
-                        <div className="w-full py-2.5 bg-slate-300 text-slate-500 font-bold rounded-xl flex items-center justify-center text-sm">
+                        <div className="w-full py-3 bg-slate-300 text-slate-500 font-bold rounded-xl flex items-center justify-center text-base">
                           Tiket Habis
                         </div>
                       </div>
                     </div>
                   </div>
-                ) : (
+                );
+              }
+
+              return (
                 <Link 
                   href={`/event/${event.slug}/register?ticketId=${ticket.id}`} 
                   key={ticket.id} 
@@ -336,104 +344,75 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                       setShowLoginModal(true);
                     }
                   }}
-                  className="block group/ticket outline-none w-[80vw] sm:w-[320px] max-w-[320px] flex-none snap-center animate-fade-in-up"
-                  style={{ animationDelay: `${index * 100}ms` }}
+                  className="block shrink-0 w-[310px] sm:w-[340px] snap-center group/ticket"
                 >
-                  <div className={`bg-white rounded-2xl p-5 shadow-lg ${style.shadowClass} border ${isLowStock ? 'border-orange-400' : style.borderClass} relative overflow-hidden flex flex-col h-full transition-all duration-300 hover:-translate-y-1`}>
+                  <div className={`bg-white rounded-2xl p-5 sm:p-6 shadow-lg ${style.shadowClass} border ${isLowStock ? 'border-orange-400' : style.borderClass} relative overflow-hidden flex flex-col h-full transition-all duration-300 hover:-translate-y-1`}>
                     {isBestSeller && (
-                      <div className="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-2xl z-10 flex items-center shadow-md">
+                      <div className="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[11px] font-black px-3 py-1.5 rounded-bl-2xl z-10 flex items-center shadow-md">
                         <span className="animate-pulse mr-1">🔥</span>
                         PALING LARIS
                       </div>
                     )}
                     
-                    {/* Low Stock Warning Badge */}
                     {isLowStock && !isBestSeller && (
-                      <div className="absolute top-0 right-0 bg-orange-500 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-2xl z-10 flex items-center">
+                      <div className="absolute top-0 right-0 bg-orange-500 text-white text-[11px] font-black px-3 py-1.5 rounded-bl-2xl z-10 flex items-center">
                         <span className="animate-pulse mr-1">⚡</span>
                         HAMPIR HABIS
                       </div>
                     )}
 
-                    {/* Top Premium Glow Border */}
-                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${style.colors}`}></div>
-                    
-                    {/* Progress Bar (Urgency) */}
-                    {ticket.initialQuota && ticket.initialQuota > 0 ? (
-                      <div className="mb-4">
-                        <div className="flex justify-between items-center mb-3">
-                          <div className={`p-2.5 rounded-xl ${style.bgClass}`}>
-                            {style.icon}
-                          </div>
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                            isLowStock ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-600'
-                          }`}>
-                            Sisa {ticket.quota}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-end mb-1.5">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Terjual</span>
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                            {Math.round(((ticket.initialQuota - ticket.quota) / ticket.initialQuota) * 100)}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                          <div 
-                            className={`h-1.5 rounded-full ${isLowStock ? 'bg-red-500' : 'bg-emerald-500'}`} 
-                            style={{ width: `${Math.max(0, Math.min(100, ((ticket.initialQuota - ticket.quota) / ticket.initialQuota) * 100))}%` }}
-                          ></div>
-                        </div>
+                    <div className="flex justify-between items-center mb-4">
+                      <div className={`p-3 rounded-xl ${style.bgClass} border ${style.borderClass} shadow-sm transform group-hover/ticket:scale-110 group-hover/ticket:rotate-3 transition-transform duration-300`}>
+                        {style.icon}
                       </div>
-                    ) : (
-                      <div className="flex justify-between items-center mb-4">
-                        <div className={`p-2.5 rounded-xl ${style.bgClass}`}>
-                          {style.icon}
-                        </div>
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-md border ${
-                          isLowStock 
-                            ? 'border-orange-300 bg-orange-50 text-orange-600'
-                            : `${style.borderClass} ${style.bgClass} ${style.textClass}`
-                        }`}>
-                          {ticket.quota} sisa
+                      {isLowStock ? (
+                        <span className="text-sm font-black px-3 py-1.5 rounded-md border border-orange-300 bg-orange-50 text-orange-600 animate-pulse shadow-sm">
+                          🔥 Sisa {ticket.quota} Kursi!
                         </span>
-                      </div>
-                    )}
+                      ) : (
+                        <span className={`text-sm font-black px-3 py-1.5 rounded-md border ${style.borderClass} ${style.bgClass} ${style.textClass} shadow-sm`}>
+                          Sisa {ticket.quota} Tiket
+                        </span>
+                      )}
+                    </div>
                     
-                    <h3 className="text-lg font-bold text-slate-800 mb-1 group-hover/ticket:text-emerald-600 transition-colors">{ticket.name}</h3>
+                    <h3 className="text-2xl font-bold text-slate-800 mb-1 group-hover/ticket:text-emerald-600 transition-colors">{ticket.name}</h3>
                     
-                    {/* Price with Anchoring (Harga Coret) */}
-                    <div className="mb-4">
-                      {displayOriginalPrice && displayOriginalPrice > activePrice && (
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-xs text-slate-400 line-through decoration-slate-400">
-                            Rp {displayOriginalPrice.toLocaleString('id-ID')}
-                          </span>
-                          <span className="text-[9px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
-                            HEMAT {Math.round(((displayOriginalPrice - activePrice) / displayOriginalPrice) * 100)}%
-                          </span>
+                    {/* Benefits - Grid List */}
+                    <div className="flex-1">
+                      {ticket.hasBenefits && ticket.benefits && ticket.benefits.length > 0 && (
+                        <div className="mb-4 mt-2 border-t border-slate-100 pt-4">
+                          <div className="grid grid-cols-2 gap-3">
+                            {ticket.benefits.map((benefit: string, idx: number) => (
+                              <div key={idx} className="flex items-start">
+                                <CheckCircle2 className="w-5 h-5 text-emerald-500 mr-2 shrink-0 mt-0.5" />
+                                <span className="text-sm font-bold text-slate-700 leading-snug break-words">{benefit}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
-                      {isDiscountActive && (
-                        <div className="flex items-center gap-1 mb-1">
-                          <span className="text-[10px] font-bold text-white bg-emerald-500 px-1.5 py-0.5 rounded-full animate-pulse">
-                            🔥 FLASH SALE
-                          </span>
+                    </div>
+                    
+                    <div className="mt-auto pt-2">
+                      {ticket.discountPrice && ticket.discountPrice < ticket.price && (
+                        <div className="text-sm font-medium text-slate-400 line-through mb-0.5">
+                          Rp {ticket.price.toLocaleString('id-ID')}
                         </div>
                       )}
-                      <div className="text-xl font-black text-slate-800">
+                      <div className="text-3xl font-black text-slate-800 tracking-tight">
                         {activePrice === 0 ? "Gratis" : `Rp ${activePrice.toLocaleString('id-ID')}`}
                       </div>
                     </div>
 
-                    <div className="mt-auto pt-4 border-t border-slate-100">
-                      <div className={`w-full py-2.5 bg-gradient-to-r ${style.colors} text-white font-bold rounded-xl shadow-md group-hover/ticket:shadow-lg transition-all flex items-center justify-center text-sm`}>
-                        <Ticket className="w-4 h-4 mr-2" />
-                        Beli Tiket
+                    <div className="pt-4 border-t border-slate-100 mt-3">
+                      <div className={`w-full py-3 bg-gradient-to-r ${style.colors} text-white rounded-xl shadow-md group-hover/ticket:shadow-lg transition-all flex items-center justify-center text-sm sm:text-base font-bold whitespace-nowrap`}>
+                        Amankan Kursi Sekarang <ChevronRight className="w-5 h-5 ml-1" />
                       </div>
+                      <p className="text-center text-xs text-slate-500 mt-2 font-medium">Garansi informasi & support 24/7</p>
                     </div>
                   </div>
                 </Link>
-                )
               );
             })}
           </div>
@@ -463,6 +442,43 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
           Pilih Tiket
         </Link>
       </div>
+
+      {/* Ticket Benefits Modal */}
+      {selectedTicketBenefits && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setSelectedTicketBenefits(null)}></div>
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full relative z-10 shadow-2xl flex flex-col items-center">
+            <button 
+              onClick={() => setSelectedTicketBenefits(null)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
+            >
+              ✕
+            </button>
+            <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center text-3xl mb-4 shadow-inner">
+              <Star className="w-8 h-8" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-800 mb-1 text-center">Benefit Tiket</h3>
+            <p className="text-sm font-bold text-amber-600 mb-6 text-center uppercase tracking-widest">{selectedTicketBenefits.name}</p>
+            
+            <div className="w-full space-y-3 mb-6 max-h-[60vh] overflow-y-auto px-2">
+              {selectedTicketBenefits.benefits.map((benefit: string, idx: number) => (
+                <div key={idx} className="flex items-start bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 mr-3 shrink-0 mt-0.5" />
+                  <span className="text-sm font-medium text-slate-700 leading-snug">{benefit}</span>
+                </div>
+              ))}
+            </div>
+
+            <button 
+              onClick={() => setSelectedTicketBenefits(null)}
+              className="w-full py-3.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-all shadow-lg"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Login Recommendation Modal */}
       {showLoginModal && typeof document !== 'undefined' && createPortal(

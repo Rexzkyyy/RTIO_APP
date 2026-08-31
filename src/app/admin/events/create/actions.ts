@@ -49,11 +49,15 @@ export async function createEvent(formData: FormData) {
   const discountPrices = formData.getAll("discountPrice[]") as string[];
   const discountStartDates = formData.getAll("discountStartDate[]") as string[];
   const discountEndDates = formData.getAll("discountEndDate[]") as string[];
+  const hasBenefits = formData.getAll("hasBenefits[]") as string[];
+  const ticketIndices = formData.getAll("ticketIndex[]") as string[];
 
   // Construct ticket categories data for nested write
   const ticketCategories = ticketNames.map((name, idx) => {
     const quota = parseInt(ticketQuotas[idx]);
     const originalPriceStr = ticketOriginalPrices[idx]?.replace(/\D/g, '');
+    const hasBenefit = hasBenefits[idx] === "true";
+    const benefits = hasBenefit ? (formData.getAll(`benefit_${ticketIndices[idx]}[]`) as string[]).filter(b => b.trim() !== "") : [];
     return {
       name: ticketNames[idx],
       price: parseInt(ticketPrices[idx].replace(/\D/g, '') || "0"),
@@ -64,6 +68,8 @@ export async function createEvent(formData: FormData) {
       discountPrice: discountPrices[idx] ? parseInt(discountPrices[idx].replace(/\D/g, '')) : null,
       discountStartDate: discountStartDates[idx] ? new Date(discountStartDates[idx]) : null,
       discountEndDate: discountEndDates[idx] ? new Date(discountEndDates[idx]) : null,
+      hasBenefits: hasBenefit,
+      benefits: benefits,
     };
   });
 

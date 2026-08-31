@@ -9,7 +9,7 @@ import CuteLoadingOverlay from "@/components/CuteLoadingOverlay";
 
 export default function RegisterFormClient({ event, initialTicketId }: { event: any, initialTicketId?: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number | string>(1);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'general' | 'quota'>('general');
   const router = useRouter();
@@ -60,8 +60,28 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
       try {
         const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: true };
         
+        const formatPhone = (val: string | null) => {
+          if (!val) return val;
+          let cleaned = val.toString().replace(/\D/g, '');
+          if (cleaned.startsWith('62')) return '+' + cleaned;
+          if (cleaned.startsWith('0')) return '+62' + cleaned.substring(1);
+          return '+62' + cleaned;
+        };
+
+        const buyerPhone = formData.get('buyerPhone');
+        if (buyerPhone) formData.set('buyerPhone', formatPhone(buyerPhone as string)!);
+
+        for (let i = 1; i < Number(quantity); i++) {
+          const holderPhone = formData.get(`holderPhone_${i}`);
+          if (holderPhone) formData.set(`holderPhone_${i}`, formatPhone(holderPhone as string)!);
+        }
+
         // Compress image files client-side before upload
         for (const field of event.fields) {
+          if (field.type === 'PHONE') {
+            const customPhone = formData.get(`customAnswer_${field.id}`);
+            if (customPhone) formData.set(`customAnswer_${field.id}`, formatPhone(customPhone as string)!);
+          }
           if (field.type === 'FILE') {
             const file = formData.get(`customAnswer_${field.id}`) as File;
             if (file && file.size > 0) {
@@ -192,7 +212,7 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
             type="number" 
             name="ticketQuantity"
             value={quantity}
-            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+            onChange={(e) => setQuantity(e.target.value === '' ? '' : Number(e.target.value))}
             min={1}
             max={5}
             required
@@ -234,19 +254,30 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Nomor WhatsApp</label>
-            <input 
-              type="tel" 
-              name="buyerPhone"
-              required
-              placeholder="081234567890"
-              className="w-full px-4 py-3 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-            />
+            <div className="flex relative">
+              <span className="inline-flex items-center px-4 py-3 rounded-l-lg border border-r-0 border-slate-300 bg-slate-100 text-slate-600 font-bold text-sm">
+                +62
+              </span>
+              <input 
+                type="tel" 
+                name="buyerPhone"
+                required
+                placeholder="81234567890"
+                className="w-full px-4 py-3 rounded-r-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                onInput={(e) => {
+                  let val = e.currentTarget.value;
+                  if (val.startsWith('0')) e.currentTarget.value = val.substring(1);
+                  else if (val.startsWith('62')) e.currentTarget.value = val.substring(2);
+                  else if (val.startsWith('+62')) e.currentTarget.value = val.substring(3);
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Section 2.5: Data Pemegang Tiket (Jika > 1) */}
-      {quantity > 1 && (
+      {Number(quantity) > 1 && (
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
           <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center">
             <span className="w-5 h-5 mr-2 flex justify-center items-center rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold"><Users className="w-3 h-3"/></span>
@@ -255,7 +286,7 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           <p className="text-sm text-slate-500 mb-4">Anda memesan {quantity} tiket. Data pemesan utama otomatis menjadi pemegang Tiket 1. Silakan lengkapi data untuk tiket tambahannya.</p>
           
           <div className="space-y-6">
-            {Array.from({ length: quantity - 1 }).map((_, idx) => {
+            {Array.from({ length: Number(quantity) - 1 }).map((_, idx) => {
               const i = idx + 1; // Start from 1 for Ticket 2
               return (
               <div key={i} className="p-5 border rounded-xl bg-slate-50 relative">
@@ -273,13 +304,24 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Nomor WhatsApp <span className="text-red-500">*</span></label>
-                    <input 
-                      type="tel" 
-                      name={`holderPhone_${i}`}
-                      required
-                      placeholder="0812..."
-                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none transition-colors"
-                    />
+                    <div className="flex relative">
+                      <span className="inline-flex items-center px-3 py-2.5 rounded-l-lg border border-r-0 border-slate-300 bg-slate-100 text-slate-600 font-bold text-sm">
+                        +62
+                      </span>
+                      <input 
+                        type="tel" 
+                        name={`holderPhone_${i}`}
+                        required
+                        placeholder="812..."
+                        className="w-full px-3 py-2.5 rounded-r-lg border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none transition-colors"
+                        onInput={(e) => {
+                          let val = e.currentTarget.value;
+                          if (val.startsWith('0')) e.currentTarget.value = val.substring(1);
+                          else if (val.startsWith('62')) e.currentTarget.value = val.substring(2);
+                          else if (val.startsWith('+62')) e.currentTarget.value = val.substring(3);
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -326,12 +368,24 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
                 )}
 
                 {field.type === 'PHONE' && (
-                  <input 
-                    type="tel" 
-                    name={`customAnswer_${field.id}`}
-                    required={field.isRequired}
-                    className="w-full px-4 py-3 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-                  />
+                  <div className="flex relative">
+                    <span className="inline-flex items-center px-4 py-3 rounded-l-lg border border-r-0 border-slate-300 bg-slate-100 text-slate-600 font-bold text-sm">
+                      +62
+                    </span>
+                    <input 
+                      type="tel" 
+                      name={`customAnswer_${field.id}`}
+                      required={field.isRequired}
+                      placeholder="812..."
+                      className="w-full px-4 py-3 rounded-r-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                      onInput={(e) => {
+                        let val = e.currentTarget.value;
+                        if (val.startsWith('0')) e.currentTarget.value = val.substring(1);
+                        else if (val.startsWith('62')) e.currentTarget.value = val.substring(2);
+                        else if (val.startsWith('+62')) e.currentTarget.value = val.substring(3);
+                      }}
+                    />
+                  </div>
                 )}
 
                 {field.type === 'SELECT' && field.options && (
@@ -370,7 +424,7 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
             type="button"
             onClick={handlePrev}
             disabled={isSubmitting}
-            className="w-1/3 md:w-1/4 flex justify-center items-center px-6 py-4 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-all text-lg border border-slate-300"
+            className="w-1/3 md:w-1/4 flex justify-center items-center px-4 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-all text-base border border-slate-300"
           >
             Kembali
           </button>
@@ -380,7 +434,7 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           <button 
             type="button"
             onClick={handleNext}
-            className="flex-1 flex justify-center items-center px-6 py-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-lg shadow-lg shadow-emerald-500/30"
+            className="flex-1 flex justify-center items-center px-4 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-base shadow-lg shadow-emerald-500/30"
           >
             Selanjutnya
           </button>
@@ -388,7 +442,7 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           <button 
             type="submit"
             disabled={isSubmitting}
-            className={`w-full flex justify-center items-center px-6 py-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-lg shadow-lg shadow-emerald-500/30 ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
+            className={`w-full flex justify-center items-center px-4 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-base shadow-lg shadow-emerald-500/30 ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
           >
             {isSubmitting ? (
               <>

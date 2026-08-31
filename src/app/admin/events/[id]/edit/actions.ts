@@ -46,6 +46,8 @@ export async function updateEvent(id: string, formData: FormData) {
   const discountPrices = formData.getAll("discountPrice[]") as string[];
   const discountStartDates = formData.getAll("discountStartDate[]") as string[];
   const discountEndDates = formData.getAll("discountEndDate[]") as string[];
+  const hasBenefits = formData.getAll("hasBenefits[]") as string[];
+  const ticketIndices = formData.getAll("ticketIndex[]") as string[];
 
   const bankNames = formData.getAll("bankName[]") as string[];
   const bankNumbers = formData.getAll("bankNumber[]") as string[];
@@ -124,6 +126,8 @@ export async function updateEvent(id: string, formData: FormData) {
     const tId = ticketIds[i];
     const quota = parseInt(ticketQuotas[i]);
     const originalPriceStr = ticketOriginalPrices[i]?.replace(/\D/g, '');
+    const hasBenefit = hasBenefits[i] === "true";
+    const benefits = hasBenefit ? (formData.getAll(`benefit_${ticketIndices[i]}[]`) as string[]).filter(b => b.trim() !== "") : [];
     
     const data: any = {
       name: ticketNames[i],
@@ -135,6 +139,8 @@ export async function updateEvent(id: string, formData: FormData) {
       discountPrice: discountPrices[i] ? parseInt(discountPrices[i].replace(/\D/g, '')) : null,
       discountStartDate: discountStartDates[i] ? new Date(discountStartDates[i]) : null,
       discountEndDate: discountEndDates[i] ? new Date(discountEndDates[i]) : null,
+      hasBenefits: hasBenefit,
+      benefits: benefits,
     };
 
     if (tId === "NEW") {

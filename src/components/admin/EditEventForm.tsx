@@ -13,6 +13,7 @@ const sanitizeImageUrl = (url: string | null) => {
     url.startsWith('data:image/') ||
     url.startsWith('http://') ||
     url.startsWith('https://') ||
+    url.startsWith('blob:') ||
     url.startsWith('/')
   ) {
     return url;
@@ -40,9 +41,11 @@ export function EditEventForm({ event }: { event: any }) {
         discountPrice: t.discountPrice ? formatPrice(t.discountPrice) : "",
         discountStartDate: t.discountStartDate ? new Date(t.discountStartDate.getTime() - (t.discountStartDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : "",
         discountEndDate: t.discountEndDate ? new Date(t.discountEndDate.getTime() - (t.discountEndDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : "",
+        hasBenefits: t.hasBenefits || false,
+        benefits: (t.benefits && t.benefits.length > 0) ? t.benefits : [""],
         isNew: false
       }))
-    : [{ id: Date.now().toString(), name: "", price: "", originalPrice: "", quota: "", hasDiscount: false, discountPrice: "", discountStartDate: "", discountEndDate: "", isNew: true }];
+    : [{ id: Date.now().toString(), name: "", price: "", originalPrice: "", quota: "", hasDiscount: false, discountPrice: "", discountStartDate: "", discountEndDate: "", hasBenefits: false, benefits: [""], isNew: true }];
 
   const initialBankAccounts = (event.bankAccounts && Array.isArray(event.bankAccounts) && event.bankAccounts.length > 0)
     ? event.bankAccounts.map((b: any, index: number) => ({
@@ -109,6 +112,8 @@ export function EditEventForm({ event }: { event: any }) {
       discountPrice: "",
       discountStartDate: "",
       discountEndDate: "",
+      hasBenefits: false,
+      benefits: [""],
       isNew: true 
     }]);
   };
@@ -120,7 +125,41 @@ export function EditEventForm({ event }: { event: any }) {
   };
 
   const toggleDiscount = (id: string) => {
-    setTickets(tickets.map(t => t.id === id ? { ...t, hasDiscount: !t.hasDiscount } : t));
+    setTickets(tickets.map((t: any) => t.id === id ? { ...t, hasDiscount: !t.hasDiscount } : t));
+  };
+
+  const toggleBenefit = (id: string) => {
+    setTickets(tickets.map((t: any) => t.id === id ? { ...t, hasBenefits: !t.hasBenefits } : t));
+  };
+
+  const addBenefitToTicket = (id: string) => {
+    setTickets(tickets.map((t: any) => {
+      if (t.id === id && t.benefits.length < 10) {
+        return { ...t, benefits: [...t.benefits, ""] };
+      }
+      return t;
+    }));
+  };
+
+  const updateBenefit = (ticketId: string, index: number, value: string) => {
+    setTickets(tickets.map((t: any) => {
+      if (t.id === ticketId) {
+        const newBenefits = [...t.benefits];
+        newBenefits[index] = value;
+        return { ...t, benefits: newBenefits };
+      }
+      return t;
+    }));
+  };
+
+  const removeBenefit = (ticketId: string, index: number) => {
+    setTickets(tickets.map((t: any) => {
+      if (t.id === ticketId) {
+        const newBenefits = t.benefits.filter((_: any, i: number) => i !== index);
+        return { ...t, benefits: newBenefits.length ? newBenefits : [""] };
+      }
+      return t;
+    }));
   };
 
   const addBankAccount = () => {
@@ -488,6 +527,62 @@ export function EditEventForm({ event }: { event: any }) {
                       <input type="hidden" name="discountStartDate[]" value="" />
                       <input type="hidden" name="discountEndDate[]" value="" />
                     </>
+                  )}
+
+                  {/* Benefit Checkbox */}
+                  <div className="md:col-span-12 mt-4 pt-4 border-t border-slate-200 border-dashed">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={ticket.hasBenefits}
+                        onChange={() => toggleBenefit(ticket.id)}
+                        className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                      />
+                      <span className="text-sm font-medium text-slate-700">Aktifkan Benefit Tiket?</span>
+                    </label>
+                    <input type="hidden" name="hasBenefits[]" value={ticket.hasBenefits ? "true" : "false"} />
+                    <input type="hidden" name="ticketIndex[]" value={index} />
+                  </div>
+
+                  {/* Benefit Inputs */}
+                  {ticket.hasBenefits && (
+                    <div className="md:col-span-12 mt-2 bg-indigo-50 p-4 rounded-lg border border-indigo-100 space-y-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-xs font-bold text-indigo-800">Daftar Benefit (Maksimal 10)</label>
+                        <button 
+                          type="button" 
+                          onClick={() => addBenefitToTicket(ticket.id)}
+                          disabled={ticket.benefits.length >= 10}
+                          className={`flex items-center text-xs font-bold px-2 py-1 rounded shadow-sm border ${ticket.benefits.length >= 10 ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-indigo-600 hover:text-indigo-800 border-indigo-200'}`}
+                        >
+                          <Plus className="w-3 h-3 mr-1" /> Tambah
+                        </button>
+                      </div>
+                      
+                      {ticket.benefits.map((ben: string, bIndex: number) => (
+                        <div key={bIndex} className="flex gap-2">
+                          <input 
+                            type="text" 
+                            name={`benefit_${index}[]`} 
+                            required 
+                            defaultValue={ben}
+                            onChange={(e) => updateBenefit(ticket.id, bIndex, e.target.value)}
+                            placeholder="Misal: Akses Backstage"
+                            className="flex-1 px-3 py-2 rounded-md border border-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => removeBenefit(ticket.id, bIndex)}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-md border border-transparent hover:border-red-100 transition-colors bg-white"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {!ticket.hasBenefits && (
+                    <input type="hidden" name={`benefit_${index}[]`} value="" />
                   )}
                 </div>
               ))}

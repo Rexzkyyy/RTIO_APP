@@ -34,7 +34,6 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
       } catch (error) {
         console.error(error);
         setErrorMsg("Gagal memproses gambar. Pastikan format gambar valid.");
-      } finally {
         setIsSubmitting(false);
       }
     }} className="space-y-6">
@@ -70,11 +69,11 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
         />
       </div>
 
-      {/* Desktop Button */}
+      {/* Submit Button */}
       <button 
         type="submit"
         disabled={isSubmitting}
-        className={`hidden md:flex w-full justify-center items-center px-6 py-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all shadow-lg shadow-emerald-500/30 ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
+        className={`flex w-full justify-center items-center px-4 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-base shadow-lg shadow-emerald-500/30 ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
       >
         {isSubmitting ? (
           <>
@@ -85,24 +84,6 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
           'Proses Pembayaran'
         )}
       </button>
-
-      {/* Mobile Sticky Bottom Button */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-50">
-        <button 
-          type="submit"
-          disabled={isSubmitting}
-          className={`w-full flex justify-center items-center px-6 py-3.5 bg-emerald-500 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Memproses...
-            </>
-          ) : (
-            'Proses Pembayaran'
-          )}
-        </button>
-      </div>
     </form>
   );
 }

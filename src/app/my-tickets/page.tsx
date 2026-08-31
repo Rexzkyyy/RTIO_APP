@@ -1,24 +1,86 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Ticket, Calendar, MapPin, ChevronRight, AlertCircle, ArrowLeft } from "lucide-react";
+import { Ticket, Calendar, ChevronRight, AlertCircle, Phone } from "lucide-react";
 import InteractiveBackground from "@/components/InteractiveBackground";
 import PublicNavbar from "@/components/PublicNavbar";
 
-export default async function MyTicketsPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+export default async function MyTicketsPage({ searchParams }: { searchParams: Promise<{ status?: string, phone?: string }> }) {
   const session = await getServerSession(authOptions);
+  const { status, phone } = await searchParams;
   
   if (!session || !session.user?.email) {
-    redirect("/profile");
+    if (!phone) {
+      return (
+        <div className="min-h-screen bg-slate-50/50 flex flex-col relative z-0">
+          <InteractiveBackground />
+          <PublicNavbar />
+          
+          <div className="flex-1 max-w-lg mx-auto w-full px-4 py-12 relative z-10 flex flex-col justify-center">
+            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-blue-500" />
+              </div>
+              <h1 className="text-xl font-bold text-slate-800 mb-2">Login Disarankan</h1>
+              <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                Kami sangat menyarankan Anda untuk login agar riwayat tiket Anda tersimpan dengan aman dan mudah diakses di kemudian hari tanpa perlu melacak secara manual.
+              </p>
+              
+              <Link href="/profile" className="block w-full py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-bold rounded-xl shadow-md hover:scale-[1.02] transition-transform mb-6">
+                Login Sekarang
+              </Link>
+              
+              <div className="relative flex items-center justify-center my-6">
+                <div className="border-t border-slate-200 w-full absolute left-0"></div>
+                <span className="bg-white px-4 text-xs font-bold text-slate-400 uppercase tracking-wider relative z-10">Atau lacak tanpa login</span>
+              </div>
+              
+              <form action="/my-tickets" method="GET" className="text-left space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center">
+                    <Phone className="w-4 h-4 mr-1.5" />
+                    Nomor WhatsApp
+                  </label>
+                  <div className="flex relative">
+                    <span className="inline-flex items-center px-4 py-3 rounded-l-xl border border-r-0 border-slate-300 bg-slate-100 text-slate-600 font-bold text-sm">
+                      +62
+                    </span>
+                    <input 
+                      type="tel" 
+                      name="phone" 
+                      placeholder="81234567890" 
+                      required 
+                      className="w-full px-4 py-3 rounded-r-xl border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+                <button type="submit" className="w-full py-3.5 bg-slate-800 text-white font-bold rounded-xl shadow-md hover:bg-slate-900 transition-colors flex justify-center items-center">
+                  <Ticket className="w-5 h-5 mr-2" />
+                  Lacak Tiket Saya
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      );
+    }
   }
 
-  const { status } = await searchParams;
+  let normalizedPhone = phone;
+  if (phone) {
+    let cleaned = phone.replace(/\D/g, '');
+    if (cleaned.startsWith('62')) normalizedPhone = '+' + cleaned;
+    else if (cleaned.startsWith('0')) normalizedPhone = '+62' + cleaned.substring(1);
+    else normalizedPhone = '+62' + cleaned;
+  }
 
-  const whereClause: any = {
-    buyerEmail: session.user.email
-  };
+  const whereClause: any = {};
+  if (session?.user?.email) {
+    whereClause.buyerEmail = session.user.email;
+  } else if (normalizedPhone) {
+    whereClause.buyerPhone = normalizedPhone;
+  }
 
   if (status && ['PENDING', 'APPROVED', 'REJECTED'].includes(status)) {
     whereClause.status = status;
@@ -45,10 +107,10 @@ export default async function MyTicketsPage({ searchParams }: { searchParams: Pr
         
         {/* Filters */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-          <Link href="/my-tickets" className={`px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${!status || status === 'ALL' ? 'bg-slate-800 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>Semua</Link>
-          <Link href="/my-tickets?status=PENDING" className={`px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${status === 'PENDING' ? 'bg-amber-100 text-amber-700 border border-amber-200 shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>Menunggu</Link>
-          <Link href="/my-tickets?status=APPROVED" className={`px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>Aktif</Link>
-          <Link href="/my-tickets?status=REJECTED" className={`px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${status === 'REJECTED' ? 'bg-red-100 text-red-700 border border-red-200 shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>Ditolak</Link>
+          <Link href={`/my-tickets${phone ? `?phone=${phone}` : ''}`} className={`px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${!status || status === 'ALL' ? 'bg-slate-800 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>Semua</Link>
+          <Link href={`/my-tickets?status=PENDING${phone ? `&phone=${phone}` : ''}`} className={`px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${status === 'PENDING' ? 'bg-amber-100 text-amber-700 border border-amber-200 shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>Menunggu</Link>
+          <Link href={`/my-tickets?status=APPROVED${phone ? `&phone=${phone}` : ''}`} className={`px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>Aktif</Link>
+          <Link href={`/my-tickets?status=REJECTED${phone ? `&phone=${phone}` : ''}`} className={`px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${status === 'REJECTED' ? 'bg-red-100 text-red-700 border border-red-200 shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>Ditolak</Link>
         </div>
 
         {transactions.length === 0 ? (
@@ -57,14 +119,24 @@ export default async function MyTicketsPage({ searchParams }: { searchParams: Pr
               <Ticket className="w-8 h-8 text-slate-300" />
             </div>
             <h2 className="text-lg font-bold text-slate-700 mb-2">Belum Ada Tiket</h2>
-            <p className="text-sm text-slate-500 mb-6">Anda belum memiliki tiket untuk kategori ini.</p>
+            <p className="text-sm text-slate-500 mb-6">Tidak ditemukan tiket{phone ? ` untuk nomor ${phone}` : ''}.</p>
+            {phone && (
+              <Link href="/my-tickets" className="inline-block px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl mb-4 hover:bg-slate-200 transition-colors text-sm mr-2">
+                Ganti Nomor
+              </Link>
+            )}
             <Link href="/" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-800 to-teal-500 text-white font-bold rounded-xl shadow-md hover:scale-105 transition-transform">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mr-2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               Cari Event Seru
             </Link>
           </div>
         ) : (
           <div className="space-y-4">
+            {phone && (
+              <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl mb-4 flex justify-between items-center">
+                <span className="text-sm text-emerald-800 font-medium">Menampilkan tiket untuk: <strong className="font-bold">{phone}</strong></span>
+                <Link href="/my-tickets" className="text-xs bg-white text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200 font-bold hover:bg-emerald-100 transition-colors">Ganti</Link>
+              </div>
+            )}
             {transactions.map(tx => (
               <Link 
                 href={`/public/${tx.id}/${tx.status === "APPROVED" ? "ticket" : (tx.paymentProofUrl ? "verify" : "pay")}`}

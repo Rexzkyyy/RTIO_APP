@@ -85,6 +85,8 @@ model TicketCategory {
   discountEndDate   DateTime? // Waktu selesai diskon
   quota         Int      // Batas kuota untuk kategori ini saat ini
   initialQuota  Int?     // Kuota saat pertama dibuat (untuk hitung % progress bar)
+  hasBenefits   Boolean  @default(false)
+  benefits      String[] // Array of strings (benefits)
 
   event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   tickets   Ticket[]
