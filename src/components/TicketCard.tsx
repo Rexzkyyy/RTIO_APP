@@ -108,7 +108,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
         <div className="absolute top-0 left-0 right-0 h-1.5 z-10" style={{ background: `linear-gradient(to right, ${primaryColor}, ${accentColor}, ${primaryColor})` }}></div>
 
         {/* Left Side: Poster */}
-        <div className={`w-full ${forceMobile ? 'min-h-[300px]' : 'md:w-2/5 md:min-h-full'} relative min-h-[300px] flex-shrink-0 bg-slate-900 overflow-hidden`}>
+        <div className={`w-full ${forceMobile ? 'min-h-[300px]' : 'md:w-1/3 md:min-h-full'} relative min-h-[300px] flex-shrink-0 bg-slate-900 overflow-hidden`}>
           {(data.event.ticketDesignUrl || data.event.bannerUrl) ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img 
@@ -123,13 +123,13 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
         </div>
 
         {/* Right Side: Details & Barcode */}
-        <div className={`w-full ${forceMobile ? '' : 'md:w-3/5'} flex flex-col relative p-6 sm:p-8 z-10`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
+        <div className={`w-full ${forceMobile ? '' : 'md:w-2/3'} flex flex-col relative p-4 sm:p-6 z-10`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
           
           {/* Main Info Section */}
           <div className="flex-1 flex flex-col">
-            <div className="mb-6 mt-4">
+            <div className="mb-4 mt-2">
               <h2 
-                className="text-3xl sm:text-5xl font-black uppercase tracking-tight leading-none mb-4 pb-1 drop-shadow-sm"
+                className="text-2xl sm:text-4xl font-black uppercase tracking-tight leading-none mb-3 pb-1 drop-shadow-sm"
                 style={{ color: textColor }}
               >
                 {data.event.title}
@@ -198,14 +198,14 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
           </div>
 
           {/* Barcode & Status Section */}
-          <div className="mt-6 pt-6 border-t-2 border-dashed border-slate-200/60 flex flex-col md:flex-row items-center justify-center gap-6">
+          <div className="mt-4 pt-4 border-t-2 border-dashed border-slate-200/60 flex flex-col md:flex-row items-center justify-center gap-6">
 
             {/* Barcode Display */}
-            <div className="text-center w-full md:w-auto flex flex-col items-center p-4 rounded-xl border border-slate-100 bg-white shadow-sm">
-              <span className="text-[10px] font-bold opacity-60 tracking-widest uppercase mb-3 block" style={{ color: textColor }}>
+            <div className="text-center w-full md:w-auto flex flex-col items-center p-3 rounded-xl border border-slate-100 bg-white shadow-sm">
+              <span className="text-[9px] font-bold opacity-60 tracking-widest uppercase mb-2 block" style={{ color: textColor }}>
                 ✦ SCAN UNTUK MASUK ✦
               </span>
-              <div className="rounded-lg overflow-hidden mix-blend-multiply flex justify-center w-full max-w-[200px]">
+              <div className="rounded-lg overflow-hidden mix-blend-multiply flex justify-center w-full max-w-[180px]">
                 <Barcode 
                   value={data.barcodeString}
                   width={1.5}

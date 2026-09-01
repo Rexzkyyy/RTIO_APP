@@ -53,9 +53,6 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900">Pendaftaran Berhasil!</h1>
-          <p className="text-slate-500 mt-2">
-            ID Transaksi: <span className="font-mono text-slate-700 bg-slate-100 px-2 py-1 rounded">{transaction.id}</span>
-          </p>
         </div>
 
         {/* Ticket Card */}
