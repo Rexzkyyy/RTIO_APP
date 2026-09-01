@@ -152,6 +152,7 @@ model Ticket {
   ticketCategoryId String
   barcodeString    String   @unique // String unik untuk digenerate jadi QR/Barcode
   isValidated      Boolean  @default(false)
+  checkedInAt      DateTime? // Waktu check-in saat tiket di-scan oleh validator
   holderName       String?  // Nama pemegang tiket individu
   holderPhone      String?  // Nomor HP pemegang tiket individu
   holderGender     String?  // Jenis Kelamin pemegang tiket (L/P)

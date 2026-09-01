@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Calendar, CreditCard, Ticket, LogOut, Users, Menu, ChevronLeft, BarChart, LayoutDashboard, MoreHorizontal } from "lucide-react";
+import { Calendar, CreditCard, Ticket, LogOut, Users, Menu, ChevronLeft, BarChart, LayoutDashboard, MoreHorizontal, ScanLine } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
 export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) {
@@ -99,6 +99,20 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
           >
             <CreditCard className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
             {!isCollapsed && <span>Validasi Pembayaran</span>}
+          </Link>
+
+          <Link 
+            prefetch={false}
+            href="/admin/scanner" 
+            className={`flex items-center p-3 transition-colors rounded-xl ${
+              pathname.includes('/admin/scanner') 
+                ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
+                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+            }`}
+            title="Scanner Tiket"
+          >
+            <ScanLine className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
+            {!isCollapsed && <span>Scanner Tiket</span>}
           </Link>
 
           {!isValidator && (
@@ -216,6 +230,17 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
         >
           <CreditCard className="w-5 h-5 mb-1" />
           <span className="text-[10px] font-medium">Validasi</span>
+        </Link>
+        <Link 
+          prefetch={false}
+          href="/admin/scanner" 
+          className={`flex flex-col items-center justify-center w-1/4 h-full ${
+            pathname.includes('/admin/scanner') && !isMobileMenuOpen ? 'text-emerald-600' : 'text-slate-400'
+          }`}
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          <ScanLine className="w-5 h-5 mb-1" />
+          <span className="text-[10px] font-medium">Scanner</span>
         </Link>
         {!isValidator && (
           <button 

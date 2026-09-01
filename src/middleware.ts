@@ -11,10 +11,11 @@ export async function middleware(request: NextRequest) {
     const bypassCookie = process.env.NODE_ENV !== 'production' ? request.cookies.get('dev-admin-bypass')?.value : null;
     if (bypassCookie) {
       if (bypassCookie === 'VALIDATOR') {
-        // If they go to /admin, redirect to /admin/transactions
+        // If they go to restricted pages, redirect to /admin/transactions
         if (request.nextUrl.pathname === '/admin' || request.nextUrl.pathname.startsWith('/admin/events') || request.nextUrl.pathname.startsWith('/admin/users') || request.nextUrl.pathname.startsWith('/admin/tickets')) {
           return NextResponse.redirect(new URL('/admin/transactions', request.url));
         }
+        // Validators can access scanner
       }
       return NextResponse.next();
     }
@@ -29,7 +30,7 @@ export async function middleware(request: NextRequest) {
     // @ts-ignore
     if (token.adminRole === 'VALIDATOR') {
       // Validators can only access transactions and the main admin dashboard (which we can redirect to transactions)
-      const allowedPaths = ['/admin/transactions', '/admin'];
+      const allowedPaths = ['/admin/transactions', '/admin/scanner', '/admin'];
       const isAllowed = allowedPaths.some(path => request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/'));
       
       if (!isAllowed) {
