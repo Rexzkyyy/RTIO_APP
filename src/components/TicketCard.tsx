@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import Barcode from 'react-barcode';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import { Download, Image as ImageIcon, CheckCircle2, Info, User, Tag, Ticket as TicketIcon, Calendar, MapPin, Mic, HeartHandshake } from "lucide-react";
+import { Download, Image as ImageIcon, CheckCircle2, Info, User, Tag, Ticket as TicketIcon, Calendar, MapPin, Mic, HeartHandshake, Globe } from "lucide-react";
 
 type TicketData = {
   barcodeString: string;
@@ -132,137 +132,121 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
           </div>
         )}
 
-        {/* Right Side: Details & Barcode (Wider & Landscape) */}
-        <div className={`w-full ${forceMobile ? '' : 'md:w-[72%]'} flex flex-col relative p-6 sm:p-8 z-10 overflow-hidden`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
+        {/* Right Side: Details & Barcode (Authentic Boarding Pass Layout) */}
+        <div className={`w-full ${forceMobile ? '' : 'md:w-[72%]'} flex flex-col md:flex-row relative z-10 overflow-hidden`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
           
-          {/* Depth Overlays (Noise & Gradient) */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-black/[0.03] pointer-events-none mix-blend-overlay"></div>
-          <div className="absolute inset-0 opacity-[0.06] pointer-events-none mix-blend-multiply" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
-          
-          <div className="flex-1 flex flex-col justify-between h-full relative z-10">
+          {/* Watermark (Globe / Map) */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none z-0">
+            <Globe className="w-[120%] h-[120%]" style={{ color: textColor }} strokeWidth={0.5} />
+          </div>
+
+          {/* MAIN TICKET INFO */}
+          <div className="flex-1 flex flex-col p-5 sm:p-6 lg:p-8 relative z-10">
             
-            {/* Title & Desc */}
-            <div className="mb-5 border-b border-slate-300/60 pb-5 relative">
+            {/* Top Bar */}
+            <div className="flex items-center justify-between mb-4 pb-4 border-b-2 border-slate-900/10">
               <h2 
-                className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter leading-[1.05]"
+                className="text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-[1.05] line-clamp-2 pr-4"
                 style={{ color: textColor }}
                 title={data.event.title}
               >
                 {data.event.title}
               </h2>
-              {data.event.description && (
-                <div className="text-[13px] font-medium mt-3 leading-relaxed opacity-80" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: data.event.description }}></div>
-              )}
-            </div>
-
-            {/* Info Grid (Authentic Minimalist Boarding Pass Layout) */}
-            <div className="border border-slate-300/80 rounded-xl overflow-hidden mb-5 bg-white/50 shadow-[0_2px_10px_rgba(0,0,0,0.02)] backdrop-blur-sm">
-              {/* Top Row */}
-              <div className="grid grid-cols-2 md:grid-cols-3 border-b border-slate-300/80">
-                {/* Participant Name */}
-                <div className="flex flex-col p-3 md:p-4 col-span-2 md:col-span-1 border-r border-slate-300/80 bg-white/30">
-                  <span className="text-[9px] uppercase font-black tracking-[0.15em] opacity-60 mb-1" style={{ color: primaryColor }}>
-                    Nama Penumpang
-                  </span>
-                  <span className="text-[15px] font-black uppercase truncate" style={{ color: textColor }} title={data.transaction.buyerName}>
-                    {data.transaction.buyerName}
-                  </span>
-                </div>
-                
-                {/* Category */}
-                <div className="flex flex-col p-3 md:p-4 border-r border-slate-300/80 bg-white/30">
-                  <span className="text-[9px] uppercase font-black tracking-[0.15em] opacity-60 mb-1" style={{ color: primaryColor }}>
-                    Kategori Tiket
-                  </span>
-                  <span className="text-[15px] font-bold uppercase truncate" style={{ color: textColor }}>
-                    {data.ticketCategoryName}
-                  </span>
-                </div>
-                
-                {/* Quantity */}
-                <div className="flex flex-col p-3 md:p-4 bg-slate-50/50">
-                  <span className="text-[9px] uppercase font-black tracking-[0.15em] opacity-60 mb-1" style={{ color: primaryColor }}>
-                    Jumlah Masuk
-                  </span>
-                  <span className="text-[15px] font-bold" style={{ color: textColor }}>
-                    {data.transaction.totalTickets} ORANG
-                  </span>
-                </div>
-              </div>
-
-              {/* Bottom Row */}
-              <div className="grid grid-cols-2 md:grid-cols-3">
-                {/* Date & Time */}
-                <div className="flex flex-col p-3 md:p-4 border-r border-slate-300/80 bg-slate-50/50">
-                  <span className="text-[9px] uppercase font-black tracking-[0.15em] opacity-60 mb-1" style={{ color: primaryColor }}>
-                    Jadwal Acara
-                  </span>
-                  <span className="text-[13px] font-bold leading-tight" style={{ color: textColor }}>
-                    {new Date(data.event.eventDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}<br/>
-                    <span style={{ color: primaryColor }}>{new Date(data.event.eventDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA</span>
-                  </span>
-                </div>
-
-                {/* Location */}
-                <div className="flex flex-col p-3 md:p-4 col-span-2 md:col-span-2 bg-white/30">
-                  <span className="text-[9px] uppercase font-black tracking-[0.15em] opacity-60 mb-1" style={{ color: primaryColor }}>
-                    Lokasi Acara
-                  </span>
-                  <span className="text-[13px] font-bold leading-tight line-clamp-2 opacity-90" style={{ color: textColor }}>
-                    {data.event.location}
-                  </span>
-                </div>
+              <div className="hidden sm:flex px-3 py-1.5 rounded bg-slate-900 text-white text-[10px] font-black tracking-widest uppercase flex-shrink-0">
+                {data.ticketCategoryName}
               </div>
             </div>
 
-            {/* Bottom Row: Sponsors/Artists & Barcode */}
-            <div className="mt-auto pt-4 border-t border-slate-300/60 flex flex-col md:flex-row items-end justify-between gap-6">
+            {data.event.description && (
+              <div className="text-[11px] font-medium mb-5 leading-relaxed opacity-70 line-clamp-2" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: data.event.description }}></div>
+            )}
+
+            {/* Gray Bordered Grid ("kotak kotak garis abu abu") */}
+            <div className="border border-slate-300 rounded-lg overflow-hidden flex flex-col mt-auto bg-white/50 backdrop-blur-sm shadow-sm">
               
-              <div className="flex-1 w-full space-y-4 pr-6">
+              {/* Row 1: Name & Category */}
+              <div className="grid grid-cols-3 border-b border-slate-300">
+                <div className="p-3 border-r border-slate-300 col-span-2">
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nama Penumpang</span>
+                  <span className="text-sm font-black uppercase truncate block" style={{ color: textColor }}>{data.transaction.buyerName}</span>
+                </div>
+                <div className="p-3 bg-slate-50/50">
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Jml Tiket</span>
+                  <span className="text-sm font-bold uppercase" style={{ color: textColor }}>{data.transaction.totalTickets} Orang</span>
+                </div>
+              </div>
+              
+              {/* Row 2: Date, Time, Location */}
+              <div className="grid grid-cols-4 border-b border-slate-300">
+                <div className="p-3 border-r border-slate-300 col-span-2 sm:col-span-1">
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Tanggal</span>
+                  <span className="text-xs font-bold" style={{ color: textColor }}>
+                    {new Date(data.event.eventDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+                <div className="p-3 border-r border-slate-300 col-span-2 sm:col-span-1">
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Waktu</span>
+                  <span className="text-xs font-bold" style={{ color: primaryColor }}>
+                    {new Date(data.event.eventDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA
+                  </span>
+                </div>
+                <div className="p-3 col-span-4 sm:col-span-2 bg-slate-50/50 border-t sm:border-t-0 border-slate-300">
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Lokasi</span>
+                  <span className="text-xs font-bold truncate block" style={{ color: textColor }}>{data.event.location}</span>
+                </div>
+              </div>
+              
+              {/* Row 3: Artists / Sponsors */}
+              <div className="p-3 text-[10px] bg-white/30 flex flex-col sm:flex-row gap-4">
                 {data.event.artists.length > 0 && (
-                  <div>
-                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-50 mb-1 block" style={{ color: textColor }}>
-                      Penampil Khusus
-                    </span>
-                    <span className="text-[13px] font-bold opacity-90 leading-relaxed" style={{ color: textColor }}>
-                      {data.event.artists.join(', ')}
-                    </span>
+                  <div className="flex-1">
+                    <span className="font-bold text-slate-400 uppercase tracking-wider mr-2">Penampil:</span>
+                    <span className="font-medium opacity-90" style={{ color: textColor }}>{data.event.artists.join(', ')}</span>
                   </div>
                 )}
                 {data.event.sponsors.length > 0 && (
-                  <div>
-                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-50 mb-1 block" style={{ color: textColor }}>
-                      Didukung Oleh
-                    </span>
-                    <span className="text-[12px] font-medium opacity-70 leading-relaxed" style={{ color: textColor }}>
-                      {data.event.sponsors.join(' • ')}
-                    </span>
+                  <div className="flex-1">
+                    <span className="font-bold text-slate-400 uppercase tracking-wider mr-2">Didukung:</span>
+                    <span className="font-medium opacity-90" style={{ color: textColor }}>{data.event.sponsors.join(' • ')}</span>
                   </div>
                 )}
               </div>
 
-              <div className="w-full md:w-auto flex flex-col items-center p-4 rounded-xl border border-slate-300/80 bg-white shadow-sm flex-shrink-0">
-                <span className="text-[8px] font-black opacity-50 tracking-[0.25em] uppercase mb-3 block text-center border-b border-slate-200/60 w-full pb-2" style={{ color: textColor }}>
-                  SCAN UNTUK MASUK
-                </span>
-                <div className="overflow-hidden mix-blend-multiply flex justify-center w-full max-w-[160px] bg-white">
-                  <Barcode 
-                    value={data.barcodeString}
-                    width={1.4}
-                    height={45}
-                    displayValue={false}
-                    background="transparent"
-                    lineColor={textColor}
-                    margin={0}
-                  />
-                </div>
-                <span className="font-mono text-xs font-black tracking-[0.3em] mt-3 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 w-full text-center" title={data.barcodeString}>
-                  {data.barcodeString}
-                </span>
-              </div>
+            </div>
+          </div>
 
+          {/* RIGHT STUB (Tear-off Barcode Section) */}
+          <div className="w-full md:w-[220px] border-t-2 md:border-t-0 md:border-l-[3px] border-dashed border-slate-300/80 flex flex-col p-5 sm:p-6 bg-slate-50/80 relative z-10 flex-shrink-0">
+            
+            {/* Stub Header */}
+            <div className="w-full py-2 mb-4 rounded bg-slate-900 text-white text-center">
+              <span className="text-[10px] font-black tracking-[0.2em] uppercase">Entry Pass</span>
+            </div>
+            
+            <div className="flex-1 flex flex-col justify-center items-center">
+              <span className="text-[9px] font-bold opacity-50 tracking-widest uppercase mb-1 block text-center" style={{ color: textColor }}>
+                Pindai Disini
+              </span>
+              <div className="overflow-hidden mix-blend-multiply flex justify-center w-full bg-transparent mt-2">
+                <Barcode 
+                  value={data.barcodeString}
+                  width={1.5}
+                  height={50}
+                  displayValue={false}
+                  background="transparent"
+                  lineColor={textColor}
+                  margin={0}
+                />
+              </div>
+              <span className="font-mono text-xs font-black tracking-[0.2em] mt-3 py-1.5 px-2 rounded bg-white border border-slate-200 text-slate-800 w-full text-center shadow-sm">
+                {data.barcodeString}
+              </span>
             </div>
 
+            <div className="mt-4 pt-4 border-t border-slate-300/60 text-center">
+              <span className="text-[8px] font-bold text-slate-400 uppercase block tracking-wider">Kategori</span>
+              <span className="text-xs font-black uppercase" style={{ color: primaryColor }}>{data.ticketCategoryName}</span>
+            </div>
           </div>
         </div>
       </div>
