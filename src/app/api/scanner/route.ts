@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import fs from "fs";
+import path from "path";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,6 +22,16 @@ export async function POST(req: NextRequest) {
 
     if (!barcodeString || typeof barcodeString !== "string" || barcodeString.trim() === "") {
       return NextResponse.json({ success: false, message: "Kode QR tidak valid." }, { status: 400 });
+    }
+
+    console.log("[SCANNER API] Menerima request barcode:", barcodeString);
+    try {
+      fs.appendFileSync(
+        path.join(process.cwd(), "scanner_log.txt"),
+        `[${new Date().toISOString()}] Scanned: "${barcodeString}"\n`
+      );
+    } catch (e) {
+      console.error(e);
     }
 
     // Cari tiket berdasarkan barcodeString
