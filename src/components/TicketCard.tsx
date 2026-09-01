@@ -130,14 +130,14 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
             {/* Title & Desc */}
             <div className="mb-4 border-b-2 border-slate-200/60 border-dashed pb-4">
               <h2 
-                className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight leading-none drop-shadow-sm line-clamp-2"
+                className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight leading-none drop-shadow-sm"
                 style={{ color: textColor }}
                 title={data.event.title}
               >
                 {data.event.title}
               </h2>
               {data.event.description && (
-                <div className="text-[12px] font-medium line-clamp-1 mt-2 italic opacity-70" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: data.event.description }}></div>
+                <div className="text-[12px] font-medium mt-3 leading-relaxed italic opacity-80" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: data.event.description }}></div>
               )}
             </div>
 
@@ -180,17 +180,17 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
             {/* Bottom Row: Sponsors/Artists & Barcode */}
             <div className="mt-auto pt-4 border-t-2 border-slate-200/60 border-dashed flex flex-col md:flex-row items-end justify-between gap-4">
               
-              <div className="flex-1 w-full text-xs space-y-2">
+              <div className="flex-1 w-full text-xs space-y-3 pr-6">
                 {data.event.artists.length > 0 && (
                   <div>
-                    <span className="text-[8px] uppercase font-black tracking-widest opacity-50 block">Penampil</span>
-                    <span className="text-[11px] font-bold opacity-80 leading-tight line-clamp-1">{data.event.artists.join(', ')}</span>
+                    <span className="text-[8px] uppercase font-black tracking-widest opacity-50 block mb-1">Penampil</span>
+                    <span className="text-[11px] font-bold opacity-80 leading-relaxed">{data.event.artists.join(', ')}</span>
                   </div>
                 )}
                 {data.event.sponsors.length > 0 && (
                   <div>
-                    <span className="text-[8px] uppercase font-black tracking-widest opacity-50 block">Didukung Oleh</span>
-                    <span className="text-[10px] font-medium opacity-70 leading-tight line-clamp-1">{data.event.sponsors.join(' • ')}</span>
+                    <span className="text-[8px] uppercase font-black tracking-widest opacity-50 block mb-1">Didukung Oleh</span>
+                    <span className="text-[10px] font-medium opacity-70 leading-relaxed">{data.event.sponsors.join(' • ')}</span>
                   </div>
                 )}
               </div>
