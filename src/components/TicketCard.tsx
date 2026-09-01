@@ -133,12 +133,16 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
         )}
 
         {/* Right Side: Details & Barcode (Wider & Landscape) */}
-        <div className={`w-full ${forceMobile ? '' : 'md:w-[72%]'} flex flex-col relative p-6 sm:p-8 z-10`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
+        <div className={`w-full ${forceMobile ? '' : 'md:w-[72%]'} flex flex-col relative p-6 sm:p-8 z-10 overflow-hidden`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
           
-          <div className="flex-1 flex flex-col justify-between h-full">
+          {/* Depth Overlays (Noise & Gradient) */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-black/[0.03] pointer-events-none mix-blend-overlay"></div>
+          <div className="absolute inset-0 opacity-[0.06] pointer-events-none mix-blend-multiply" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+          
+          <div className="flex-1 flex flex-col justify-between h-full relative z-10">
             
             {/* Title & Desc */}
-            <div className="mb-4 border-b-[3px] border-slate-200/50 border-dotted pb-5">
+            <div className="mb-5 border-b-[3px] border-slate-200/60 border-dotted pb-5 relative">
               <h2 
                 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter leading-[1.05]"
                 style={{ 
@@ -154,49 +158,55 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               )}
             </div>
 
-            {/* Info Grid (Balanced layout with Premium Icons) */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-y-5 gap-x-6 mb-4 mt-2">
+            {/* Info Grid (Premium Box Layout) */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5 mt-2">
+              
               {/* Participant Name */}
-              <div className="flex flex-col col-span-2 md:col-span-1 md:border-r border-slate-200/50 pr-4">
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1 flex items-center" style={{ color: primaryColor }}>
-                  <User className="w-3 h-3 mr-1.5" /> Nama
+              <div className="flex flex-col col-span-2 md:col-span-1 p-3 rounded-xl bg-white/60 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-sm relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(0,0,0,0.06)] transition-all duration-300">
+                <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/90 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1.5 flex items-center relative z-10" style={{ color: primaryColor }}>
+                  <User className="w-3.5 h-3.5 mr-1.5" /> Nama
                 </span>
-                <span className="text-[15px] font-black truncate tracking-wide" style={{ color: textColor }} title={data.transaction.buyerName}>{data.transaction.buyerName.toUpperCase()}</span>
+                <span className="text-[15px] font-black truncate tracking-wide relative z-10" style={{ color: textColor }} title={data.transaction.buyerName}>{data.transaction.buyerName.toUpperCase()}</span>
               </div>
               
               {/* Category */}
-              <div className="flex flex-col border-r border-slate-200/50 pr-4">
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1 flex items-center" style={{ color: primaryColor }}>
-                  <Tag className="w-3 h-3 mr-1.5" /> Kategori
+              <div className="flex flex-col p-3 rounded-xl bg-white/60 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-sm relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(0,0,0,0.06)] transition-all duration-300">
+                <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/90 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1.5 flex items-center relative z-10" style={{ color: primaryColor }}>
+                  <Tag className="w-3.5 h-3.5 mr-1.5" /> Kategori
                 </span>
-                <span className="text-[15px] font-bold truncate" style={{ color: textColor }}>{data.ticketCategoryName.toUpperCase()}</span>
+                <span className="text-[15px] font-bold truncate relative z-10" style={{ color: textColor }}>{data.ticketCategoryName.toUpperCase()}</span>
               </div>
               
               {/* Quantity */}
-              <div className="flex flex-col pr-4">
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1 flex items-center" style={{ color: primaryColor }}>
-                  <TicketIcon className="w-3 h-3 mr-1.5" /> Jml Tiket
+              <div className="flex flex-col p-3 rounded-xl bg-white/60 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-sm relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(0,0,0,0.06)] transition-all duration-300">
+                <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/90 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1.5 flex items-center relative z-10" style={{ color: primaryColor }}>
+                  <TicketIcon className="w-3.5 h-3.5 mr-1.5" /> Jml Tiket
                 </span>
-                <span className="text-[15px] font-bold" style={{ color: textColor }}>{data.transaction.totalTickets} Tiket</span>
+                <span className="text-[15px] font-bold relative z-10" style={{ color: textColor }}>{data.transaction.totalTickets} Tiket</span>
               </div>
 
               {/* Date & Time */}
-              <div className="flex flex-col md:border-r border-slate-200/50 pr-4">
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1 flex items-center" style={{ color: primaryColor }}>
-                  <Calendar className="w-3 h-3 mr-1.5" /> Waktu
+              <div className="flex flex-col p-3 rounded-xl bg-white/60 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-sm relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(0,0,0,0.06)] transition-all duration-300">
+                <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/90 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1.5 flex items-center relative z-10" style={{ color: primaryColor }}>
+                  <Calendar className="w-3.5 h-3.5 mr-1.5" /> Waktu
                 </span>
-                <span className="text-[13px] font-bold leading-snug" style={{ color: textColor }}>
+                <span className="text-[13px] font-bold leading-snug relative z-10" style={{ color: textColor }}>
                   {new Date(data.event.eventDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}<br/>
                   <span style={{ color: primaryColor }}>{new Date(data.event.eventDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA</span>
                 </span>
               </div>
 
               {/* Location */}
-              <div className="flex flex-col pr-4 col-span-2 md:col-span-2">
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1 flex items-center" style={{ color: primaryColor }}>
-                  <MapPin className="w-3 h-3 mr-1.5" /> Lokasi
+              <div className="flex flex-col col-span-2 md:col-span-2 p-3 rounded-xl bg-white/60 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-sm relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(0,0,0,0.06)] transition-all duration-300">
+                <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/90 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1.5 flex items-center relative z-10" style={{ color: primaryColor }}>
+                  <MapPin className="w-3.5 h-3.5 mr-1.5" /> Lokasi
                 </span>
-                <span className="text-[13px] font-bold leading-snug line-clamp-2 opacity-90" style={{ color: textColor }}>{data.event.location}</span>
+                <span className="text-[13px] font-bold leading-snug line-clamp-2 opacity-90 relative z-10" style={{ color: textColor }}>{data.event.location}</span>
               </div>
             </div>
 
