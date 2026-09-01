@@ -8,7 +8,6 @@ import { Download, Image as ImageIcon, MapPin, Calendar, Clock, User, Tag, Users
 
 type TicketData = {
   barcodeString: string;
-  ticketIndex?: { current: number; total: number };
   transaction: {
     id: string;
     buyerName: string;
@@ -124,18 +123,10 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
         </div>
 
         {/* Right Side: Details & Barcode */}
-        <div className={`w-full ${forceMobile ? '' : 'md:w-3/5 md:flex-row'} flex flex-col relative`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
+        <div className={`w-full ${forceMobile ? '' : 'md:w-3/5'} flex flex-col relative p-6 sm:p-8 z-10`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
           
           {/* Main Info Section */}
-          <div className={`flex-1 p-6 sm:p-8 flex flex-col border-b ${forceMobile ? '' : 'md:border-b-0 md:border-r'} border-slate-200 border-dashed relative z-10 bg-white/40`}>
-            {/* Cutouts for dashed border effect */}
-            {borderRadius !== 'rounded-none' && (
-              <>
-                <div className={`${forceMobile ? 'hidden' : 'hidden md:block'} absolute -top-4 -right-4 w-8 h-8 rounded-full border border-slate-200 z-10 shadow-inner`} style={{ backgroundColor: bgColor }}></div>
-                <div className={`${forceMobile ? 'hidden' : 'hidden md:block'} absolute -bottom-4 -right-4 w-8 h-8 rounded-full border border-slate-200 z-10 shadow-inner`} style={{ backgroundColor: bgColor }}></div>
-              </>
-            )}
-            
+          <div className="flex-1 flex flex-col">
             <div className="mb-6 mt-4">
               <h2 
                 className="text-3xl sm:text-5xl font-black uppercase tracking-tight leading-none mb-4 pb-1 drop-shadow-sm"
@@ -162,9 +153,9 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] uppercase font-extrabold tracking-[0.2em] flex items-center mb-1" style={{ color: primaryColor }}><Users className="w-3.5 h-3.5 mr-1.5" /> Tiket Ke</span>
+                  <span className="text-[10px] uppercase font-extrabold tracking-[0.2em] flex items-center mb-1" style={{ color: primaryColor }}><Users className="w-3.5 h-3.5 mr-1.5" /> Jumlah</span>
                   <span className="text-lg font-extrabold" style={{ color: textColor }}>
-                    {data.ticketIndex ? `${data.ticketIndex.current} / ${data.ticketIndex.total}` : data.transaction.totalTickets} 
+                    {data.transaction.totalTickets} 
                     <span className="text-sm font-medium opacity-60 ml-1">Tiket</span>
                   </span>
                 </div>
@@ -206,33 +197,35 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
             </div>
           </div>
 
-          {/* Barcode Stub Section */}
-          <div className={`w-full ${forceMobile ? '' : 'md:w-56'} p-6 sm:p-8 flex flex-col items-center justify-center opacity-95 relative bg-white/40`} style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
-            <div className="mb-6 w-full">
+          {/* Barcode & Status Section */}
+          <div className="mt-6 pt-6 border-t-2 border-dashed border-slate-200/60 flex flex-col md:flex-row items-center gap-6 justify-between">
+            {/* Status (Valid/Pending) */}
+            <div className="w-full md:w-auto">
               {isApproved ? (
-                <div className="flex items-center justify-center px-3 py-2 border rounded-lg w-full shadow-sm" style={{ borderColor: primaryColor, color: primaryColor, backgroundColor: 'rgba(255,255,255,0.5)' }}>
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold leading-tight tracking-wide">TIKET VALID</span>
-                    <span className="text-[10px] leading-tight opacity-80">Lunas</span>
+                <div className="flex flex-row md:flex-col items-center justify-center px-4 py-3 border rounded-xl shadow-sm w-full h-full" style={{ borderColor: primaryColor, color: primaryColor, backgroundColor: 'rgba(255,255,255,0.7)' }}>
+                  <CheckCircle2 className="w-6 h-6 mr-3 md:mr-0 md:mb-2" />
+                  <div className="flex flex-col items-start md:items-center">
+                    <span className="text-sm font-black tracking-widest">TIKET VALID</span>
+                    <span className="text-xs font-medium opacity-80">Siap Digunakan</span>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center px-3 py-2 border rounded-lg text-amber-700 w-full shadow-sm" style={{ borderColor: '#f59e0b', backgroundColor: 'rgba(255,255,255,0.5)' }}>
-                  <Info className="w-4 h-4 mr-2" />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold leading-tight tracking-wide">MENUNGGU</span>
-                    <span className="text-[10px] leading-tight opacity-80">Verifikasi</span>
+                <div className="flex flex-row md:flex-col items-center justify-center px-4 py-3 border rounded-xl text-amber-700 shadow-sm w-full h-full" style={{ borderColor: '#f59e0b', backgroundColor: 'rgba(255,255,255,0.7)' }}>
+                  <Info className="w-6 h-6 mr-3 md:mr-0 md:mb-2" />
+                  <div className="flex flex-col items-start md:items-center">
+                    <span className="text-sm font-black tracking-widest">MENUNGGU</span>
+                    <span className="text-xs font-medium opacity-80">Verifikasi Admin</span>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="text-center w-full flex flex-col items-center">
-              <span className="text-[10px] font-bold opacity-50 tracking-widest uppercase mb-2 block" style={{ color: textColor }}>
+            {/* Barcode Display */}
+            <div className="text-center w-full md:w-auto flex flex-col items-center p-4 rounded-xl border border-slate-100 bg-white shadow-sm">
+              <span className="text-[10px] font-bold opacity-60 tracking-widest uppercase mb-3 block" style={{ color: textColor }}>
                 ✦ SCAN UNTUK MASUK ✦
               </span>
-              <div className="p-2 rounded-xl border border-slate-200 inline-block mb-3 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" style={{ backgroundColor: bgColor }}>
+              <div className="rounded-lg overflow-hidden mix-blend-multiply flex justify-center w-full max-w-[200px]">
                 <Barcode 
                   value={data.barcodeString}
                   width={1.5}
@@ -243,7 +236,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
                   margin={0}
                 />
               </div>
-              <span className="font-mono text-[10px] font-black tracking-widest px-2 py-1 rounded border border-slate-200 inline-block w-full max-w-[150px] truncate shadow-inner" style={{ color: textColor, backgroundColor: 'rgba(0,0,0,0.02)' }} title={data.barcodeString}>
+              <span className="font-mono text-sm font-black tracking-[0.2em] mt-3 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 w-full" title={data.barcodeString}>
                 {data.barcodeString}
               </span>
             </div>

@@ -365,8 +365,7 @@ export default function TicketDesignEditor({ event }: { event: EventWithConfig }
               forceMobile={previewMode === 'mobile'}
               data={{
                 ...previewData,
-                barcodeString: 'TX-12345678',
-                ticketIndex: { current: 1, total: previewData.transaction.totalTickets }
+                barcodeString: 'TX-12345678'
               }}
             />
             

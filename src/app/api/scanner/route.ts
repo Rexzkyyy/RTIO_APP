@@ -60,26 +60,59 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Validasi akses validator — hanya boleh scan tiket dari event yang ditugaskan
+    // Cek apakah Admin/Validator punya akses ke Event tiket ini
     // @ts-ignore
-    const adminId = session?.user?.adminId;
-    // @ts-ignore
-    const isValidator = session?.user?.adminRole === "VALIDATOR";
-
-    if (isValidator && adminId) {
-      const access = await prisma.adminEventAccess.findFirst({
+    if (session.user.role === "VALIDATOR") {
+      const hasAccess = await prisma.adminEventAccess.findUnique({
         where: {
-          adminId,
-          eventId: ticket.transaction.event.id,
-        },
+          adminId_eventId: {
+            // @ts-ignore
+            adminId: session.user.id,
+            eventId: ticket.transaction.eventId
+          }
+        }
       });
-      if (!access) {
+      if (!hasAccess) {
         return NextResponse.json({
           success: false,
-          status: "ACCESS_DENIED",
-          message: "Kamu tidak memiliki akses untuk event ini.",
+          status: "FORBIDDEN",
+          message: "Kamu tidak memiliki akses untuk men-scan tiket event ini.",
         });
       }
+    }
+
+    // --- QUOTA-BASED CHECK-IN LOGIC ---
+    // Fetch all tickets in the same transaction
+    const allTickets = await prisma.ticket.findMany({
+      where: { transactionId: ticket.transactionId },
+      orderBy: { id: 'asc' }
+    });
+
+    const checkedInTickets = allTickets.filter(t => t.isValidated);
+    const checkedInCount = checkedInTickets.length;
+    const totalTickets = allTickets.length;
+    const uncheckedTicket = allTickets.find(t => !t.isValidated);
+
+    // Jika semua tiket dalam transaksi ini sudah terpakai
+    if (!uncheckedTicket) {
+      // Format tanggal check-in terakhir
+      const lastCheckIn = checkedInTickets[checkedInTickets.length - 1].checkedInAt;
+      const formattedDate = lastCheckIn ? new Date(lastCheckIn).toLocaleString('id-ID', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      }) : "Tidak diketahui";
+
+      return NextResponse.json({
+        success: false,
+        status: "ALREADY_SCANNED",
+        message: `Kuota habis! Semua tiket (${totalTickets}/${totalTickets}) sudah digunakan (Terakhir pada ${formattedDate}).`,
+        ticket: {
+          holderName: ticket.holderName || ticket.transaction.buyerName,
+          eventTitle: ticket.transaction.event.title,
+          category: ticket.ticketCategory.name,
+          checkedInAt: lastCheckIn,
+        }
+      });
     }
 
     // Transaksi belum diapprove
@@ -97,43 +130,29 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Tiket sudah di-scan sebelumnya
-    if (ticket.isValidated) {
-      return NextResponse.json({
-        success: false,
-        status: "ALREADY_CHECKED_IN",
-        message: "Tiket ini sudah digunakan untuk masuk!",
-        ticket: {
-          holderName: ticket.holderName || ticket.transaction.buyerName,
-          eventTitle: ticket.transaction.event.title,
-          category: ticket.ticketCategory.name,
-          checkedInAt: ticket.checkedInAt,
-        },
-      });
-    }
-
-    // ✅ Tiket valid — lakukan check-in
+    // Update 1 tiket yang belum terpakai menjadi terpakai
     const now = new Date();
     await prisma.ticket.update({
-      where: { id: ticket.id },
+      where: { id: uncheckedTicket.id },
       data: {
         isValidated: true,
-        checkedInAt: now,
-      },
+        checkedInAt: now
+      }
     });
 
     return NextResponse.json({
       success: true,
       status: "VALID",
-      message: "Check-in berhasil! Selamat datang 🎉",
+      message: `Check-in berhasil! (Kuota terpakai: ${checkedInCount + 1}/${totalTickets})`,
       ticket: {
-        id: ticket.id,
-        holderName: ticket.holderName || ticket.transaction.buyerName,
-        holderPhone: ticket.holderPhone || ticket.transaction.buyerPhone,
+        id: uncheckedTicket.id,
+        holderName: uncheckedTicket.holderName || ticket.transaction.buyerName,
+        holderPhone: uncheckedTicket.holderPhone || ticket.transaction.buyerPhone,
         eventTitle: ticket.transaction.event.title,
         category: ticket.ticketCategory.name,
-        checkedInAt: now,
-      },
+        transactionId: ticket.transaction.id,
+        checkedInAt: now
+      }
     });
   } catch (error) {
     console.error("[SCANNER API ERROR]", error);

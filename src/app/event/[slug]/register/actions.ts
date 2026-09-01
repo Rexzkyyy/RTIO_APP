@@ -152,21 +152,22 @@ export async function submitRegistration(formData: FormData) {
         });
 
         // ── Step 5: Create individual Ticket records (MENGGUNAKAN CREATEMANY). ─────────────────────────
-        const ticketsToCreate = Array.from({ length: ticketQuantity }, (_, i) => {
+        const ticketsToCreate: any[] = [];
+        for (let i = 0; i < ticketQuantity; i++) {
           const hName = formData.get(`holderName_${i}`) as string;
           const hPhone = formData.get(`holderPhone_${i}`) as string;
           const hGender = formData.get(`holderGender_${i}`) as string;
-          const shortId = crypto.randomBytes(4).toString('hex').toUpperCase();
+          const shortId = crypto.randomUUID().split('-')[0].toUpperCase();
           const newBarcode = `TX-${shortId}`;
-          return {
+          ticketsToCreate.push({
             transactionId: newTransaction.id,
             ticketCategoryId: category.id,
             barcodeString: newBarcode,
             holderName: hName || buyerName,
             holderPhone: hPhone || buyerPhone,
             holderGender: hGender || buyerGender,
-          };
-        });
+          });
+        }
 
         await tx.ticket.createMany({
           data: ticketsToCreate,
