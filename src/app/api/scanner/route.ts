@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: false,
         status: "NOT_FOUND",
-        message: "Tiket tidak ditemukan. QR tidak valid.",
+        message: `Tiket tidak ditemukan (Teks dibaca: "${barcodeString}")`,
       });
     }
 
