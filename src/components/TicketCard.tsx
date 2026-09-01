@@ -101,7 +101,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
       {/* Ticket Wrapper */}
       <div 
         ref={ticketRef} 
-        className={`w-full max-w-6xl flex flex-col ${forceMobile ? '' : 'md:flex-row'} shadow-2xl shadow-slate-900/5 ${borderRadius} overflow-hidden relative border border-slate-200`}
+        className={`w-full flex flex-col ${forceMobile ? '' : 'md:flex-row'} shadow-2xl shadow-slate-900/5 ${borderRadius} overflow-hidden relative border border-slate-200`}
         style={{ backgroundColor: bgColor }}
       >
         {/* Accent Strip at Top */}
@@ -130,7 +130,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
             {/* Title & Desc */}
             <div className="mb-4 border-b-2 border-slate-200/60 border-dashed pb-4">
               <h2 
-                className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight leading-none drop-shadow-sm truncate"
+                className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight leading-none drop-shadow-sm line-clamp-2"
                 style={{ color: textColor }}
                 title={data.event.title}
               >
@@ -223,7 +223,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
 
       {/* Download Buttons */}
       {!isPreview && (
-        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-6xl no-print">
+        <div className="flex flex-col sm:flex-row gap-4 w-full mt-2 no-print">
           <button 
             onClick={() => {
               const text = `Halo! Ini adalah E-Ticket saya untuk acara *${data.event.title}*.\n\nKlik tautan ini untuk melihat tiket:\n${window.location.href}`;

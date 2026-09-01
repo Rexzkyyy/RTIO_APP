@@ -56,7 +56,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
         </div>
 
         {/* Ticket Card */}
-        <div className="w-full max-w-6xl">
+        <div className="w-full">
           <TicketCard 
             data={{
               barcodeString: transaction.tickets[0]?.barcodeString || 'UNKNOWN',
