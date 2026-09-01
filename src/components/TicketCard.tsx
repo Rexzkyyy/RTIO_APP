@@ -108,7 +108,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
         <div className="absolute top-0 left-0 right-0 h-1.5 z-10" style={{ background: `linear-gradient(to right, ${primaryColor}, ${accentColor}, ${primaryColor})` }}></div>
 
         {/* Left Side: Poster (Narrower) */}
-        <div className={`w-full ${forceMobile ? 'min-h-[200px]' : 'md:w-1/4 md:min-h-full'} relative min-h-[200px] flex-shrink-0 bg-slate-900 overflow-hidden`}>
+        <div className={`w-full ${forceMobile ? 'min-h-[280px]' : 'md:w-1/3 md:min-h-full'} relative min-h-[280px] flex-shrink-0 bg-slate-900 overflow-hidden`}>
           {(data.event.ticketDesignUrl || data.event.bannerUrl) ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img 
@@ -123,7 +123,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
         </div>
 
         {/* Right Side: Details & Barcode (Wider & Landscape) */}
-        <div className={`w-full ${forceMobile ? '' : 'md:w-3/4'} flex flex-col relative p-5 sm:p-6 z-10`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
+        <div className={`w-full ${forceMobile ? '' : 'md:w-2/3'} flex flex-col relative p-6 sm:p-8 z-10`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
           
           <div className="flex-1 flex flex-col justify-between h-full">
             
@@ -141,10 +141,10 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               )}
             </div>
 
-            {/* Info Grid (Horizontal layout like airplane ticket) */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+            {/* Info Grid (Balanced layout) */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4 mb-4 mt-2">
               {/* Participant Name */}
-              <div className="flex flex-col col-span-2 md:col-span-1 border-r border-slate-200/50 pr-2">
+              <div className="flex flex-col col-span-2 md:col-span-1 md:border-r border-slate-200/50 pr-2">
                 <span className="text-[9px] uppercase font-extrabold tracking-[0.1em] opacity-60 mb-0.5" style={{ color: primaryColor }}>Nama</span>
                 <span className="text-sm font-black truncate" style={{ color: textColor }} title={data.transaction.buyerName}>{data.transaction.buyerName.toUpperCase()}</span>
               </div>
@@ -164,16 +164,16 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               {/* Date & Time */}
               <div className="flex flex-col border-r border-slate-200/50 pr-2">
                 <span className="text-[9px] uppercase font-extrabold tracking-[0.1em] opacity-60 mb-0.5" style={{ color: primaryColor }}>Tanggal/Waktu</span>
-                <span className="text-xs font-bold leading-tight" style={{ color: textColor }}>
+                <span className="text-sm font-bold leading-tight" style={{ color: textColor }}>
                   {new Date(data.event.eventDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}<br/>
                   <span style={{ color: primaryColor }}>{new Date(data.event.eventDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA</span>
                 </span>
               </div>
 
               {/* Location */}
-              <div className="flex flex-col pr-2">
+              <div className="flex flex-col pr-2 col-span-2 md:col-span-2">
                 <span className="text-[9px] uppercase font-extrabold tracking-[0.1em] opacity-60 mb-0.5" style={{ color: primaryColor }}>Lokasi</span>
-                <span className="text-xs font-bold leading-tight line-clamp-2" style={{ color: textColor }}>{data.event.location}</span>
+                <span className="text-sm font-bold leading-tight line-clamp-2" style={{ color: textColor }}>{data.event.location}</span>
               </div>
             </div>
 
