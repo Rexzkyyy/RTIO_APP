@@ -158,55 +158,55 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               )}
             </div>
 
-            {/* Info Grid (Premium Box Layout) */}
+            {/* Info Grid (Colorful Premium Box Layout with Emojis) */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5 mt-2">
               
               {/* Participant Name */}
-              <div className="flex flex-col col-span-2 md:col-span-1 p-3 rounded-xl bg-white/60 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-sm relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(0,0,0,0.06)] transition-all duration-300">
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/90 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1.5 flex items-center relative z-10" style={{ color: primaryColor }}>
-                  <User className="w-3.5 h-3.5 mr-1.5" /> Nama
+              <div className="flex flex-col col-span-2 md:col-span-1 p-3 rounded-xl bg-blue-50/70 border border-blue-100/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-md relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(59,130,246,0.1)] transition-all duration-300">
+                <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-100/60 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-70 mb-1.5 flex items-center relative z-10 text-blue-700">
+                  <span className="text-base mr-2 shadow-sm">👤</span> Nama
                 </span>
-                <span className="text-[15px] font-black truncate tracking-wide relative z-10" style={{ color: textColor }} title={data.transaction.buyerName}>{data.transaction.buyerName.toUpperCase()}</span>
+                <span className="text-[15px] font-black truncate tracking-wide relative z-10 text-slate-800" title={data.transaction.buyerName}>{data.transaction.buyerName.toUpperCase()}</span>
               </div>
               
               {/* Category */}
-              <div className="flex flex-col p-3 rounded-xl bg-white/60 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-sm relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(0,0,0,0.06)] transition-all duration-300">
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/90 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1.5 flex items-center relative z-10" style={{ color: primaryColor }}>
-                  <Tag className="w-3.5 h-3.5 mr-1.5" /> Kategori
+              <div className="flex flex-col p-3 rounded-xl bg-purple-50/70 border border-purple-100/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-md relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(168,85,247,0.1)] transition-all duration-300">
+                <div className="absolute -top-4 -right-4 w-16 h-16 bg-purple-100/60 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-70 mb-1.5 flex items-center relative z-10 text-purple-700">
+                  <span className="text-base mr-2 shadow-sm">🌟</span> Kategori
                 </span>
-                <span className="text-[15px] font-bold truncate relative z-10" style={{ color: textColor }}>{data.ticketCategoryName.toUpperCase()}</span>
+                <span className="text-[15px] font-bold truncate relative z-10 text-slate-800">{data.ticketCategoryName.toUpperCase()}</span>
               </div>
               
               {/* Quantity */}
-              <div className="flex flex-col p-3 rounded-xl bg-white/60 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-sm relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(0,0,0,0.06)] transition-all duration-300">
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/90 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1.5 flex items-center relative z-10" style={{ color: primaryColor }}>
-                  <TicketIcon className="w-3.5 h-3.5 mr-1.5" /> Jml Tiket
+              <div className="flex flex-col p-3 rounded-xl bg-amber-50/70 border border-amber-100/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-md relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(245,158,11,0.1)] transition-all duration-300">
+                <div className="absolute -top-4 -right-4 w-16 h-16 bg-amber-100/60 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-70 mb-1.5 flex items-center relative z-10 text-amber-700">
+                  <span className="text-base mr-2 shadow-sm">🎟️</span> Jml Tiket
                 </span>
-                <span className="text-[15px] font-bold relative z-10" style={{ color: textColor }}>{data.transaction.totalTickets} Tiket</span>
+                <span className="text-[15px] font-bold relative z-10 text-slate-800">{data.transaction.totalTickets} Tiket</span>
               </div>
 
               {/* Date & Time */}
-              <div className="flex flex-col p-3 rounded-xl bg-white/60 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-sm relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(0,0,0,0.06)] transition-all duration-300">
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/90 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1.5 flex items-center relative z-10" style={{ color: primaryColor }}>
-                  <Calendar className="w-3.5 h-3.5 mr-1.5" /> Waktu
+              <div className="flex flex-col p-3 rounded-xl bg-emerald-50/70 border border-emerald-100/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-md relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(16,185,129,0.1)] transition-all duration-300">
+                <div className="absolute -top-4 -right-4 w-16 h-16 bg-emerald-100/60 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-70 mb-1.5 flex items-center relative z-10 text-emerald-700">
+                  <span className="text-base mr-2 shadow-sm">📅</span> Waktu
                 </span>
-                <span className="text-[13px] font-bold leading-snug relative z-10" style={{ color: textColor }}>
+                <span className="text-[13px] font-bold leading-snug relative z-10 text-slate-800">
                   {new Date(data.event.eventDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}<br/>
-                  <span style={{ color: primaryColor }}>{new Date(data.event.eventDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA</span>
+                  <span className="text-emerald-700">{new Date(data.event.eventDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA</span>
                 </span>
               </div>
 
               {/* Location */}
-              <div className="flex flex-col col-span-2 md:col-span-2 p-3 rounded-xl bg-white/60 border border-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-sm relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(0,0,0,0.06)] transition-all duration-300">
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/90 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1.5 flex items-center relative z-10" style={{ color: primaryColor }}>
-                  <MapPin className="w-3.5 h-3.5 mr-1.5" /> Lokasi
+              <div className="flex flex-col col-span-2 md:col-span-2 p-3 rounded-xl bg-rose-50/70 border border-rose-100/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-md relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(244,63,94,0.1)] transition-all duration-300">
+                <div className="absolute -top-4 -right-4 w-16 h-16 bg-rose-100/60 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-70 mb-1.5 flex items-center relative z-10 text-rose-700">
+                  <span className="text-base mr-2 shadow-sm">📍</span> Lokasi
                 </span>
-                <span className="text-[13px] font-bold leading-snug line-clamp-2 opacity-90 relative z-10" style={{ color: textColor }}>{data.event.location}</span>
+                <span className="text-[13px] font-bold leading-snug line-clamp-2 opacity-90 relative z-10 text-slate-800">{data.event.location}</span>
               </div>
             </div>
 
@@ -216,18 +216,18 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               <div className="flex-1 w-full text-xs space-y-4 pr-6">
                 {data.event.artists.length > 0 && (
                   <div>
-                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-50 mb-1.5 flex items-center">
-                      <Mic className="w-3 h-3 mr-1.5" /> Penampil
+                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-60 mb-1.5 flex items-center text-indigo-700">
+                      <span className="text-base mr-2 shadow-sm">🎤</span> Penampil
                     </span>
-                    <span className="text-[12px] font-bold opacity-80 leading-relaxed block bg-white/50 p-2 rounded-lg border border-slate-100/50">{data.event.artists.join(', ')}</span>
+                    <span className="text-[12px] font-bold opacity-90 leading-relaxed block bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100/50 shadow-sm text-slate-800">{data.event.artists.join(', ')}</span>
                   </div>
                 )}
                 {data.event.sponsors.length > 0 && (
                   <div>
-                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-50 mb-1.5 flex items-center">
-                      <HeartHandshake className="w-3 h-3 mr-1.5" /> Didukung Oleh
+                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-60 mb-1.5 flex items-center text-teal-700">
+                      <span className="text-base mr-2 shadow-sm">🤝</span> Didukung Oleh
                     </span>
-                    <span className="text-[11px] font-medium opacity-70 leading-relaxed block bg-white/50 p-2 rounded-lg border border-slate-100/50">{data.event.sponsors.join(' • ')}</span>
+                    <span className="text-[11px] font-medium opacity-90 leading-relaxed block bg-teal-50/50 p-2.5 rounded-lg border border-teal-100/50 shadow-sm text-slate-800">{data.event.sponsors.join(' • ')}</span>
                   </div>
                 )}
               </div>
