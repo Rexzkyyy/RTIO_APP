@@ -142,13 +142,10 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
           <div className="flex-1 flex flex-col justify-between h-full relative z-10">
             
             {/* Title & Desc */}
-            <div className="mb-5 border-b-[3px] border-slate-200/60 border-dotted pb-5 relative">
+            <div className="mb-5 border-b border-slate-300/60 pb-5 relative">
               <h2 
                 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter leading-[1.05]"
-                style={{ 
-                  color: textColor,
-                  textShadow: '2px 2px 0px rgba(0,0,0,0.04)'
-                }}
+                style={{ color: textColor }}
                 title={data.event.title}
               >
                 {data.event.title}
@@ -158,88 +155,97 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               )}
             </div>
 
-            {/* Info Grid (Colorful Premium Box Layout with Emojis) */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5 mt-2">
-              
-              {/* Participant Name */}
-              <div className="flex flex-col col-span-2 md:col-span-1 p-3 rounded-xl bg-blue-50/70 border border-blue-100/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-md relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(59,130,246,0.1)] transition-all duration-300">
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-100/60 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-70 mb-1.5 flex items-center relative z-10 text-blue-700">
-                  <span className="text-base mr-2 shadow-sm">👤</span> Nama
-                </span>
-                <span className="text-[15px] font-black truncate tracking-wide relative z-10 text-slate-800" title={data.transaction.buyerName}>{data.transaction.buyerName.toUpperCase()}</span>
-              </div>
-              
-              {/* Category */}
-              <div className="flex flex-col p-3 rounded-xl bg-purple-50/70 border border-purple-100/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-md relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(168,85,247,0.1)] transition-all duration-300">
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-purple-100/60 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-70 mb-1.5 flex items-center relative z-10 text-purple-700">
-                  <span className="text-base mr-2 shadow-sm">🌟</span> Kategori
-                </span>
-                <span className="text-[15px] font-bold truncate relative z-10 text-slate-800">{data.ticketCategoryName.toUpperCase()}</span>
-              </div>
-              
-              {/* Quantity */}
-              <div className="flex flex-col p-3 rounded-xl bg-amber-50/70 border border-amber-100/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-md relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(245,158,11,0.1)] transition-all duration-300">
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-amber-100/60 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-70 mb-1.5 flex items-center relative z-10 text-amber-700">
-                  <span className="text-base mr-2 shadow-sm">🎟️</span> Jml Tiket
-                </span>
-                <span className="text-[15px] font-bold relative z-10 text-slate-800">{data.transaction.totalTickets} Tiket</span>
-              </div>
-
-              {/* Date & Time */}
-              <div className="flex flex-col p-3 rounded-xl bg-emerald-50/70 border border-emerald-100/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-md relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(16,185,129,0.1)] transition-all duration-300">
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-emerald-100/60 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-70 mb-1.5 flex items-center relative z-10 text-emerald-700">
-                  <span className="text-base mr-2 shadow-sm">📅</span> Waktu
-                </span>
-                <span className="text-[13px] font-bold leading-snug relative z-10 text-slate-800">
-                  {new Date(data.event.eventDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}<br/>
-                  <span className="text-emerald-700">{new Date(data.event.eventDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA</span>
-                </span>
+            {/* Info Grid (Authentic Minimalist Boarding Pass Layout) */}
+            <div className="border border-slate-300/80 rounded-xl overflow-hidden mb-5 bg-white/50 shadow-[0_2px_10px_rgba(0,0,0,0.02)] backdrop-blur-sm">
+              {/* Top Row */}
+              <div className="grid grid-cols-2 md:grid-cols-3 border-b border-slate-300/80">
+                {/* Participant Name */}
+                <div className="flex flex-col p-3 md:p-4 col-span-2 md:col-span-1 border-r border-slate-300/80 bg-white/30">
+                  <span className="text-[9px] uppercase font-black tracking-[0.15em] opacity-60 mb-1" style={{ color: primaryColor }}>
+                    Nama Penumpang
+                  </span>
+                  <span className="text-[15px] font-black uppercase truncate" style={{ color: textColor }} title={data.transaction.buyerName}>
+                    {data.transaction.buyerName}
+                  </span>
+                </div>
+                
+                {/* Category */}
+                <div className="flex flex-col p-3 md:p-4 border-r border-slate-300/80 bg-white/30">
+                  <span className="text-[9px] uppercase font-black tracking-[0.15em] opacity-60 mb-1" style={{ color: primaryColor }}>
+                    Kategori Tiket
+                  </span>
+                  <span className="text-[15px] font-bold uppercase truncate" style={{ color: textColor }}>
+                    {data.ticketCategoryName}
+                  </span>
+                </div>
+                
+                {/* Quantity */}
+                <div className="flex flex-col p-3 md:p-4 bg-slate-50/50">
+                  <span className="text-[9px] uppercase font-black tracking-[0.15em] opacity-60 mb-1" style={{ color: primaryColor }}>
+                    Jumlah Masuk
+                  </span>
+                  <span className="text-[15px] font-bold" style={{ color: textColor }}>
+                    {data.transaction.totalTickets} ORANG
+                  </span>
+                </div>
               </div>
 
-              {/* Location */}
-              <div className="flex flex-col col-span-2 md:col-span-2 p-3 rounded-xl bg-rose-50/70 border border-rose-100/50 shadow-[0_2px_10px_rgba(0,0,0,0.03)] backdrop-blur-md relative overflow-hidden group hover:shadow-[0_4px_15px_rgba(244,63,94,0.1)] transition-all duration-300">
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-rose-100/60 blur-xl rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="text-[10px] uppercase font-black tracking-widest opacity-70 mb-1.5 flex items-center relative z-10 text-rose-700">
-                  <span className="text-base mr-2 shadow-sm">📍</span> Lokasi
-                </span>
-                <span className="text-[13px] font-bold leading-snug line-clamp-2 opacity-90 relative z-10 text-slate-800">{data.event.location}</span>
+              {/* Bottom Row */}
+              <div className="grid grid-cols-2 md:grid-cols-3">
+                {/* Date & Time */}
+                <div className="flex flex-col p-3 md:p-4 border-r border-slate-300/80 bg-slate-50/50">
+                  <span className="text-[9px] uppercase font-black tracking-[0.15em] opacity-60 mb-1" style={{ color: primaryColor }}>
+                    Jadwal Acara
+                  </span>
+                  <span className="text-[13px] font-bold leading-tight" style={{ color: textColor }}>
+                    {new Date(data.event.eventDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}<br/>
+                    <span style={{ color: primaryColor }}>{new Date(data.event.eventDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA</span>
+                  </span>
+                </div>
+
+                {/* Location */}
+                <div className="flex flex-col p-3 md:p-4 col-span-2 md:col-span-2 bg-white/30">
+                  <span className="text-[9px] uppercase font-black tracking-[0.15em] opacity-60 mb-1" style={{ color: primaryColor }}>
+                    Lokasi Acara
+                  </span>
+                  <span className="text-[13px] font-bold leading-tight line-clamp-2 opacity-90" style={{ color: textColor }}>
+                    {data.event.location}
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Bottom Row: Sponsors/Artists & Barcode */}
-            <div className="mt-auto pt-5 border-t-[3px] border-slate-200/50 border-dotted flex flex-col md:flex-row items-end justify-between gap-6">
+            <div className="mt-auto pt-4 border-t border-slate-300/60 flex flex-col md:flex-row items-end justify-between gap-6">
               
-              <div className="flex-1 w-full text-xs space-y-4 pr-6">
+              <div className="flex-1 w-full space-y-4 pr-6">
                 {data.event.artists.length > 0 && (
                   <div>
-                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-60 mb-1.5 flex items-center text-indigo-700">
-                      <span className="text-base mr-2 shadow-sm">🎤</span> Penampil
+                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-50 mb-1 block" style={{ color: textColor }}>
+                      Penampil Khusus
                     </span>
-                    <span className="text-[12px] font-bold opacity-90 leading-relaxed block bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100/50 shadow-sm text-slate-800">{data.event.artists.join(', ')}</span>
+                    <span className="text-[13px] font-bold opacity-90 leading-relaxed" style={{ color: textColor }}>
+                      {data.event.artists.join(', ')}
+                    </span>
                   </div>
                 )}
                 {data.event.sponsors.length > 0 && (
                   <div>
-                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-60 mb-1.5 flex items-center text-teal-700">
-                      <span className="text-base mr-2 shadow-sm">🤝</span> Didukung Oleh
+                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-50 mb-1 block" style={{ color: textColor }}>
+                      Didukung Oleh
                     </span>
-                    <span className="text-[11px] font-medium opacity-90 leading-relaxed block bg-teal-50/50 p-2.5 rounded-lg border border-teal-100/50 shadow-sm text-slate-800">{data.event.sponsors.join(' • ')}</span>
+                    <span className="text-[12px] font-medium opacity-70 leading-relaxed" style={{ color: textColor }}>
+                      {data.event.sponsors.join(' • ')}
+                    </span>
                   </div>
                 )}
               </div>
 
-              <div className="w-full md:w-auto flex flex-col items-center p-3 rounded-2xl border border-slate-200/80 bg-slate-50/80 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] flex-shrink-0 relative overflow-hidden">
-                {/* Decorative corner accent on barcode */}
-                <div className="absolute top-0 right-0 w-8 h-8 opacity-10" style={{ background: `linear-gradient(to bottom left, ${primaryColor}, transparent)` }}></div>
-                
-                <span className="text-[9px] font-bold opacity-60 tracking-[0.2em] uppercase mb-2 block" style={{ color: textColor }}>
-                  ✦ ENTRY PASS ✦
+              <div className="w-full md:w-auto flex flex-col items-center p-4 rounded-xl border border-slate-300/80 bg-white shadow-sm flex-shrink-0">
+                <span className="text-[8px] font-black opacity-50 tracking-[0.25em] uppercase mb-3 block text-center border-b border-slate-200/60 w-full pb-2" style={{ color: textColor }}>
+                  SCAN UNTUK MASUK
                 </span>
-                <div className="rounded-xl overflow-hidden mix-blend-multiply flex justify-center w-full max-w-[160px] bg-white p-2 shadow-sm border border-slate-100">
+                <div className="overflow-hidden mix-blend-multiply flex justify-center w-full max-w-[160px] bg-white">
                   <Barcode 
                     value={data.barcodeString}
                     width={1.4}
@@ -250,7 +256,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
                     margin={0}
                   />
                 </div>
-                <span className="font-mono text-xs font-black tracking-[0.3em] mt-3 px-3 py-1.5 rounded-lg bg-white shadow-sm border border-slate-100 text-slate-800 w-full text-center" title={data.barcodeString}>
+                <span className="font-mono text-xs font-black tracking-[0.3em] mt-3 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 w-full text-center" title={data.barcodeString}>
                   {data.barcodeString}
                 </span>
               </div>
