@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from 'react';
-import QRCode from 'react-qr-code';
+import Barcode from 'react-barcode';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { Download, Image as ImageIcon, MapPin, Calendar, Clock, User, Tag, Users, CheckCircle2, Info } from 'lucide-react';
@@ -232,13 +232,15 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               <span className="text-[10px] font-bold opacity-50 tracking-widest uppercase mb-2 block" style={{ color: textColor }}>
                 ✦ SCAN UNTUK MASUK ✦
               </span>
-              <div className="p-3 rounded-xl border border-slate-200 inline-block mb-3 bg-white" style={{ backgroundColor: '#ffffff' }}>
-                <QRCode 
+              <div className="p-2 rounded-xl border border-slate-200 inline-block mb-3 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" style={{ backgroundColor: bgColor }}>
+                <Barcode 
                   value={data.barcodeString}
-                  size={100}
-                  bgColor="#ffffff"
-                  fgColor={textColor}
-                  level="M"
+                  width={1.5}
+                  height={50}
+                  displayValue={false}
+                  background="transparent"
+                  lineColor={textColor}
+                  margin={0}
                 />
               </div>
               <span className="font-mono text-[10px] font-black tracking-widest px-2 py-1 rounded border border-slate-200 inline-block w-full max-w-[150px] truncate shadow-inner" style={{ color: textColor, backgroundColor: 'rgba(0,0,0,0.02)' }} title={data.barcodeString}>

@@ -156,10 +156,12 @@ export async function submitRegistration(formData: FormData) {
           const hName = formData.get(`holderName_${i}`) as string;
           const hPhone = formData.get(`holderPhone_${i}`) as string;
           const hGender = formData.get(`holderGender_${i}`) as string;
+          const shortId = crypto.randomBytes(4).toString('hex').toUpperCase();
+          const newBarcode = `TX-${shortId}`;
           return {
             transactionId: newTransaction.id,
             ticketCategoryId: category.id,
-            barcodeString: `${newTransaction.id}-${i}-${Date.now()}`,
+            barcodeString: newBarcode,
             holderName: hName || buyerName,
             holderPhone: hPhone || buyerPhone,
             holderGender: hGender || buyerGender,
