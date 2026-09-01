@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useRef, useState } from 'react';
-import Barcode from 'react-barcode';
+import QRCode from 'react-qr-code';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { Download, Image as ImageIcon, MapPin, Calendar, Clock, User, Tag, Users, CheckCircle2, Info } from 'lucide-react';
 
 type TicketData = {
+  barcodeString: string;
+  ticketIndex?: { current: number; total: number };
   transaction: {
     id: string;
     buyerName: string;
@@ -160,8 +162,11 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] uppercase font-extrabold tracking-[0.2em] flex items-center mb-1" style={{ color: primaryColor }}><Users className="w-3.5 h-3.5 mr-1.5" /> Jumlah</span>
-                  <span className="text-lg font-extrabold" style={{ color: textColor }}>{data.transaction.totalTickets} <span className="text-sm font-medium opacity-60">Tiket</span></span>
+                  <span className="text-[10px] uppercase font-extrabold tracking-[0.2em] flex items-center mb-1" style={{ color: primaryColor }}><Users className="w-3.5 h-3.5 mr-1.5" /> Tiket Ke</span>
+                  <span className="text-lg font-extrabold" style={{ color: textColor }}>
+                    {data.ticketIndex ? `${data.ticketIndex.current} / ${data.ticketIndex.total}` : data.transaction.totalTickets} 
+                    <span className="text-sm font-medium opacity-60 ml-1">Tiket</span>
+                  </span>
                 </div>
               </div>
 
@@ -227,19 +232,17 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               <span className="text-[10px] font-bold opacity-50 tracking-widest uppercase mb-2 block" style={{ color: textColor }}>
                 ✦ SCAN UNTUK MASUK ✦
               </span>
-              <div className="p-2 rounded-xl border border-slate-200 inline-block mb-3 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" style={{ backgroundColor: bgColor }}>
-                <Barcode 
-                  value={data.transaction.id.split('-')[0]}
-                  width={1.5}
-                  height={50}
-                  displayValue={false}
-                  background="transparent"
-                  lineColor={textColor}
-                  margin={0}
+              <div className="p-3 rounded-xl border border-slate-200 inline-block mb-3 bg-white" style={{ backgroundColor: '#ffffff' }}>
+                <QRCode 
+                  value={data.barcodeString}
+                  size={100}
+                  bgColor="#ffffff"
+                  fgColor={textColor}
+                  level="M"
                 />
               </div>
-              <span className="font-mono text-[15px] font-black tracking-[0.25em] px-4 py-2 rounded-xl border-b-2 border-r-2 border-t border-l border-slate-200 inline-block w-full shadow-inner" style={{ color: textColor, backgroundColor: 'rgba(0,0,0,0.02)' }}>
-                {data.transaction.id.split('-')[0].toUpperCase()}
+              <span className="font-mono text-[10px] font-black tracking-widest px-2 py-1 rounded border border-slate-200 inline-block w-full max-w-[150px] truncate shadow-inner" style={{ color: textColor, backgroundColor: 'rgba(0,0,0,0.02)' }} title={data.barcodeString}>
+                {data.barcodeString}
               </span>
             </div>
           </div>

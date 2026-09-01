@@ -58,31 +58,35 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
           </p>
         </div>
 
-        {/* Ticket Card */}
-        <div className="w-full max-w-6xl">
-
-          <TicketCard 
-            data={{
-              transaction: {
-                id: transaction.id,
-                buyerName: transaction.buyerName,
-                totalTickets: transaction.totalTickets,
-                status: transaction.status,
-                totalPrice: transaction.totalPrice
-              },
-              event: {
-                title: transaction.event.title,
-                eventDate: transaction.event.eventDate.toISOString(),
-                location: transaction.event.location,
-                bannerUrl: transaction.event.bannerUrl,
-                ticketDesignUrl: transaction.event.ticketDesignUrl,
-                description: transaction.event.description,
-                artists: transaction.event.artists,
-                sponsors: transaction.event.sponsors
-              },
-              ticketCategoryName: transaction.tickets[0]?.ticketCategory.name || 'Umum'
-            }}
-          />
+        {/* Ticket Cards */}
+        <div className="w-full max-w-6xl space-y-8">
+          {transaction.tickets.map((ticket, index) => (
+            <TicketCard 
+              key={ticket.id}
+              data={{
+                barcodeString: ticket.barcodeString,
+                ticketIndex: { current: index + 1, total: transaction.tickets.length },
+                transaction: {
+                  id: transaction.id,
+                  buyerName: transaction.buyerName,
+                  totalTickets: transaction.totalTickets,
+                  status: transaction.status,
+                  totalPrice: transaction.totalPrice
+                },
+                event: {
+                  title: transaction.event.title,
+                  eventDate: transaction.event.eventDate.toISOString(),
+                  location: transaction.event.location,
+                  bannerUrl: transaction.event.bannerUrl,
+                  ticketDesignUrl: transaction.event.ticketDesignUrl,
+                  description: transaction.event.description,
+                  artists: transaction.event.artists,
+                  sponsors: transaction.event.sponsors
+                },
+                ticketCategoryName: ticket.ticketCategory.name || 'Umum'
+              }}
+            />
+          ))}
         </div>
 
         {/* Desktop Bottom Button */}
