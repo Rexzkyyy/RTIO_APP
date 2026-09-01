@@ -198,27 +198,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
           </div>
 
           {/* Barcode & Status Section */}
-          <div className="mt-6 pt-6 border-t-2 border-dashed border-slate-200/60 flex flex-col md:flex-row items-center gap-6 justify-between">
-            {/* Status (Valid/Pending) */}
-            <div className="w-full md:w-auto">
-              {isApproved ? (
-                <div className="flex flex-row md:flex-col items-center justify-center px-4 py-3 border rounded-xl shadow-sm w-full h-full" style={{ borderColor: primaryColor, color: primaryColor, backgroundColor: 'rgba(255,255,255,0.7)' }}>
-                  <CheckCircle2 className="w-6 h-6 mr-3 md:mr-0 md:mb-2" />
-                  <div className="flex flex-col items-start md:items-center">
-                    <span className="text-sm font-black tracking-widest">TIKET VALID</span>
-                    <span className="text-xs font-medium opacity-80">Siap Digunakan</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-row md:flex-col items-center justify-center px-4 py-3 border rounded-xl text-amber-700 shadow-sm w-full h-full" style={{ borderColor: '#f59e0b', backgroundColor: 'rgba(255,255,255,0.7)' }}>
-                  <Info className="w-6 h-6 mr-3 md:mr-0 md:mb-2" />
-                  <div className="flex flex-col items-start md:items-center">
-                    <span className="text-sm font-black tracking-widest">MENUNGGU</span>
-                    <span className="text-xs font-medium opacity-80">Verifikasi Admin</span>
-                  </div>
-                </div>
-              )}
-            </div>
+          <div className="mt-6 pt-6 border-t-2 border-dashed border-slate-200/60 flex flex-col md:flex-row items-center justify-center gap-6">
 
             {/* Barcode Display */}
             <div className="text-center w-full md:w-auto flex flex-col items-center p-4 rounded-xl border border-slate-100 bg-white shadow-sm">
