@@ -45,7 +45,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
       
       <PublicNavbar />
 
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 space-y-8 flex flex-col items-center relative z-10">
+      <div className="flex-1 w-full mx-auto px-4 sm:px-8 xl:px-16 py-8 space-y-8 flex flex-col items-center relative z-10">
         
         {/* Status Header */}
         <div className="text-center w-full max-w-2xl no-print">
