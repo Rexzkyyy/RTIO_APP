@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import Barcode from 'react-barcode';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import { Download, Image as ImageIcon, MapPin, Calendar, Clock, User, Tag, Users, CheckCircle2, Info } from 'lucide-react';
+import { Download, Image as ImageIcon, CheckCircle2, Info, User, Tag, Ticket as TicketIcon, Calendar, MapPin, Mic, HeartHandshake } from "lucide-react";
 
 type TicketData = {
   barcodeString: string;
@@ -122,49 +122,70 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
           )}
         </div>
 
+        {/* Physical Ticket Perforation Line & Notches (Desktop Only) */}
+        {!forceMobile && (
+          <div className="hidden md:flex flex-col justify-between w-0 relative border-l-[3px] border-dashed border-slate-300/50 z-20">
+            {/* Top Notch */}
+            <div className="w-10 h-10 rounded-full absolute -top-5 -left-5 shadow-inner" style={{ backgroundColor: '#f8fafc', boxShadow: 'inset 0 -4px 6px -2px rgba(0,0,0,0.05)' }}></div>
+            {/* Bottom Notch */}
+            <div className="w-10 h-10 rounded-full absolute -bottom-5 -left-5 shadow-inner" style={{ backgroundColor: '#f8fafc', boxShadow: 'inset 0 4px 6px -2px rgba(0,0,0,0.05)' }}></div>
+          </div>
+        )}
+
         {/* Right Side: Details & Barcode (Wider & Landscape) */}
-        <div className={`w-full ${forceMobile ? '' : 'md:w-[72%]'} flex flex-col relative p-5 sm:p-6 lg:p-8 z-10`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
+        <div className={`w-full ${forceMobile ? '' : 'md:w-[72%]'} flex flex-col relative p-6 sm:p-8 z-10`} style={{ backgroundColor: bgColor, backgroundImage: getPatternStyle(config.bgPattern) }}>
           
           <div className="flex-1 flex flex-col justify-between h-full">
             
             {/* Title & Desc */}
-            <div className="mb-4 border-b-2 border-slate-200/60 border-dashed pb-4">
+            <div className="mb-4 border-b-[3px] border-slate-200/50 border-dotted pb-5">
               <h2 
-                className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight leading-none drop-shadow-sm"
-                style={{ color: textColor }}
+                className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter leading-[1.05]"
+                style={{ 
+                  color: textColor,
+                  textShadow: '2px 2px 0px rgba(0,0,0,0.04)'
+                }}
                 title={data.event.title}
               >
                 {data.event.title}
               </h2>
               {data.event.description && (
-                <div className="text-[12px] font-medium mt-3 leading-relaxed italic opacity-80" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: data.event.description }}></div>
+                <div className="text-[13px] font-medium mt-3 leading-relaxed opacity-80" style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: data.event.description }}></div>
               )}
             </div>
 
-            {/* Info Grid (Balanced layout) */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-6 mb-4 mt-2">
+            {/* Info Grid (Balanced layout with Premium Icons) */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-y-5 gap-x-6 mb-4 mt-2">
               {/* Participant Name */}
               <div className="flex flex-col col-span-2 md:col-span-1 md:border-r border-slate-200/50 pr-4">
-                <span className="text-[9px] uppercase font-extrabold tracking-[0.1em] opacity-60 mb-0.5" style={{ color: primaryColor }}>Nama</span>
-                <span className="text-sm font-black truncate" style={{ color: textColor }} title={data.transaction.buyerName}>{data.transaction.buyerName.toUpperCase()}</span>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1 flex items-center" style={{ color: primaryColor }}>
+                  <User className="w-3 h-3 mr-1.5" /> Nama
+                </span>
+                <span className="text-[15px] font-black truncate tracking-wide" style={{ color: textColor }} title={data.transaction.buyerName}>{data.transaction.buyerName.toUpperCase()}</span>
               </div>
               
               {/* Category */}
               <div className="flex flex-col border-r border-slate-200/50 pr-4">
-                <span className="text-[9px] uppercase font-extrabold tracking-[0.1em] opacity-60 mb-0.5" style={{ color: primaryColor }}>Kategori</span>
-                <span className="text-sm font-bold truncate" style={{ color: textColor }}>{data.ticketCategoryName.toUpperCase()}</span>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1 flex items-center" style={{ color: primaryColor }}>
+                  <Tag className="w-3 h-3 mr-1.5" /> Kategori
+                </span>
+                <span className="text-[15px] font-bold truncate" style={{ color: textColor }}>{data.ticketCategoryName.toUpperCase()}</span>
               </div>
               
               {/* Quantity */}
               <div className="flex flex-col pr-4">
-                <span className="text-[9px] uppercase font-extrabold tracking-[0.1em] opacity-60 mb-0.5" style={{ color: primaryColor }}>Jml Tiket</span>
-                <span className="text-sm font-bold" style={{ color: textColor }}>{data.transaction.totalTickets} Tiket</span>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1 flex items-center" style={{ color: primaryColor }}>
+                  <TicketIcon className="w-3 h-3 mr-1.5" /> Jml Tiket
+                </span>
+                <span className="text-[15px] font-bold" style={{ color: textColor }}>{data.transaction.totalTickets} Tiket</span>
               </div>
 
               {/* Date & Time */}
               <div className="flex flex-col md:border-r border-slate-200/50 pr-4">
-                <span className="text-[9px] uppercase font-extrabold tracking-[0.1em] opacity-60 mb-0.5" style={{ color: primaryColor }}>Tanggal/Waktu</span>
-                <span className="text-sm font-bold leading-tight" style={{ color: textColor }}>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1 flex items-center" style={{ color: primaryColor }}>
+                  <Calendar className="w-3 h-3 mr-1.5" /> Waktu
+                </span>
+                <span className="text-[13px] font-bold leading-snug" style={{ color: textColor }}>
                   {new Date(data.event.eventDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}<br/>
                   <span style={{ color: primaryColor }}>{new Date(data.event.eventDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA</span>
                 </span>
@@ -172,45 +193,54 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
 
               {/* Location */}
               <div className="flex flex-col pr-4 col-span-2 md:col-span-2">
-                <span className="text-[9px] uppercase font-extrabold tracking-[0.1em] opacity-60 mb-0.5" style={{ color: primaryColor }}>Lokasi</span>
-                <span className="text-sm font-bold leading-tight line-clamp-2" style={{ color: textColor }}>{data.event.location}</span>
+                <span className="text-[10px] uppercase font-black tracking-widest opacity-60 mb-1 flex items-center" style={{ color: primaryColor }}>
+                  <MapPin className="w-3 h-3 mr-1.5" /> Lokasi
+                </span>
+                <span className="text-[13px] font-bold leading-snug line-clamp-2 opacity-90" style={{ color: textColor }}>{data.event.location}</span>
               </div>
             </div>
 
             {/* Bottom Row: Sponsors/Artists & Barcode */}
-            <div className="mt-auto pt-4 border-t-2 border-slate-200/60 border-dashed flex flex-col md:flex-row items-end justify-between gap-4">
+            <div className="mt-auto pt-5 border-t-[3px] border-slate-200/50 border-dotted flex flex-col md:flex-row items-end justify-between gap-6">
               
-              <div className="flex-1 w-full text-xs space-y-3 pr-6">
+              <div className="flex-1 w-full text-xs space-y-4 pr-6">
                 {data.event.artists.length > 0 && (
                   <div>
-                    <span className="text-[8px] uppercase font-black tracking-widest opacity-50 block mb-1">Penampil</span>
-                    <span className="text-[11px] font-bold opacity-80 leading-relaxed">{data.event.artists.join(', ')}</span>
+                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-50 mb-1.5 flex items-center">
+                      <Mic className="w-3 h-3 mr-1.5" /> Penampil
+                    </span>
+                    <span className="text-[12px] font-bold opacity-80 leading-relaxed block bg-white/50 p-2 rounded-lg border border-slate-100/50">{data.event.artists.join(', ')}</span>
                   </div>
                 )}
                 {data.event.sponsors.length > 0 && (
                   <div>
-                    <span className="text-[8px] uppercase font-black tracking-widest opacity-50 block mb-1">Didukung Oleh</span>
-                    <span className="text-[10px] font-medium opacity-70 leading-relaxed">{data.event.sponsors.join(' • ')}</span>
+                    <span className="text-[9px] uppercase font-black tracking-[0.2em] opacity-50 mb-1.5 flex items-center">
+                      <HeartHandshake className="w-3 h-3 mr-1.5" /> Didukung Oleh
+                    </span>
+                    <span className="text-[11px] font-medium opacity-70 leading-relaxed block bg-white/50 p-2 rounded-lg border border-slate-100/50">{data.event.sponsors.join(' • ')}</span>
                   </div>
                 )}
               </div>
 
-              <div className="w-full md:w-auto flex flex-col items-center p-2 rounded-xl border border-slate-100 bg-white shadow-sm flex-shrink-0">
-                <span className="text-[8px] font-bold opacity-50 tracking-widest uppercase mb-1 block" style={{ color: textColor }}>
-                  ✦ SCAN UNTUK MASUK ✦
+              <div className="w-full md:w-auto flex flex-col items-center p-3 rounded-2xl border border-slate-200/80 bg-slate-50/80 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] flex-shrink-0 relative overflow-hidden">
+                {/* Decorative corner accent on barcode */}
+                <div className="absolute top-0 right-0 w-8 h-8 opacity-10" style={{ background: `linear-gradient(to bottom left, ${primaryColor}, transparent)` }}></div>
+                
+                <span className="text-[9px] font-bold opacity-60 tracking-[0.2em] uppercase mb-2 block" style={{ color: textColor }}>
+                  ✦ ENTRY PASS ✦
                 </span>
-                <div className="rounded-lg overflow-hidden mix-blend-multiply flex justify-center w-full max-w-[150px]">
+                <div className="rounded-xl overflow-hidden mix-blend-multiply flex justify-center w-full max-w-[160px] bg-white p-2 shadow-sm border border-slate-100">
                   <Barcode 
                     value={data.barcodeString}
-                    width={1.2}
-                    height={40}
+                    width={1.4}
+                    height={45}
                     displayValue={false}
                     background="transparent"
                     lineColor={textColor}
                     margin={0}
                   />
                 </div>
-                <span className="font-mono text-xs font-black tracking-[0.3em] mt-2 px-2 py-1 rounded bg-slate-50 text-slate-700 w-full text-center" title={data.barcodeString}>
+                <span className="font-mono text-xs font-black tracking-[0.3em] mt-3 px-3 py-1.5 rounded-lg bg-white shadow-sm border border-slate-100 text-slate-800 w-full text-center" title={data.barcodeString}>
                   {data.barcodeString}
                 </span>
               </div>
