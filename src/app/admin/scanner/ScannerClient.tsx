@@ -72,8 +72,8 @@ export function ScannerClient({ adminRole }: { adminRole?: string }) {
   // ─── Init ZXing ────────────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
-    import("@zxing/browser").then(({ BrowserMultiFormatReader }) => {
-      if (isMounted) readerRef.current = new BrowserMultiFormatReader();
+    import("@zxing/browser").then(({ BrowserQRCodeReader }) => {
+      if (isMounted) readerRef.current = new BrowserQRCodeReader();
     });
     return () => { isMounted = false; };
   }, []);

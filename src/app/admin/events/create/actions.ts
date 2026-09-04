@@ -3,8 +3,7 @@
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { put } from "@vercel/blob";
 
 export async function createEvent(formData: FormData) {
   const { getServerSession } = await import("next-auth/next");
@@ -85,31 +84,21 @@ export async function createEvent(formData: FormData) {
     name: bankAccountNames[idx],
   }));
 
-  // Handle Image Upload locally to public/uploads
+  // Handle Image Upload using Vercel Blob
   let bannerUrl = ""; 
   const file = formData.get("bannerImage") as File;
-  const uploadDir = join(process.cwd(), 'public', 'uploads');
   if (file && file.size > 0) {
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const filename = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-    
-    // Pastikan folder ada
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(join(uploadDir, filename), buffer);
-    bannerUrl = `/uploads/${filename}`;
+    const filename = `banners/${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+    const blob = await put(filename, file, { access: 'public' });
+    bannerUrl = blob.url;
   }
 
   let ticketDesignUrl = ""; 
   const ticketFile = formData.get("ticketDesignImage") as File;
   if (ticketFile && ticketFile.size > 0) {
-    const bytes = await ticketFile.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const filename = `ticket-${Date.now()}-${ticketFile.name.replace(/\s+/g, '-')}`;
-    
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(join(uploadDir, filename), buffer);
-    ticketDesignUrl = `/uploads/${filename}`;
+    const filename = `tickets/${Date.now()}-${ticketFile.name.replace(/\s+/g, '-')}`;
+    const blob = await put(filename, ticketFile, { access: 'public' });
+    ticketDesignUrl = blob.url;
   }
 
   await prisma.event.create({

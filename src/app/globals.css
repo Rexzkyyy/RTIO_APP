@@ -12,12 +12,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* App does not currently support dark mode. Forcing light mode to prevent unreadable text on hardcoded white backgrounds. */
 
 body {
   background: var(--background);

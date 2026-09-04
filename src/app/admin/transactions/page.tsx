@@ -412,7 +412,24 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                     </div>
                   )}
                   {tx.status === "APPROVED" && (
-                    <a href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="w-full text-center py-2.5 text-sm font-bold rounded-xl text-white bg-green-500">Kirim WA</a>
+                    <div className="flex gap-2 w-full pt-2">
+                      <a 
+                        href={`/public/${tx.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer" 
+                        className="flex-1 text-center py-2.5 text-sm font-bold rounded-xl text-emerald-700 bg-emerald-100 hover:bg-emerald-200 transition-all"
+                      >
+                        Lihat Tiket
+                      </a>
+                      <a 
+                        href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nPembayaran Anda untuk acara *${tx.event.title}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${tx.buyerName}\n- Acara: *${tx.event.title}*\n- Jenis Kelamin: ${tx.buyerGender || '-'}\n- Jenis Tiket: ${tx.tickets[0]?.ticketCategory.name || '-'}\n- Jumlah: ${tx.tickets.length} Tiket\n- Tanggal: ${new Date(tx.event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n- Lokasi: ${tx.event.location}${tx.tickets.length > 0 ? `\n\n*Daftar Peserta:*\n${tx.tickets.map((t: any, i: number) => `${i + 1}. ${t.holderName || '-'} (${t.holderGender || '-'})`).join('\n')}` : ''}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${process.env.NEXT_PUBLIC_APP_URL || 'https://rtio-tix.vercel.app'}/public/${tx.id}/verify\n\nTerima kasih.`)}`}
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="flex-1 text-center py-2.5 text-sm font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 transition-all"
+                      >
+                        Kirim WA
+                      </a>
+                    </div>
                   )}
                 </div>
               </div>

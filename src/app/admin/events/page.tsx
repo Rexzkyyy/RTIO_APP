@@ -235,26 +235,29 @@ export default async function EventsPage({ searchParams }: Props) {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
-                    <a href={`/event/${event.slug}`} target="_blank" rel="noopener noreferrer" className="text-xs px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg font-medium flex items-center transition-colors">
-                      Lihat Web <ExternalLink className="w-3 h-3 ml-1.5" />
-                    </a>
+                  <div className="flex flex-col gap-3 pt-3 mt-3 border-t border-slate-100">
+                    <div>
+                      <a href={`/event/${event.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex text-xs px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg font-medium items-center transition-colors">
+                        <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                        Lihat Web
+                      </a>
+                    </div>
                     
-                    <div className="flex gap-2 w-full mt-2 pt-4 border-t border-slate-100">
+                    <div className="flex flex-wrap gap-2 w-full">
                       {(!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR") && (
                         <>
-                          <Link prefetch={false} href={`/admin/events/${event.id}/form-builder`} className="flex-1 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 text-center flex items-center justify-center transition-colors">
-                            <ListPlus className="w-4 h-4 mr-1.5" />
+                          <Link prefetch={false} href={`/admin/events/${event.id}/form-builder`} className="flex-1 min-w-[45%] py-2 bg-slate-100 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-200 text-center flex items-center justify-center transition-colors">
+                            <ListPlus className="w-3.5 h-3.5 mr-1.5" />
                             Form
                           </Link>
-                          <Link prefetch={false} href={`/admin/events/${event.id}/edit`} className="flex-1 py-2 bg-indigo-50 text-indigo-700 text-sm font-medium rounded-lg hover:bg-indigo-100 text-center transition-colors">
+                          <Link prefetch={false} href={`/admin/events/${event.id}/edit`} className="flex-1 min-w-[45%] py-2 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-lg hover:bg-indigo-100 text-center flex items-center justify-center transition-colors">
                             Edit
                           </Link>
-                          <DeleteEventButton id={event.id} />
+                          <DeleteEventButton id={event.id} className="flex-1 min-w-[45%] py-2 bg-red-50 text-red-700 text-xs font-medium rounded-lg hover:bg-red-100 text-center transition-colors" />
                         </>
                       )}
-                      <Link prefetch={false} href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="flex-1 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-100 text-center flex items-center justify-center transition-colors">
-                        <Receipt className="w-4 h-4 mr-1.5" />
+                      <Link prefetch={false} href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="flex-1 min-w-[45%] py-2 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-lg hover:bg-emerald-100 text-center flex items-center justify-center transition-colors">
+                        <Receipt className="w-3.5 h-3.5 mr-1.5" />
                         Validasi ({event._count.transactions})
                       </Link>
                     </div>

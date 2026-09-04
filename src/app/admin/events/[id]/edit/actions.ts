@@ -3,8 +3,7 @@
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { put } from "@vercel/blob";
 
 export async function updateEvent(id: string, formData: FormData) {
   const { getServerSession } = await import("next-auth/next");
@@ -82,29 +81,20 @@ export async function updateEvent(id: string, formData: FormData) {
     bankAccounts: bankAccounts.length > 0 ? (bankAccounts as any) : undefined,
   };
 
-  // Handle Image Upload locally if new image is provided
+  // Handle Image Upload using Vercel Blob if new image is provided
   const file = formData.get("bannerImage") as File;
-  const uploadDir = join(process.cwd(), 'public', 'uploads');
   if (file && file.size > 0) {
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const filename = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-    
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(join(uploadDir, filename), buffer);
-    dataToUpdate.bannerUrl = `/uploads/${filename}`;
+    const filename = `banners/${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+    const blob = await put(filename, file, { access: 'public' });
+    dataToUpdate.bannerUrl = blob.url;
   }
 
   // Handle Ticket Design Upload if provided
   const ticketFile = formData.get("ticketDesignImage") as File;
   if (ticketFile && ticketFile.size > 0) {
-    const bytes = await ticketFile.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const filename = `ticket-${Date.now()}-${ticketFile.name.replace(/\s+/g, '-')}`;
-    
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(join(uploadDir, filename), buffer);
-    dataToUpdate.ticketDesignUrl = `/uploads/${filename}`;
+    const filename = `tickets/${Date.now()}-${ticketFile.name.replace(/\s+/g, '-')}`;
+    const blob = await put(filename, ticketFile, { access: 'public' });
+    dataToUpdate.ticketDesignUrl = blob.url;
   }
 
   await prisma.event.update({

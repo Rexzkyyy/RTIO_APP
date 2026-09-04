@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { deleteEvent } from "@/app/admin/events/actions";
 
-export function DeleteEventButton({ id }: { id: string }) {
+export function DeleteEventButton({ id, className }: { id: string, className?: string }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -21,7 +21,7 @@ export function DeleteEventButton({ id }: { id: string }) {
     <button 
       onClick={handleDelete}
       disabled={isDeleting}
-      className={`text-red-600 hover:text-red-900 ml-4 font-medium ${isDeleting ? "opacity-50 cursor-wait" : ""}`}
+      className={className || `text-red-600 hover:text-red-900 ml-4 font-medium ${isDeleting ? "opacity-50 cursor-wait" : ""}`}
     >
       {isDeleting ? "Menghapus..." : "Hapus"}
     </button>
