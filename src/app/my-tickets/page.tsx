@@ -75,15 +75,27 @@ export default async function MyTicketsPage({ searchParams }: { searchParams: Pr
     else normalizedPhone = '+62' + cleaned;
   }
 
-  const whereClause: any = {};
+  const conditions: any[] = [];
   if (session?.user?.email) {
-    whereClause.buyerEmail = session.user.email;
-  } else if (normalizedPhone) {
-    whereClause.buyerPhone = normalizedPhone;
+    conditions.push({ buyerEmail: session.user.email });
+  }
+  if (normalizedPhone) {
+    conditions.push({ buyerPhone: normalizedPhone });
+  }
+
+  const whereClause: any = {};
+  if (conditions.length > 0) {
+    whereClause.OR = conditions;
   }
 
   if (status && ['PENDING', 'APPROVED', 'REJECTED'].includes(status)) {
     whereClause.status = status;
+  }
+
+  // If no conditions (not logged in and no phone), this shouldn't happen due to earlier checks, 
+  // but if it does, we shouldn't fetch all tickets.
+  if (conditions.length === 0) {
+    return null;
   }
 
   const transactions = await prisma.transaction.findMany({
@@ -120,9 +132,32 @@ export default async function MyTicketsPage({ searchParams }: { searchParams: Pr
             </div>
             <h2 className="text-lg font-bold text-slate-700 mb-2">Belum Ada Tiket</h2>
             <p className="text-sm text-slate-500 mb-6">Tidak ditemukan tiket{phone ? ` untuk nomor ${phone}` : ''}.</p>
+            
+            <div className="max-w-sm mx-auto mb-6 text-left">
+              <p className="text-xs text-slate-500 mb-3 text-center">Punya tiket tapi tidak muncul? Coba cari dengan nomor WhatsApp saat membeli event:</p>
+              <form action="/my-tickets" method="GET" className="flex items-center gap-2">
+                <div className="flex relative flex-1">
+                  <span className="inline-flex items-center px-3 py-2.5 rounded-l-xl border border-r-0 border-slate-300 bg-slate-100 text-slate-600 font-bold text-sm">
+                    +62
+                  </span>
+                  <input 
+                    type="tel" 
+                    name="phone" 
+                    placeholder="81234567890" 
+                    required 
+                    defaultValue={phone ? phone.replace(/^\+62|0/, '') : ''}
+                    className="w-full px-3 py-2.5 rounded-r-xl border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-colors text-sm"
+                  />
+                </div>
+                <button type="submit" className="py-2.5 px-4 bg-slate-800 text-white font-bold rounded-xl shadow-md hover:bg-slate-900 transition-colors text-sm whitespace-nowrap">
+                  Cari
+                </button>
+              </form>
+            </div>
+
             {phone && (
               <Link href="/my-tickets" className="inline-block px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl mb-4 hover:bg-slate-200 transition-colors text-sm mr-2">
-                Ganti Nomor
+                Hapus Pencarian
               </Link>
             )}
             <Link href="/" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-800 to-teal-500 text-white font-bold rounded-xl shadow-md hover:scale-105 transition-transform">

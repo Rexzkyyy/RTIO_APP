@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from 'react';
-import Barcode from 'react-barcode';
-import { toPng } from 'html-to-image';
-import { jsPDF } from 'jspdf';
+import QRCode from 'react-qr-code';
 import { Download, Image as ImageIcon, CheckCircle2, Info, User, Tag, Ticket as TicketIcon, Calendar, MapPin, Mic, HeartHandshake, Globe } from "lucide-react";
 
 type TicketData = {
@@ -37,6 +35,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
     if (!ticketRef.current) return;
     setIsDownloading(true);
     try {
+      const { toPng } = await import('html-to-image');
       const dataUrl = await toPng(ticketRef.current, {
         cacheBust: true,
         pixelRatio: 2,
@@ -56,6 +55,9 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
     if (!ticketRef.current) return;
     setIsDownloading(true);
     try {
+      const { toPng } = await import('html-to-image');
+      const { jsPDF } = await import('jspdf');
+      
       const dataUrl = await toPng(ticketRef.current, {
         cacheBust: true,
         pixelRatio: 2,
@@ -94,6 +96,17 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
       case 'diagmonds': return `url('https://www.transparenttextures.com/patterns/diagmonds-light.png')`;
       default: return 'none';
     }
+  };
+
+  const getCategoryBadgeClass = (name: string) => {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('diamond')) return 'bg-indigo-600 text-white shadow-indigo-600/20';
+    if (lowerName.includes('gold')) return 'bg-amber-400 text-amber-950 shadow-amber-400/20';
+    if (lowerName.includes('silver')) return 'bg-slate-300 text-slate-800 shadow-slate-300/20';
+    if (lowerName.includes('vip')) return 'bg-rose-600 text-white shadow-rose-600/20';
+    if (lowerName.includes('presale') || lowerName.includes('pre-sale') || lowerName.includes('early')) return 'bg-teal-500 text-white shadow-teal-500/20';
+    if (lowerName.includes('normal') || lowerName.includes('regular')) return 'bg-blue-500 text-white shadow-blue-500/20';
+    return 'bg-slate-800 text-white shadow-slate-800/20'; // default
   };
 
   return (
@@ -152,7 +165,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               >
                 {data.event.title}
               </h2>
-              <div className="hidden sm:flex px-3 py-1.5 rounded bg-slate-900 text-white text-[10px] font-black tracking-widest uppercase flex-shrink-0">
+              <div className={`hidden sm:flex px-3 py-1.5 rounded ${getCategoryBadgeClass(data.ticketCategoryName)} shadow-sm text-[10px] font-black tracking-widest uppercase flex-shrink-0`}>
                 {data.ticketCategoryName}
               </div>
             </div>
@@ -224,28 +237,25 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
             </div>
             
             <div className="flex-1 flex flex-col justify-center items-center">
-              <span className="text-[9px] font-bold opacity-50 tracking-widest uppercase mb-1 block text-center" style={{ color: textColor }}>
+              <span className="text-[9px] font-bold opacity-50 tracking-widest uppercase mb-3 block text-center" style={{ color: textColor }}>
                 Pindai Disini
               </span>
-              <div className="overflow-hidden mix-blend-multiply flex justify-center w-full bg-transparent mt-2">
-                <Barcode 
+              <div className="overflow-hidden mix-blend-multiply flex justify-center w-full bg-transparent">
+                <QRCode 
                   value={data.barcodeString}
-                  width={1.5}
-                  height={50}
-                  displayValue={false}
-                  background="transparent"
-                  lineColor={textColor}
-                  margin={0}
+                  size={140}
+                  bgColor="transparent"
+                  fgColor={textColor}
+                  level="Q"
                 />
               </div>
-              <span className="font-mono text-xs font-black tracking-[0.2em] mt-3 py-1.5 px-2 rounded bg-white border border-slate-200 text-slate-800 w-full text-center shadow-sm">
-                {data.barcodeString}
-              </span>
             </div>
 
             <div className="mt-4 pt-4 border-t border-slate-300/60 text-center">
-              <span className="text-[8px] font-bold text-slate-400 uppercase block tracking-wider">Kategori</span>
-              <span className="text-xs font-black uppercase" style={{ color: primaryColor }}>{data.ticketCategoryName}</span>
+              <span className="text-[8px] font-bold text-slate-400 uppercase block tracking-wider mb-1.5">Kategori</span>
+              <div className={`inline-block px-3 py-1 rounded ${getCategoryBadgeClass(data.ticketCategoryName)} shadow-sm text-[10px] font-black tracking-widest uppercase`}>
+                {data.ticketCategoryName}
+              </div>
             </div>
           </div>
         </div>
