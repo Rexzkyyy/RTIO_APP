@@ -179,7 +179,8 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
             const discountEnd = ticket.discountEndDate ? new Date(ticket.discountEndDate) : null;
             const isDiscountActive = ticket.hasDiscount && ticket.discountPrice != null && 
               (!discountStart || now >= discountStart) && 
-              (!discountEnd || now <= discountEnd);
+              (!discountEnd || now <= discountEnd) &&
+              (ticket.discountQuota === null || ticket.discountQuota > 0);
             const activePrice = isDiscountActive ? ticket.discountPrice : ticket.price;
 
             return (
@@ -249,6 +250,16 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
               className="w-full px-4 py-3 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
             />
           </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-slate-700 mb-2">Alamat Pemesan <span className="text-red-500">*</span></label>
+            <textarea
+              name="buyerAddress"
+              required
+              rows={2}
+              placeholder="Misal: Jl. Jend. Sudirman No. 1, Jakarta"
+              className="w-full px-4 py-3 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+            ></textarea>
+          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Alamat Email</label>
             <input 
@@ -291,6 +302,18 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
               <option value="Laki-laki">Laki-laki</option>
               <option value="Perempuan">Perempuan</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Umur <span className="text-red-500">*</span></label>
+            <input 
+              type="number" 
+              name="holderAge_0"
+              required
+              min={1}
+              max={150}
+              placeholder="Misal: 25"
+              className="w-full px-4 py-3 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+            />
           </div>
         </div>
       </div>
@@ -342,7 +365,7 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
                       />
                     </div>
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-1">
                     <label className="block text-sm font-medium text-slate-700 mb-2">Jenis Kelamin <span className="text-red-500">*</span></label>
                     <select
                       name={`holderGender_${i}`}
@@ -353,6 +376,18 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
                       <option value="Laki-laki">Laki-laki</option>
                       <option value="Perempuan">Perempuan</option>
                     </select>
+                  </div>
+                  <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Umur <span className="text-red-500">*</span></label>
+                    <input 
+                      type="number" 
+                      name={`holderAge_${i}`}
+                      required
+                      min={1}
+                      max={150}
+                      placeholder="Umur"
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none transition-colors"
+                    />
                   </div>
                 </div>
               </div>
@@ -461,16 +496,20 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           </button>
         )}
         
-        {step < totalSteps ? (
+        {step < totalSteps && (
           <button 
+            key="btn-next"
             type="button"
             onClick={handleNext}
             className="flex-1 flex justify-center items-center px-4 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-base shadow-lg shadow-emerald-500/30"
           >
             Selanjutnya
           </button>
-        ) : (
+        )}
+        
+        {step === totalSteps && (
           <button 
+            key="btn-submit"
             type="submit"
             disabled={isSubmitting}
             className={`w-full flex justify-center items-center px-4 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/50 transition-all text-base shadow-lg shadow-emerald-500/30 ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}

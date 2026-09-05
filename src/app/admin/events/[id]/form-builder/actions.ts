@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 export async function saveFormFields(eventId: string, formData: FormData) {
   const fieldIds = formData.getAll("fieldId[]") as string[];
@@ -29,6 +30,17 @@ export async function saveFormFields(eventId: string, formData: FormData) {
       data: fieldsToCreate,
     });
   }
+
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { slug: true }
+  });
+
+  if (event) {
+    revalidatePath(`/event/${event.slug}`);
+    revalidatePath(`/event/${event.slug}/register`);
+  }
+  revalidatePath("/admin/events");
 
   redirect("/admin/events");
 }

@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, ArrowLeft, Ticket } from "lucide-react";
+import { CheckCircle2, ArrowLeft, Ticket, MessageCircle } from "lucide-react";
 import TicketCard from "@/components/TicketCard";
 import InteractiveBackground from "@/components/InteractiveBackground";
 import PublicNavbar from "@/components/PublicNavbar";
@@ -81,6 +81,26 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
             }}
           />
         </div>
+
+        {transaction.event.waGroupLink && (
+          <div className="bg-white p-5 rounded-xl border border-emerald-200 w-full max-w-2xl shadow-sm mt-4 no-print">
+            <p className="text-sm text-slate-600 mb-4 leading-relaxed text-center">
+              <span className="font-bold text-emerald-800">🗣️ Bergabung ke Grup WhatsApp!</span><br/>
+              Silakan bergabung ke grup WhatsApp event untuk mendapatkan informasi terbaru terkait acara ini.
+            </p>
+            <div className="flex justify-center">
+              <a 
+                href={transaction.event.waGroupLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center justify-center px-4 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 active:scale-95 transition-all shadow-md w-full sm:w-auto"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Gabung Grup WhatsApp
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Desktop Bottom Button */}
         <div className="hidden md:flex justify-center w-full max-w-2xl no-print pb-12">

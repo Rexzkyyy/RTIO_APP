@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { ChevronLeft, CheckCircle2, XCircle, Search, ExternalLink, ImageIcon, Clock, ChevronRight, Receipt } from "lucide-react";
 import { revalidatePath } from "next/cache";
+import { DeleteButton } from "./DeleteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,38 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
       await prisma.transaction.update({
         where: { id },
         data: { status }
+      });
+      revalidatePath("/admin/transactions");
+    }
+  }
+
+  async function deleteTransaction(formData: FormData) {
+    "use server";
+    const id = formData.get("id") as string;
+    
+    if (id) {
+      await prisma.$transaction(async (prismaTx) => {
+        const tx = await prismaTx.transaction.findUnique({
+          where: { id },
+          include: { tickets: true }
+        });
+        if (!tx) return;
+
+        await prismaTx.transaction.delete({ where: { id } });
+
+        if (tx.status !== "EXPIRED") {
+          const quotaToReturn = new Map<string, number>();
+          for (const ticket of tx.tickets) {
+            const current = quotaToReturn.get(ticket.ticketCategoryId) ?? 0;
+            quotaToReturn.set(ticket.ticketCategoryId, current + 1);
+          }
+          for (const [categoryId, count] of quotaToReturn.entries()) {
+            await prismaTx.ticketCategory.update({
+              where: { id: categoryId },
+              data: { quota: { increment: count } }
+            });
+          }
+        }
       });
       revalidatePath("/admin/transactions");
     }
@@ -309,6 +342,10 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                                 Setujui
                               </button>
                             </form>
+                            <form action={deleteTransaction}>
+                              <input type="hidden" name="id" value={tx.id} />
+                              <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
+                            </form>
                           </div>
                         )}
                         {tx.status === "APPROVED" && (
@@ -322,17 +359,34 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                               Lihat Tiket
                             </a>
                             <a
-                              href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nPembayaran Anda untuk acara *${tx.event.title}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${tx.buyerName}\n- Acara: *${tx.event.title}*\n- Jenis Kelamin: ${tx.buyerGender || '-'}\n- Jenis Tiket: ${tx.tickets[0]?.ticketCategory.name || '-'}\n- Jumlah: ${tx.tickets.length} Tiket\n- Tanggal: ${new Date(tx.event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n- Lokasi: ${tx.event.location}${tx.tickets.length > 0 ? `\n\n*Daftar Peserta:*\n${tx.tickets.map((t: any, i: number) => `${i + 1}. ${t.holderName || '-'} (${t.holderGender || '-'})`).join('\n')}` : ''}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${process.env.NEXT_PUBLIC_APP_URL || 'https://rtio-tix.vercel.app'}/public/${tx.id}/verify\n\nTerima kasih.`)}`}
+                              href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nPembayaran Anda untuk acara *${tx.event.title}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${tx.buyerName}\n- Acara: *${tx.event.title}*\n- Jenis Kelamin: ${tx.buyerGender || '-'}\n- Jenis Tiket: ${tx.tickets[0]?.ticketCategory.name || '-'}\n- Jumlah: ${tx.tickets.length} Tiket\n- Tanggal: ${new Date(tx.event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n- Lokasi: ${tx.event.location}${tx.tickets.length > 0 ? `\n\n*Daftar Peserta:*\n${tx.tickets.map((t: any, i: number) => `${i + 1}. ${t.holderName || '-'} (${t.holderGender || '-'})`).join('\n')}` : ''}${tx.event.waGroupLink ? `\n\n*Grup WhatsApp Event:*\nSilakan bergabung melalui link berikut:\n${tx.event.waGroupLink}` : ''}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${process.env.NEXT_PUBLIC_APP_URL || 'https://rtio-tix.vercel.app'}/public/${tx.id}/verify\n\nTerima kasih.`)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center px-4 py-2 text-sm font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 shadow-sm transition-colors"
                             >
                               Kirim WA
                             </a>
+                            <form action={deleteTransaction}>
+                              <input type="hidden" name="id" value={tx.id} />
+                              <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
+                            </form>
                           </div>
                         )}
                         {tx.status === "REJECTED" && (
-                          <span className="px-4 py-2 text-sm font-bold text-red-400">Ditolak</span>
+                          <div className="flex gap-2 items-center">
+                            <a
+                              href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nMohon maaf, pembayaran Anda untuk pendaftaran acara *${tx.event.title}* belum dapat kami validasi karena bukti transfer tidak sesuai atau dana belum masuk.\n\nSilakan lakukan konfirmasi ulang atau hubungi kami jika ada kendala.\n\nTerima kasih.`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-4 py-2 text-sm font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 shadow-sm transition-colors h-full"
+                            >
+                              Kirim WA
+                            </a>
+                            <form action={deleteTransaction}>
+                              <input type="hidden" name="id" value={tx.id} />
+                              <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
+                            </form>
+                          </div>
                         )}
                       </div>
                     </td>
@@ -409,6 +463,10 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                         <input type="hidden" name="status" value="APPROVED" />
                         <button type="submit" className="w-full py-2.5 bg-emerald-500 text-white font-bold hover:bg-emerald-600 rounded-xl transition-all">Setujui</button>
                       </form>
+                      <form action={deleteTransaction}>
+                        <input type="hidden" name="id" value={tx.id} />
+                        <DeleteButton className="p-3 rounded-xl h-full" />
+                      </form>
                     </div>
                   )}
                   {tx.status === "APPROVED" && (
@@ -422,13 +480,33 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                         Lihat Tiket
                       </a>
                       <a 
-                        href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nPembayaran Anda untuk acara *${tx.event.title}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${tx.buyerName}\n- Acara: *${tx.event.title}*\n- Jenis Kelamin: ${tx.buyerGender || '-'}\n- Jenis Tiket: ${tx.tickets[0]?.ticketCategory.name || '-'}\n- Jumlah: ${tx.tickets.length} Tiket\n- Tanggal: ${new Date(tx.event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n- Lokasi: ${tx.event.location}${tx.tickets.length > 0 ? `\n\n*Daftar Peserta:*\n${tx.tickets.map((t: any, i: number) => `${i + 1}. ${t.holderName || '-'} (${t.holderGender || '-'})`).join('\n')}` : ''}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${process.env.NEXT_PUBLIC_APP_URL || 'https://rtio-tix.vercel.app'}/public/${tx.id}/verify\n\nTerima kasih.`)}`}
+                        href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nPembayaran Anda untuk acara *${tx.event.title}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${tx.buyerName}\n- Acara: *${tx.event.title}*\n- Jenis Kelamin: ${tx.buyerGender || '-'}\n- Jenis Tiket: ${tx.tickets[0]?.ticketCategory.name || '-'}\n- Jumlah: ${tx.tickets.length} Tiket\n- Tanggal: ${new Date(tx.event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n- Lokasi: ${tx.event.location}${tx.tickets.length > 0 ? `\n\n*Daftar Peserta:*\n${tx.tickets.map((t: any, i: number) => `${i + 1}. ${t.holderName || '-'} (${t.holderGender || '-'})`).join('\n')}` : ''}${tx.event.waGroupLink ? `\n\n*Grup WhatsApp Event:*\nSilakan bergabung melalui link berikut:\n${tx.event.waGroupLink}` : ''}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${process.env.NEXT_PUBLIC_APP_URL || 'https://rtio-tix.vercel.app'}/public/${tx.id}/verify\n\nTerima kasih.`)}`}
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="flex-1 text-center py-2.5 text-sm font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 transition-all"
                       >
                         Kirim WA
                       </a>
+                      <form action={deleteTransaction}>
+                        <input type="hidden" name="id" value={tx.id} />
+                        <DeleteButton className="p-3 rounded-xl h-full" />
+                      </form>
+                    </div>
+                  )}
+                  {tx.status === "REJECTED" && (
+                    <div className="flex gap-2 w-full pt-2">
+                      <a
+                        href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nMohon maaf, pembayaran Anda untuk pendaftaran acara *${tx.event.title}* belum dapat kami validasi karena bukti transfer tidak sesuai atau dana belum masuk.\n\nSilakan lakukan konfirmasi ulang atau hubungi kami jika ada kendala.\n\nTerima kasih.`)}`}
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="flex-1 text-center py-2.5 text-sm font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 transition-all flex items-center justify-center"
+                      >
+                        Kirim WA
+                      </a>
+                      <form action={deleteTransaction}>
+                        <input type="hidden" name="id" value={tx.id} />
+                        <DeleteButton className="p-2.5 rounded-xl h-full" />
+                      </form>
                     </div>
                   )}
                 </div>

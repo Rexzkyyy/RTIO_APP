@@ -17,10 +17,9 @@ export async function createEvent(formData: FormData) {
   const title = formData.get("title") as string;
   const slug = formData.get("slug") as string;
   const description = formData.get("description") as string;
-  const eventDateStr = formData.get("eventDate") as string;
   const location = formData.get("location") as string;
-  const whatsapp = formData.get("whatsapp") as string;
-  const instagram = formData.get("instagram") as string;
+  const eventDateStr = formData.get("eventDate") as string;
+  const waGroupLink = formData.get("waGroupLink") as string | null;
 
   // Validate Slug Format
   if (!/^[a-z0-9-]+$/.test(slug)) {
@@ -48,6 +47,7 @@ export async function createEvent(formData: FormData) {
   const discountPrices = formData.getAll("discountPrice[]") as string[];
   const discountStartDates = formData.getAll("discountStartDate[]") as string[];
   const discountEndDates = formData.getAll("discountEndDate[]") as string[];
+  const discountQuotas = formData.getAll("discountQuota[]") as string[];
   const hasBenefits = formData.getAll("hasBenefits[]") as string[];
   const ticketIndices = formData.getAll("ticketIndex[]") as string[];
 
@@ -67,6 +67,7 @@ export async function createEvent(formData: FormData) {
       discountPrice: discountPrices[idx] ? parseInt(discountPrices[idx].replace(/\D/g, '')) : null,
       discountStartDate: discountStartDates[idx] ? new Date(discountStartDates[idx]) : null,
       discountEndDate: discountEndDates[idx] ? new Date(discountEndDates[idx]) : null,
+      discountQuota: discountQuotas[idx] ? parseInt(discountQuotas[idx]) : null,
       hasBenefits: hasBenefit,
       benefits: benefits,
     };
@@ -83,6 +84,25 @@ export async function createEvent(formData: FormData) {
     number: bankNumbers[idx],
     name: bankAccountNames[idx],
   }));
+
+  // Parse arrays of social medias
+  const socialPlatforms = formData.getAll("socialPlatform[]") as string[];
+  const socialLinks = formData.getAll("socialLink[]") as string[];
+
+  // Construct social medias JSON array
+  const socialMedias = socialPlatforms.map((platform, idx) => {
+    let link = socialLinks[idx];
+    if (platform === 'WhatsApp' && link) {
+      let cleaned = link.toString().replace(/\D/g, '');
+      if (cleaned.startsWith('62')) link = '+' + cleaned;
+      else if (cleaned.startsWith('0')) link = '+62' + cleaned.substring(1);
+      else link = '+62' + cleaned;
+    }
+    return {
+      platform,
+      link,
+    };
+  }).filter(s => s.link.trim() !== "");
 
   // Handle Image Upload using Vercel Blob
   let bannerUrl = ""; 
@@ -110,11 +130,11 @@ export async function createEvent(formData: FormData) {
       location,
       artists,
       sponsors,
-      whatsapp: whatsapp || null,
-      instagram: instagram || null,
+      socialMedias: socialMedias.length > 0 ? (socialMedias as any) : undefined,
       bankAccounts: bankAccounts.length > 0 ? (bankAccounts as any) : undefined,
       bannerUrl,
       ticketDesignUrl,
+      waGroupLink,
       isActive: true,
       ticketCategories: {
         create: ticketCategories

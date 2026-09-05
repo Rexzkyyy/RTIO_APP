@@ -7,8 +7,10 @@ async function main() {
     const updated = await prisma.event.update({
       where: { id: events[0].id },
       data: {
-        whatsapp: '081234567890',
-        instagram: 'ruangtenang'
+        socialMedias: [
+          { platform: 'WhatsApp', link: '081234567890' },
+          { platform: 'Instagram', link: 'ruangtenang' }
+        ]
       }
     });
     console.log('Updated event:', updated.title);

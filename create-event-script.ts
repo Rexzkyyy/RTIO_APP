@@ -13,8 +13,10 @@ async function main() {
       isActive: true,
       artists: ['Dimas Seto', 'Dhini Aminarti'],
       sponsors: [],
-      whatsapp: '+6285299383426',
-      instagram: '@ruangtenanng.community',
+      socialMedias: [
+        { platform: 'WhatsApp', link: '+6285299383426' },
+        { platform: 'Instagram', link: '@ruangtenanng.community' }
+      ],
       bankAccounts: [
         {
           bank: 'Bank Syariah Indonesia',

@@ -180,7 +180,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               {/* Row 1: Name & Category */}
               <div className="grid grid-cols-3 border-b border-slate-300">
                 <div className="p-3 border-r border-slate-300 col-span-2">
-                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nama Penumpang</span>
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nama Peserta</span>
                   <span className="text-sm font-black uppercase truncate block" style={{ color: textColor }}>{data.transaction.buyerName}</span>
                 </div>
                 <div className="p-3 bg-slate-50/50">

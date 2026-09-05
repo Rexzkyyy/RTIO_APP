@@ -19,8 +19,7 @@ export async function updateEvent(id: string, formData: FormData) {
   const description = formData.get("description") as string;
   const eventDateStr = formData.get("eventDate") as string;
   const location = formData.get("location") as string;
-  const whatsapp = formData.get("whatsapp") as string;
-  const instagram = formData.get("instagram") as string;
+  const waGroupLink = formData.get("waGroupLink") as string | null;
 
   // Check Slug format and uniqueness
   if (!/^[a-z0-9-]+$/.test(slug)) {
@@ -45,6 +44,7 @@ export async function updateEvent(id: string, formData: FormData) {
   const discountPrices = formData.getAll("discountPrice[]") as string[];
   const discountStartDates = formData.getAll("discountStartDate[]") as string[];
   const discountEndDates = formData.getAll("discountEndDate[]") as string[];
+  const discountQuotas = formData.getAll("discountQuota[]") as string[];
   const hasBenefits = formData.getAll("hasBenefits[]") as string[];
   const ticketIndices = formData.getAll("ticketIndex[]") as string[];
 
@@ -57,6 +57,23 @@ export async function updateEvent(id: string, formData: FormData) {
     number: bankNumbers[idx],
     name: bankAccountNames[idx],
   }));
+
+  const socialPlatforms = formData.getAll("socialPlatform[]") as string[];
+  const socialLinks = formData.getAll("socialLink[]") as string[];
+
+  const socialMedias = socialPlatforms.map((platform, idx) => {
+    let link = socialLinks[idx];
+    if (platform === 'WhatsApp' && link) {
+      let cleaned = link.toString().replace(/\D/g, '');
+      if (cleaned.startsWith('62')) link = '+' + cleaned;
+      else if (cleaned.startsWith('0')) link = '+62' + cleaned.substring(1);
+      else link = '+62' + cleaned;
+    }
+    return {
+      platform,
+      link,
+    };
+  }).filter(s => s.link.trim() !== "");
 
   // Prepare ticket updates: we will delete all old ones and recreate to keep it simple,
   // OR we can update existing and create new.
@@ -76,8 +93,8 @@ export async function updateEvent(id: string, formData: FormData) {
     location,
     artists,
     sponsors,
-    whatsapp: whatsapp || null,
-    instagram: instagram || null,
+    waGroupLink,
+    socialMedias: socialMedias.length > 0 ? (socialMedias as any) : null,
     bankAccounts: bankAccounts.length > 0 ? (bankAccounts as any) : undefined,
   };
 
@@ -119,28 +136,33 @@ export async function updateEvent(id: string, formData: FormData) {
     const hasBenefit = hasBenefits[i] === "true";
     const benefits = hasBenefit ? (formData.getAll(`benefit_${ticketIndices[i]}[]`) as string[]).filter(b => b.trim() !== "") : [];
     
-    const data: any = {
+    const baseData: any = {
       name: ticketNames[i],
       price: parseInt(ticketPrices[i].replace(/\D/g, '') || "0"),
       originalPrice: originalPriceStr ? parseInt(originalPriceStr) : null,
       quota: quota,
-      eventId: id,
       hasDiscount: hasDiscounts[i] === "true",
       discountPrice: discountPrices[i] ? parseInt(discountPrices[i].replace(/\D/g, '')) : null,
       discountStartDate: discountStartDates[i] ? new Date(discountStartDates[i]) : null,
       discountEndDate: discountEndDates[i] ? new Date(discountEndDates[i]) : null,
+      discountQuota: discountQuotas[i] ? parseInt(discountQuotas[i]) : null,
       hasBenefits: hasBenefit,
       benefits: benefits,
     };
 
     if (tId === "NEW") {
-      data.initialQuota = quota;
-      await prisma.ticketCategory.create({ data });
+      await prisma.ticketCategory.create({ 
+        data: {
+          ...baseData,
+          initialQuota: quota,
+          eventId: id,
+        }
+      });
     } else {
       // Don't update initialQuota for existing tickets unless we specifically want to
       await prisma.ticketCategory.update({
         where: { id: tId },
-        data,
+        data: baseData,
       });
     }
   }

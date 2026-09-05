@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar as CalendarIcon, MapPin, Tag, Users, CheckCircle2, Plus, Trash2, Image as ImageIcon, Ticket } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, Tag, Users, CheckCircle2, Plus, Trash2, Image as ImageIcon, Ticket, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import imageCompression from "browser-image-compression";
@@ -29,6 +29,7 @@ export default function CreateEventPage() {
     quota: "", 
     hasDiscount: false,
     discountPrice: "",
+    discountQuota: "",
     discountStartDate: "",
     discountEndDate: "",
     hasBenefits: false,
@@ -53,6 +54,7 @@ export default function CreateEventPage() {
     }));
   };
   const [bankAccounts, setBankAccounts] = useState([{ id: 1, bank: "", number: "", name: "" }]);
+  const [socialMedias, setSocialMedias] = useState([{ id: 1, platform: "Instagram", link: "" }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [ticketImagePreview, setTicketImagePreview] = useState<string | null>(null);
@@ -92,6 +94,7 @@ export default function CreateEventPage() {
       quota: "",
       hasDiscount: false,
       discountPrice: "",
+      discountQuota: "",
       discountStartDate: "",
       discountEndDate: "",
       hasBenefits: false,
@@ -153,6 +156,16 @@ export default function CreateEventPage() {
     }
   };
 
+  const addSocialMedia = () => {
+    setSocialMedias([...socialMedias, { id: Date.now(), platform: "Instagram", link: "" }]);
+  };
+
+  const removeSocialMedia = (id: number) => {
+    if (socialMedias.length > 1) {
+      setSocialMedias(socialMedias.filter(s => s.id !== id));
+    }
+  };
+
   return (
     <div className="w-full space-y-6">
       <div className="flex justify-between items-center">
@@ -203,14 +216,6 @@ export default function CreateEventPage() {
           }
 
           if (!compressionError) {
-            const wa = formData.get('whatsapp');
-            if (wa) {
-              let cleaned = wa.toString().replace(/\D/g, '');
-              if (cleaned.startsWith('62')) formData.set('whatsapp', '+' + cleaned);
-              else if (cleaned.startsWith('0')) formData.set('whatsapp', '+62' + cleaned.substring(1));
-              else formData.set('whatsapp', '+62' + cleaned);
-            }
-
             const res = await createEvent(formData);
             if (res?.error) {
               setErrorMsg(res.error);
@@ -352,6 +357,21 @@ export default function CreateEventPage() {
                   />
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Link Grup WhatsApp (Opsional)</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MessageCircle className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <input 
+                    type="url" 
+                    name="waGroupLink"
+                    placeholder="https://chat.whatsapp.com/..."
+                    className="block w-full pl-10 px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -411,6 +431,8 @@ export default function CreateEventPage() {
                         name="ticketQuota[]"
                         required
                         min="1"
+                        value={ticket.quota}
+                        onChange={(e) => handleTicketChange(ticket.id, 'quota', e.target.value)}
                         placeholder="100"
                         className="w-full pl-8 px-3 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
                       />
@@ -443,7 +465,7 @@ export default function CreateEventPage() {
 
                   {/* Discount Inputs */}
                   {ticket.hasDiscount && (
-                    <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+                    <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2 bg-emerald-50 p-4 rounded-lg border border-emerald-100">
                       <div>
                         <label className="block text-xs font-medium text-emerald-800 mb-1">Harga Diskon (Rp)</label>
                         <input 
@@ -458,11 +480,25 @@ export default function CreateEventPage() {
                         />
                       </div>
                       <div>
+                        <label className="block text-xs font-medium text-emerald-800 mb-1">Kuota Diskon</label>
+                        <input 
+                          type="number" 
+                          name="discountQuota[]" 
+                          min="1"
+                          value={ticket.discountQuota}
+                          onChange={(e) => handleTicketChange(ticket.id, 'discountQuota', e.target.value)}
+                          placeholder="Kosong = Tak Terbatas"
+                          className="w-full px-3 py-2 rounded-md border border-emerald-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+                        />
+                      </div>
+                      <div>
                         <label className="block text-xs font-medium text-emerald-800 mb-1">Mulai Diskon (WIB)</label>
                         <input 
                           type="datetime-local" 
                           name="discountStartDate[]" 
                           required 
+                          value={ticket.discountStartDate}
+                          onChange={(e) => handleTicketChange(ticket.id, 'discountStartDate', e.target.value)}
                           className="w-full px-3 py-2 rounded-md border border-emerald-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
                         />
                       </div>
@@ -472,6 +508,8 @@ export default function CreateEventPage() {
                           type="datetime-local" 
                           name="discountEndDate[]" 
                           required 
+                          value={ticket.discountEndDate}
+                          onChange={(e) => handleTicketChange(ticket.id, 'discountEndDate', e.target.value)}
                           className="w-full px-3 py-2 rounded-md border border-emerald-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
                         />
                       </div>
@@ -480,6 +518,7 @@ export default function CreateEventPage() {
                   {!ticket.hasDiscount && (
                     <>
                       <input type="hidden" name="discountPrice[]" value="" />
+                      <input type="hidden" name="discountQuota[]" value="" />
                       <input type="hidden" name="discountStartDate[]" value="" />
                       <input type="hidden" name="discountEndDate[]" value="" />
                     </>
@@ -547,37 +586,59 @@ export default function CreateEventPage() {
 
           {/* Bagian 4: Media Sosial */}
           <div>
-            <h3 className="text-lg font-semibold text-slate-800 border-b pb-2 mb-4">4. Media Sosial (Opsional)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">WhatsApp Admin</label>
-                <div className="flex relative">
-                  <span className="inline-flex items-center px-4 py-3 rounded-l-lg border border-r-0 border-slate-300 bg-slate-100 text-slate-600 font-bold text-sm">
-                    +62
-                  </span>
-                  <input 
-                    type="tel" 
-                    name="whatsapp"
-                    placeholder="8123456789"
-                    className="w-full px-4 py-3 rounded-r-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                    onInput={(e) => {
-                      let val = e.currentTarget.value;
-                      if (val.startsWith('0')) e.currentTarget.value = val.substring(1);
-                      else if (val.startsWith('62')) e.currentTarget.value = val.substring(2);
-                      else if (val.startsWith('+62')) e.currentTarget.value = val.substring(3);
-                    }}
-                  />
+            <div className="flex justify-between items-center border-b pb-2 mb-4">
+              <h3 className="text-lg font-semibold text-slate-800">4. Media Sosial (Opsional)</h3>
+              <button 
+                type="button" 
+                onClick={addSocialMedia}
+                className="flex items-center text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Tambah Media Sosial
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {socialMedias.map((social) => (
+                <div key={social.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
+                  <div className="md:col-span-4">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Platform</label>
+                    <select 
+                      name="socialPlatform[]"
+                      required
+                      className="w-full px-3 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm bg-white"
+                    >
+                      <option value="WhatsApp">WhatsApp</option>
+                      <option value="Instagram">Instagram</option>
+                      <option value="TikTok">TikTok</option>
+                      <option value="Twitter">Twitter / X</option>
+                      <option value="Facebook">Facebook</option>
+                      <option value="Website">Website</option>
+                      <option value="Lainnya">Lainnya</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-7">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Link / Username / Nomor</label>
+                    <input 
+                      type="text" 
+                      name="socialLink[]"
+                      required
+                      placeholder="Misal: https://instagram.com/event atau 0812345678"
+                      className="w-full px-3 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+                    />
+                  </div>
+                  <div className="md:col-span-1 flex justify-end">
+                    <button 
+                      type="button" 
+                      onClick={() => removeSocialMedia(social.id)}
+                      disabled={socialMedias.length === 1}
+                      className={`p-2 rounded-md ${socialMedias.length === 1 ? 'text-slate-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-50'}`}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Instagram (Username atau Link)</label>
-                <input 
-                  type="text" 
-                  name="instagram"
-                  placeholder="@event_keren"
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                />
-              </div>
+              ))}
             </div>
           </div>
 

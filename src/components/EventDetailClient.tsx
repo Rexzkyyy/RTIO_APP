@@ -232,20 +232,47 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
               </div>
 
               {/* Kontak & Sosial Media */}
-              {(event.whatsapp || event.instagram) && (
+              {(event.socialMedias && Array.isArray(event.socialMedias) && event.socialMedias.length > 0) && (
                 <div className="mt-8 flex flex-wrap gap-4">
-                  {event.whatsapp && (
-                    <a href={`https://wa.me/${event.whatsapp.replace(/[^0-9]/g, '').replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="flex items-center px-5 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 hover:bg-emerald-100 hover:shadow-sm transition-all group">
-                      <MessageCircle className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform" />
-                      <span className="font-bold text-sm">Hubungi Admin (WA)</span>
-                    </a>
-                  )}
-                  {event.instagram && (
-                    <a href={event.instagram.startsWith('http') ? event.instagram : `https://instagram.com/${event.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center px-5 py-2.5 bg-pink-50 text-pink-700 rounded-xl border border-pink-200 hover:bg-pink-100 hover:shadow-sm transition-all group">
-                      <InstagramIcon className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform" />
-                      <span className="font-bold text-sm">{event.instagram.startsWith('http') ? 'Instagram' : (event.instagram.startsWith('@') ? event.instagram : `@${event.instagram}`)}</span>
-                    </a>
-                  )}
+                  {event.socialMedias.map((social: any, idx: number) => {
+                    let href = social.link;
+                    let display = social.platform;
+                    let bgClass = "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100";
+                    let icon = <Globe className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform" />;
+                    
+                    if (social.platform === 'WhatsApp') {
+                      href = `https://wa.me/${social.link.replace(/[^0-9]/g, '').replace(/^0/, '62')}`;
+                      bgClass = "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100";
+                      icon = <MessageCircle className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform" />;
+                      display = "Hubungi Admin (WA)";
+                    } else if (social.platform === 'Instagram') {
+                      href = social.link.startsWith('http') ? social.link : `https://instagram.com/${social.link.replace('@', '')}`;
+                      bgClass = "bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100";
+                      icon = <InstagramIcon className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform" />;
+                      display = social.link.startsWith('http') ? 'Instagram' : (social.link.startsWith('@') ? social.link : `@${social.link}`);
+                    } else if (social.platform === 'Twitter') {
+                      href = social.link.startsWith('http') ? social.link : `https://twitter.com/${social.link.replace('@', '')}`;
+                      bgClass = "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100";
+                      display = 'Twitter / X';
+                    } else if (social.platform === 'Facebook') {
+                      href = social.link.startsWith('http') ? social.link : `https://facebook.com/${social.link}`;
+                      bgClass = "bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100";
+                      display = 'Facebook';
+                    } else if (social.platform === 'TikTok') {
+                      href = social.link.startsWith('http') ? social.link : `https://tiktok.com/@${social.link.replace('@', '')}`;
+                      bgClass = "bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200";
+                      display = 'TikTok';
+                    } else {
+                      if (!href.startsWith('http')) href = `https://${href}`;
+                    }
+
+                    return (
+                      <a key={idx} href={href} target="_blank" rel="noopener noreferrer" className={`flex items-center px-5 py-2.5 rounded-xl border hover:shadow-sm transition-all group ${bgClass}`}>
+                        {icon}
+                        <span className="font-bold text-sm">{display}</span>
+                      </a>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -322,7 +349,8 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
               const discountEnd = ticket.discountEndDate ? new Date(ticket.discountEndDate) : null;
               const isDiscountActive = ticket.hasDiscount && ticket.discountPrice != null && 
                 (!discountStart || now >= discountStart) && 
-                (!discountEnd || now <= discountEnd);
+                (!discountEnd || now <= discountEnd) &&
+                (ticket.discountQuota === null || ticket.discountQuota > 0);
 
               const activePrice = isDiscountActive ? ticket.discountPrice : ticket.price;
               const displayOriginalPrice = isDiscountActive ? ticket.price : ticket.originalPrice;
@@ -331,8 +359,8 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
               const cheapestTicketId = [...event.ticketCategories]
                 .filter((t: any) => t.quota > 0)
                 .sort((a: any, b: any) => {
-                  const aActivePrice = a.hasDiscount && a.discountPrice != null && (!a.discountStartDate || now >= new Date(a.discountStartDate)) && (!a.discountEndDate || now <= new Date(a.discountEndDate)) ? a.discountPrice : a.price;
-                  const bActivePrice = b.hasDiscount && b.discountPrice != null && (!b.discountStartDate || now >= new Date(b.discountStartDate)) && (!b.discountEndDate || now <= new Date(b.discountEndDate)) ? b.discountPrice : b.price;
+                  const aActivePrice = a.hasDiscount && a.discountPrice != null && (!a.discountStartDate || now >= new Date(a.discountStartDate)) && (!a.discountEndDate || now <= new Date(a.discountEndDate)) && (a.discountQuota === null || a.discountQuota > 0) ? a.discountPrice : a.price;
+                  const bActivePrice = b.hasDiscount && b.discountPrice != null && (!b.discountStartDate || now >= new Date(b.discountStartDate)) && (!b.discountEndDate || now <= new Date(b.discountEndDate)) && (b.discountQuota === null || b.discountQuota > 0) ? b.discountPrice : b.price;
                   return aActivePrice - bActivePrice;
                 })[0]?.id;
               const isBestSeller = ticket.id === cheapestTicketId && !isSoldOut;
@@ -392,7 +420,11 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                       <div className={`p-3 rounded-xl ${style.bgClass} border ${style.borderClass} shadow-sm transform group-hover/ticket:scale-110 group-hover/ticket:rotate-3 transition-transform duration-300`}>
                         {style.icon}
                       </div>
-                      {isLowStock ? (
+                      {isDiscountActive && ticket.discountQuota !== null ? (
+                        <span className="text-sm font-black px-3 py-1.5 rounded-md border border-rose-300 bg-rose-50 text-rose-600 animate-pulse shadow-sm">
+                          🔥 Sisa Promo: {ticket.discountQuota}
+                        </span>
+                      ) : isLowStock ? (
                         <span className="text-sm font-black px-3 py-1.5 rounded-md border border-orange-300 bg-orange-50 text-orange-600 animate-pulse shadow-sm">
                           🔥 Sisa {ticket.quota} Kursi!
                         </span>
@@ -422,11 +454,11 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                     </div>
                     
                     <div className="mt-auto pt-2">
-                      {ticket.discountPrice && ticket.discountPrice < ticket.price && (
+                      {isDiscountActive && ticket.discountPrice && ticket.discountPrice < ticket.price ? (
                         <div className="text-sm font-medium text-slate-400 line-through mb-0.5">
                           Rp {ticket.price.toLocaleString('id-ID')}
                         </div>
-                      )}
+                      ) : null}
                       <div className="text-3xl font-black text-slate-800 tracking-tight">
                         {activePrice === 0 ? "Gratis" : `Rp ${activePrice.toLocaleString('id-ID')}`}
                       </div>

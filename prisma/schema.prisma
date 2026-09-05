@@ -9,17 +9,17 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 // 1. Tabel Admin (Pengelola Event)
 model Admin {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String   // Akan di-hash
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String // Akan di-hash
   name      String
   role      AdminRole @default(SUPER_ADMIN)
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   eventAccess AdminEventAccess[]
 
@@ -32,12 +32,12 @@ enum AdminRole {
 }
 
 model AdminEventAccess {
-  id       String @id @default(uuid())
-  adminId  String
-  eventId  String
+  id      String @id @default(uuid())
+  adminId String
+  eventId String
 
-  admin    Admin  @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([adminId, eventId])
 }
@@ -48,17 +48,17 @@ model Event {
   title           String
   slug            String   @unique // Untuk URL ramah SEO (misal: /event/konser-musik)
   description     String   @db.Text
-  bannerUrl       String?  // Link gambar banner dari Supabase Storage
-  ticketDesignUrl String?  // Link gambar desain tiket
+  bannerUrl       String? // Link gambar banner dari Supabase Storage
+  ticketDesignUrl String? // Link gambar desain tiket
   eventDate       DateTime
   location        String
   isActive        Boolean  @default(true)
   artists         String[] // Daftar artis
   sponsors        String[] // Daftar sponsor
-  whatsapp        String?  // Nomor WA Admin/Penyelenggara
-  instagram       String?  // Username/Link Instagram
-  bankAccounts    Json?    // Array rekening: [{ bank: string, number: string, name: string }]
-  ticketConfig    Json?    // Custom design untuk tiket
+  socialMedias    Json? // Array of { platform: string, link: string }
+  bankAccounts    Json? // Array rekening: [{ bank: string, number: string, name: string }]
+  ticketConfig    Json? // Custom design untuk tiket
+  waGroupLink     String? // Link Grup WhatsApp
   createdAt       DateTime @default(now())
 
   // Relasi
@@ -74,36 +74,37 @@ model Event {
 
 // 2.5 Tabel Kategori Tiket
 model TicketCategory {
-  id            String   @id @default(uuid())
-  eventId       String
-  name          String   // Misal: "VIP", "Regular"
-  price         Int      // Harga tiket
-  originalPrice Int?     // Harga Coret (Harga Asli sebelum diskon)
-  hasDiscount   Boolean  @default(false)
-  discountPrice Int?     // Harga saat diskon
+  id                String    @id @default(uuid())
+  eventId           String
+  name              String // Misal: "VIP", "Regular"
+  price             Int // Harga tiket
+  originalPrice     Int? // Harga Coret (Harga Asli sebelum diskon)
+  hasDiscount       Boolean   @default(false)
+  discountPrice     Int? // Harga saat diskon
   discountStartDate DateTime? // Waktu mulai diskon
   discountEndDate   DateTime? // Waktu selesai diskon
-  quota         Int      // Batas kuota untuk kategori ini saat ini
-  initialQuota  Int?     // Kuota saat pertama dibuat (untuk hitung % progress bar)
-  hasBenefits   Boolean  @default(false)
-  benefits      String[] // Array of strings (benefits)
+  discountQuota     Int? // Kuota khusus untuk harga diskon
+  quota             Int // Batas kuota untuk kategori ini saat ini
+  initialQuota      Int? // Kuota saat pertama dibuat (untuk hitung % progress bar)
+  hasBenefits       Boolean   @default(false)
+  benefits          String[] // Array of strings (benefits)
 
-  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  tickets   Ticket[]
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
 }
 
 // 3. Tabel Custom Form (Pertanyaan Tambahan per Event)
 // Contoh: Admin bikin pertanyaan "Ukuran Kaos" atau "Asal Instansi"
 model EventField {
-  id          String   @id @default(uuid())
-  eventId     String
-  name        String   // Nama pertanyaan (e.g., "Ukuran Kaos")
-  type        FieldType // Enum: TEXT, SELECT, NUMBER
-  options     String?  // JSON string untuk pilihan jika typenya SELECT (e.g., '["S", "M", "L", "XL"]')
-  isRequired  Boolean  @default(true)
+  id         String    @id @default(uuid())
+  eventId    String
+  name       String // Nama pertanyaan (e.g., "Ukuran Kaos")
+  type       FieldType // Enum: TEXT, SELECT, NUMBER
+  options    String? // JSON string untuk pilihan jika typenya SELECT (e.g., '["S", "M", "L", "XL"]')
+  isRequired Boolean   @default(true)
 
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  answers     TicketAnswer[]
+  event   Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  answers TicketAnswer[]
 }
 
 enum FieldType {
@@ -116,19 +117,20 @@ enum FieldType {
 
 // 4. Tabel Transaksi Pembayaran (1 Transaksi bisa beli banyak tiket)
 model Transaction {
-  id              String    @id @default(uuid())
-  eventId         String
-  buyerName       String    // Nama perwakilan yang mentransfer
-  buyerEmail      String
-  buyerPhone      String    // Nomor WA perwakilan
-  buyerGender     String?   // Jenis Kelamin perwakilan (L/P)
-  totalTickets    Int
-  totalPrice      Int
-  paymentProofUrl String?   // Link gambar bukti transfer (Supabase Storage)
+  id                String    @id @default(uuid())
+  eventId           String
+  buyerName         String // Nama perwakilan yang mentransfer
+  buyerEmail        String
+  buyerPhone        String // Nomor WA perwakilan
+  buyerGender       String? // Jenis Kelamin perwakilan (L/P)
+  buyerAddress      String? // Alamat Pemesan
+  totalTickets      Int
+  totalPrice        Int
+  paymentProofUrl   String? // Link gambar bukti transfer (Supabase Storage)
   senderAccountName String? // Nama pemilik rekening bank pengirim
-  status          TxStatus  @default(PENDING)
-  expiresAt       DateTime? // Batas waktu pembayaran (null = tidak ada batas)
-  createdAt       DateTime  @default(now())
+  status            TxStatus  @default(PENDING)
+  expiresAt         DateTime? // Batas waktu pembayaran (null = tidak ada batas)
+  createdAt         DateTime  @default(now())
 
   event   Event    @relation(fields: [eventId], references: [id])
   tickets Ticket[]
@@ -142,32 +144,33 @@ enum TxStatus {
   PENDING
   APPROVED
   REJECTED
-  EXPIRED   // Batas waktu pembayaran habis, kuota dikembalikan
+  EXPIRED // Batas waktu pembayaran habis, kuota dikembalikan
 }
 
 // 5. Tabel Data Tiket Individu
 model Ticket {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   transactionId    String
   ticketCategoryId String
-  barcodeString    String   @unique // String unik untuk digenerate jadi QR/Barcode
-  isValidated      Boolean  @default(false)
+  barcodeString    String    @unique // String unik untuk digenerate jadi QR/Barcode
+  isValidated      Boolean   @default(false)
   checkedInAt      DateTime? // Waktu check-in saat tiket di-scan oleh validator
-  holderName       String?  // Nama pemegang tiket individu
-  holderPhone      String?  // Nomor HP pemegang tiket individu
-  holderGender     String?  // Jenis Kelamin pemegang tiket (L/P)
+  holderName       String? // Nama pemegang tiket individu
+  holderPhone      String? // Nomor HP pemegang tiket individu
+  holderGender     String? // Jenis Kelamin pemegang tiket (L/P)
+  holderAge        Int? // Umur pemegang tiket
 
-  transaction      Transaction    @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  ticketCategory   TicketCategory @relation(fields: [ticketCategoryId], references: [id], onDelete: Restrict)
-  answers          TicketAnswer[]
+  transaction    Transaction    @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  ticketCategory TicketCategory @relation(fields: [ticketCategoryId], references: [id], onDelete: Restrict)
+  answers        TicketAnswer[]
 }
 
 // 6. Tabel Jawaban dari Custom Form per Tiket
 model TicketAnswer {
-  id         String @id @default(uuid())
-  ticketId   String
-  fieldId    String
-  value      String // Jawaban yang diisi peserta
+  id       String @id @default(uuid())
+  ticketId String
+  fieldId  String
+  value    String // Jawaban yang diisi peserta
 
   ticket Ticket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   field  EventField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
@@ -175,18 +178,18 @@ model TicketAnswer {
 
 // 7. NextAuth.js Models untuk Google Login
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String  @map("user_id")
-  type               String
-  provider           String
-  providerAccountId  String  @map("provider_account_id")
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String? @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -11,6 +11,7 @@ export default function WhatsAppSaveButton({
   ticketQuantity,
   eventLocation,
   eventDate,
+  waGroupLink,
   tickets
 }: { 
   eventTitle: string, 
@@ -21,6 +22,7 @@ export default function WhatsAppSaveButton({
   ticketQuantity?: number,
   eventLocation?: string,
   eventDate?: string,
+  waGroupLink?: string | null,
   tickets?: { holderName: string | null, holderGender: string | null }[]
 }) {
   const handleShare = () => {
@@ -31,9 +33,11 @@ export default function WhatsAppSaveButton({
       participantsList = `\n\n*Daftar Peserta:*\n${tickets.map((t, i) => `${i + 1}. ${t.holderName || '-'} (${t.holderGender || '-'})`).join('\n')}`;
     }
 
+    const groupInfo = waGroupLink ? `\n\n*Grup WhatsApp Event:*\nSilakan bergabung melalui link berikut:\n${waGroupLink}` : '';
+
     const text = isPending 
-      ? `Assalamualaikum,\n\nBerikut adalah informasi pendaftaran Anda yang sedang diproses:\n\n*Detail Pendaftaran:*\n- Nama: ${buyerName || 'Pemesan'}\n- Acara: *${eventTitle}*\n- Jenis Kelamin: ${buyerGender || '-'}\n- Jenis Tiket: ${ticketName || '-'}\n- Jumlah: ${ticketQuantity || 1} Tiket\n- Tanggal: ${eventDate || '-'}\n- Lokasi: ${eventLocation || '-'}${participantsList}\n\nSilakan simpan pesan ini. Untuk mengecek status validasi tiket Anda, kunjungi tautan resmi berikut:\n${url}\n\nTerima kasih.`
-      : `Assalamualaikum,\n\nPembayaran Anda untuk acara *${eventTitle}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${buyerName || 'Pemesan'}\n- Acara: *${eventTitle}*\n- Jenis Kelamin: ${buyerGender || '-'}\n- Jenis Tiket: ${ticketName || '-'}\n- Jumlah: ${ticketQuantity || 1} Tiket\n- Tanggal: ${eventDate || '-'}\n- Lokasi: ${eventLocation || '-'}${participantsList}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${url}\n\nTerima kasih.`;
+      ? `Assalamualaikum,\n\nBerikut adalah informasi pendaftaran Anda yang sedang diproses:\n\n*Detail Pendaftaran:*\n- Nama: ${buyerName || 'Pemesan'}\n- Acara: *${eventTitle}*\n- Jenis Kelamin: ${buyerGender || '-'}\n- Jenis Tiket: ${ticketName || '-'}\n- Jumlah: ${ticketQuantity || 1} Tiket\n- Tanggal: ${eventDate || '-'}\n- Lokasi: ${eventLocation || '-'}${participantsList}${groupInfo}\n\nSilakan simpan pesan ini. Untuk mengecek status validasi tiket Anda, kunjungi tautan resmi berikut:\n${url}\n\nTerima kasih.`
+      : `Assalamualaikum,\n\nPembayaran Anda untuk acara *${eventTitle}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${buyerName || 'Pemesan'}\n- Acara: *${eventTitle}*\n- Jenis Kelamin: ${buyerGender || '-'}\n- Jenis Tiket: ${ticketName || '-'}\n- Jumlah: ${ticketQuantity || 1} Tiket\n- Tanggal: ${eventDate || '-'}\n- Lokasi: ${eventLocation || '-'}${participantsList}${groupInfo}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${url}\n\nTerima kasih.`;
       
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };

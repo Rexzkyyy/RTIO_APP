@@ -28,6 +28,7 @@ export async function submitRegistration(formData: FormData) {
   const buyerEmail = formData.get("buyerEmail") as string;
   const buyerPhone = formData.get("buyerPhone") as string;
   const buyerGender = formData.get("buyerGender") as string;
+  const buyerAddress = formData.get("buyerAddress") as string;
 
   // ─────────────────────────────────────────────────────────────────────────
   // PHASE 1: Handle file uploads BEFORE the transaction.
@@ -94,9 +95,10 @@ export async function submitRegistration(formData: FormData) {
             discountPrice: number | null;
             discountStartDate: Date | null;
             discountEndDate: Date | null;
+            discountQuota: number | null;
           }[]
         >`
-          SELECT id, name, price, quota, "eventId", "hasDiscount", "discountPrice", "discountStartDate", "discountEndDate"
+          SELECT id, name, price, quota, "eventId", "hasDiscount", "discountPrice", "discountStartDate", "discountEndDate", "discountQuota"
           FROM "TicketCategory"
           WHERE id = ${ticketCategoryId}
           FOR UPDATE
@@ -119,9 +121,16 @@ export async function submitRegistration(formData: FormData) {
         }
 
         const now = new Date();
-        const isDiscountActive = category.hasDiscount && category.discountPrice != null && 
+        let isDiscountActive = category.hasDiscount && category.discountPrice != null && 
           (!category.discountStartDate || now >= category.discountStartDate) && 
-          (!category.discountEndDate || now <= category.discountEndDate);
+          (!category.discountEndDate || now <= category.discountEndDate) &&
+          (category.discountQuota === null || category.discountQuota > 0);
+
+        if (isDiscountActive && category.discountQuota !== null) {
+          if (category.discountQuota < ticketQuantity) {
+            throw new Error(`Maaf, sisa kuota harga diskon hanya ${category.discountQuota} tiket. Silakan sesuaikan jumlah pembelian Anda atau beli secara terpisah.`);
+          }
+        }
 
         const activePrice = isDiscountActive ? category.discountPrice! : category.price;
         const totalPrice = activePrice * ticketQuantity;
@@ -134,6 +143,7 @@ export async function submitRegistration(formData: FormData) {
             buyerEmail,
             buyerPhone,
             buyerGender,
+            buyerAddress,
             totalTickets: ticketQuantity,
             totalPrice,
             status: "PENDING",
@@ -142,13 +152,17 @@ export async function submitRegistration(formData: FormData) {
         });
 
         // ── Step 4: Decrement quota atomically (still inside lock). ───────────
+        const updateData: any = {
+          quota: { decrement: ticketQuantity }
+        };
+        
+        if (isDiscountActive && category.discountQuota !== null) {
+          updateData.discountQuota = { decrement: ticketQuantity };
+        }
+
         await tx.ticketCategory.update({
           where: { id: ticketCategoryId },
-          data: {
-            quota: {
-              decrement: ticketQuantity,
-            },
-          },
+          data: updateData,
         });
 
         // ── Step 5: Create individual Ticket records (MENGGUNAKAN CREATEMANY). ─────────────────────────
@@ -157,6 +171,7 @@ export async function submitRegistration(formData: FormData) {
           const hName = formData.get(`holderName_${i}`) as string;
           const hPhone = formData.get(`holderPhone_${i}`) as string;
           const hGender = formData.get(`holderGender_${i}`) as string;
+          const hAge = formData.get(`holderAge_${i}`);
           const shortId = crypto.randomUUID().split('-')[0].toUpperCase();
           const newBarcode = `TX-${shortId}`;
           ticketsToCreate.push({
@@ -166,6 +181,7 @@ export async function submitRegistration(formData: FormData) {
             holderName: hName || buyerName,
             holderPhone: hPhone || buyerPhone,
             holderGender: hGender || buyerGender,
+            holderAge: hAge ? parseInt(hAge as string) : null,
           });
         }
 
