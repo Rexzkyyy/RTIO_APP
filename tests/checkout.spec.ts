@@ -87,8 +87,11 @@ test('User can complete a ticket registration flow', async ({ page }) => {
 
   // 5. STEP 2: Registration Form - Fill Buyer Data
   await page.locator('input[name="buyerName"]').fill('Tester Otomatis');
+  await page.locator('textarea[name="buyerAddress"]').fill('Jl. Sudirman No 1');
   await page.locator('input[name="buyerEmail"]').fill('tester@otomatis.com');
   await page.locator('input[name="buyerPhone"]').fill('081234567890');
+  await page.locator('select[name="buyerGender"]').selectOption('Laki-laki');
+  await page.locator('input[name="holderAge_0"]').fill('25');
   // Fill Holder Data is skipped because quantity is 1 and it's only shown for quantity > 1
 
   // Click Next or Submit depending on event fields

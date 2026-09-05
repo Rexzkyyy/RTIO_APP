@@ -18,7 +18,7 @@ const InstagramIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
 
 // Dynamic Themes for Artists
 const artistThemes = [
-  { icon: Star, colors: 'from-emerald-400 to-teal-500', border: 'border-emerald-200', text: 'text-emerald-700' },
+  { icon: Star, colors: 'from-primary-400 to-secondary-500', border: 'border-primary-200', text: 'text-primary-700' },
   { icon: Crown, colors: 'from-amber-400 to-orange-500', border: 'border-amber-200', text: 'text-amber-700' },
   { icon: Sparkles, colors: 'from-purple-400 to-indigo-500', border: 'border-purple-200', text: 'text-purple-700' },
   { icon: Flame, colors: 'from-rose-400 to-red-500', border: 'border-rose-200', text: 'text-rose-700' },
@@ -29,7 +29,7 @@ const artistThemes = [
 const sponsorThemes = [
   { icon: Building2, text: 'text-blue-700', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', border: 'border-blue-200', glow: 'from-blue-100', shadow: 'shadow-blue-900/10' },
   { icon: Rocket, text: 'text-orange-700', iconBg: 'bg-orange-100', iconColor: 'text-orange-600', border: 'border-orange-200', glow: 'from-orange-100', shadow: 'shadow-orange-900/10' },
-  { icon: Target, text: 'text-emerald-700', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', border: 'border-emerald-200', glow: 'from-emerald-100', shadow: 'shadow-emerald-900/10' },
+  { icon: Target, text: 'text-primary-700', iconBg: 'bg-primary-100', iconColor: 'text-primary-600', border: 'border-primary-200', glow: 'from-primary-100', shadow: 'shadow-primary-900/10' },
   { icon: Award, text: 'text-purple-700', iconBg: 'bg-purple-100', iconColor: 'text-purple-600', border: 'border-purple-200', glow: 'from-purple-100', shadow: 'shadow-purple-900/10' },
   { icon: Zap, text: 'text-amber-700', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', border: 'border-amber-200', glow: 'from-amber-100', shadow: 'shadow-amber-900/10' },
   { icon: Globe, text: 'text-cyan-700', iconBg: 'bg-cyan-100', iconColor: 'text-cyan-600', border: 'border-cyan-200', glow: 'from-cyan-100', shadow: 'shadow-cyan-900/10' },
@@ -39,6 +39,17 @@ const sponsorThemes = [
 // Helper to determine ticket styling dynamically
 function getTicketStyle(name: string) {
   const lower = name.toLowerCase();
+  if (lower.includes('diamond')) {
+    return {
+      colors: 'from-blue-400 to-cyan-500',
+      bgClass: 'bg-cyan-50',
+      textClass: 'text-cyan-700',
+      borderClass: 'border-cyan-200 hover:border-cyan-400',
+      shadowClass: 'shadow-cyan-900/10 hover:shadow-cyan-900/20',
+      icon: <Award className="w-6 h-6 text-cyan-600" />,
+      checkColor: 'text-cyan-500'
+    };
+  }
   if (lower.includes('vvip') || lower.includes('vip')) {
     return {
       colors: 'from-purple-600 to-indigo-600',
@@ -47,6 +58,7 @@ function getTicketStyle(name: string) {
       borderClass: 'border-indigo-200 hover:border-indigo-400',
       shadowClass: 'shadow-indigo-900/10 hover:shadow-indigo-900/20',
       icon: <Crown className="w-6 h-6 text-indigo-600" />,
+      checkColor: 'text-indigo-500'
     };
   }
   if (lower.includes('gold') || lower.includes('emas')) {
@@ -57,6 +69,7 @@ function getTicketStyle(name: string) {
       borderClass: 'border-amber-200 hover:border-amber-400',
       shadowClass: 'shadow-amber-900/10 hover:shadow-amber-900/20',
       icon: <Star className="w-6 h-6 text-amber-600" />,
+      checkColor: 'text-amber-500'
     };
   }
   if (lower.includes('silver') || lower.includes('perak')) {
@@ -67,16 +80,18 @@ function getTicketStyle(name: string) {
       borderClass: 'border-slate-300 hover:border-slate-500',
       shadowClass: 'shadow-slate-900/20 hover:shadow-slate-900/30',
       icon: <Shield className="w-6 h-6 text-slate-800" />,
+      checkColor: 'text-slate-500'
     };
   }
   // Default/Reguler
   return {
-    colors: 'from-emerald-400 to-teal-500',
-    bgClass: 'bg-emerald-50',
-    textClass: 'text-emerald-700',
-    borderClass: 'border-emerald-200 hover:border-emerald-400',
-    shadowClass: 'shadow-emerald-900/10 hover:shadow-emerald-900/20',
-    icon: <Ticket className="w-6 h-6 text-emerald-600" />,
+    colors: 'from-primary-400 to-secondary-500',
+    bgClass: 'bg-primary-50',
+    textClass: 'text-primary-700',
+    borderClass: 'border-primary-200 hover:border-primary-400',
+    shadowClass: 'shadow-primary-900/10 hover:shadow-primary-900/20',
+    icon: <Ticket className="w-6 h-6 text-primary-600" />,
+    checkColor: 'text-primary-500'
   };
 }
 
@@ -107,6 +122,9 @@ function useFadeInRef<T extends HTMLElement>() {
 }
 
 export default function EventDetailClient({ event, lowestPrice, navbar, isLoggedIn = false }: { event: any, lowestPrice: number, navbar: React.ReactNode, isLoggedIn?: boolean }) {
+  const config = event.ticketConfig || {};
+  const themeClass = config.themeName === 'pink' ? 'theme-pink' : 'theme-primary';
+
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingUrl, setPendingUrl] = useState("");
   const [selectedTicketBenefits, setSelectedTicketBenefits] = useState<any>(null);
@@ -116,7 +134,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
   const artistsRef = useFadeInRef<HTMLDivElement>();
 
   return (
-    <div className="min-h-screen relative pb-32 md:pb-12 overflow-x-hidden bg-slate-50">
+    <div className={`min-h-screen relative pb-32 md:pb-12 overflow-x-hidden bg-slate-50 ${themeClass}`}>
       
       {/* Gray Grid Pattern Background outside cards */}
       <div className="fixed inset-0 z-0 opacity-50 pointer-events-none" 
@@ -128,8 +146,8 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
 
       {/* Aurora Glow Background Effect (Optimized for Mobile GPU) */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-0 right-0 w-[150vw] md:w-[60vw] h-[60vh] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-400/20 via-transparent to-transparent" />
-        <div className="absolute bottom-0 left-0 w-[150vw] md:w-[60vw] h-[60vh] bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-teal-400/20 via-transparent to-transparent" />
+        <div className="absolute top-0 right-0 w-[150vw] md:w-[60vw] h-[60vh] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary-400/20 via-transparent to-transparent" />
+        <div className="absolute bottom-0 left-0 w-[150vw] md:w-[60vw] h-[60vh] bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-secondary-400/20 via-transparent to-transparent" />
       </div>
 
       {/* Immersive Hero Section */}
@@ -148,7 +166,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
               priority
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-tr from-emerald-900 to-slate-900 opacity-80"></div>
+            <div className="w-full h-full bg-gradient-to-tr from-primary-900 to-slate-900 opacity-80"></div>
           )}
           {/* Background Overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent z-10 pointer-events-none"></div>
@@ -158,17 +176,17 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
         <div className="relative z-10 flex-1 flex flex-col justify-end pb-16 sm:pb-32 pt-24">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col gap-6 w-full">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tighter animate-fade-in-up py-2">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-white to-teal-100 drop-shadow-lg">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-300 via-white to-secondary-100 drop-shadow-lg">
                 {event.title}
               </span>
             </h1>
             <div className="flex flex-col sm:flex-row flex-wrap gap-4 text-base md:text-lg font-semibold text-white animate-fade-in-up animation-delay-100">
               <div className="flex items-center w-max bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
-                <CalendarIcon className="w-5 h-5 mr-3 text-emerald-400" />
+                <CalendarIcon className="w-5 h-5 mr-3 text-primary-400" />
                 {new Date(event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
               <div className="flex items-center w-max bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
-                <MapPin className="w-5 h-5 mr-3 text-emerald-400" />
+                <MapPin className="w-5 h-5 mr-3 text-primary-400" />
                 {event.location}
               </div>
             </div>
@@ -176,7 +194,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
             <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 animate-fade-in-up animation-delay-200">
                <button 
                   onClick={() => document.getElementById('tickets-section')?.scrollIntoView({ behavior: 'smooth' })} 
-                  className="px-10 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-lg font-black rounded-2xl shadow-[0_8px_32px_0_rgba(16,185,129,0.4)] hover:shadow-[0_8px_32px_0_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center justify-center w-max"
+                  className="px-10 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-lg font-black rounded-2xl shadow-[0_8px_32px_0_rgba(16,185,129,0.4)] hover:shadow-[0_8px_32px_0_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center justify-center w-max"
                 >
                   <Ticket className="w-6 h-6 mr-3" />
                   Dapatkan Tiket
@@ -214,7 +232,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
         {/* Top Card: Description & Event Info */}
         <div className="bg-white rounded-3xl p-6 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden group">
           {/* Subtle Decorative Accent */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -z-10 group-hover:bg-emerald-50/50 transition-colors duration-700"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -z-10 group-hover:bg-primary-50/50 transition-colors duration-700"></div>
           
           <div className="flex flex-col gap-8">
             {/* Removed duplicated title and badges */}
@@ -222,10 +240,10 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
             {/* Description */}
             <div ref={descRef}>
               <h2 className="text-3xl font-black mb-6 flex items-center">
-                <span className="w-8 h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full mr-4 shadow-sm"></span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 to-teal-600">Tentang Event</span>
+                <span className="w-8 h-1.5 bg-gradient-to-r from-primary-400 to-secondary-500 rounded-full mr-4 shadow-sm"></span>
+                <span className="text-slate-800">Tentang Event</span>
               </h2>
-              <div className="prose prose-slate md:prose-lg max-w-none text-slate-600 leading-relaxed font-medium">
+              <div className="prose prose-slate md:prose-lg max-w-none text-slate-700 leading-relaxed font-medium">
                 {event.description.split('\n').map((paragraph: string, i: number) => (
                   <p key={i}>{paragraph}</p>
                 ))}
@@ -242,8 +260,8 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                     
                     if (social.platform === 'WhatsApp') {
                       href = `https://wa.me/${social.link.replace(/[^0-9]/g, '').replace(/^0/, '62')}`;
-                      bgClass = "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100";
-                      icon = <MessageCircle className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform" />;
+                      bgClass = "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 shadow-sm";
+                      icon = <MessageCircle className="w-5 h-5 mr-2.5 text-[#25D366] group-hover:scale-110 transition-transform" />;
                       display = "Hubungi Admin (WA)";
                     } else if (social.platform === 'Instagram') {
                       href = social.link.startsWith('http') ? social.link : `https://instagram.com/${social.link.replace('@', '')}`;
@@ -282,7 +300,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
               <div ref={artistsRef} className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t border-slate-100">
                 {event.artists.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400 uppercase tracking-widest mb-4">Lineup & Penampil</h3>
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Lineup & Penampil</h3>
                     <div className="flex flex-wrap gap-4">
                       {event.artists.map((artist: string, idx: number) => {
                         const theme = artistThemes[idx % artistThemes.length];
@@ -303,7 +321,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                 )}
                 {event.sponsors.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400 uppercase tracking-widest mb-4">Didukung Oleh</h3>
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Didukung Oleh</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {event.sponsors.map((sponsor: string, idx: number) => {
                         const theme = sponsorThemes[idx % sponsorThemes.length];
@@ -332,8 +350,8 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
         {/* Bottom Section: Compact Tickets Row */}
         <div id="tickets-section" className="w-full pb-8 pt-8 -mt-8 scroll-mt-24">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 mb-3 drop-shadow-sm">Pilih Tiket Anda</h2>
-            <div className="w-20 h-1.5 bg-gradient-to-r from-emerald-400 to-teal-400 mx-auto rounded-full shadow-sm"></div>
+            <h2 className="text-3xl font-black text-slate-800 mb-3 drop-shadow-sm">Pilih Tiket Anda</h2>
+            <div className="w-20 h-1.5 bg-gradient-to-r from-primary-400 to-secondary-400 mx-auto rounded-full shadow-sm"></div>
           </div>
           <div className="flex flex-nowrap md:flex-wrap overflow-x-auto md:overflow-x-visible justify-start md:justify-center gap-5 pb-8 snap-x snap-mandatory scroll-smooth hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
 
@@ -435,7 +453,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                       )}
                     </div>
                     
-                    <h3 className="text-2xl font-bold text-slate-800 mb-1 group-hover/ticket:text-emerald-600 transition-colors">{ticket.name}</h3>
+                    <h3 className="text-2xl font-bold text-slate-800 mb-1 group-hover/ticket:text-primary-600 transition-colors">{ticket.name}</h3>
                     
                     {/* Benefits - Grid List */}
                     <div className="flex-1">
@@ -444,7 +462,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                           <div className="grid grid-cols-2 gap-3">
                             {ticket.benefits.map((benefit: string, idx: number) => (
                               <div key={idx} className="flex items-start">
-                                <CheckCircle2 className="w-5 h-5 text-emerald-500 mr-2 shrink-0 mt-0.5" />
+                                <CheckCircle2 className={`w-5 h-5 ${style.checkColor} mr-2 shrink-0 mt-0.5`} />
                                 <span className="text-sm font-bold text-slate-700 leading-snug break-words">{benefit}</span>
                               </div>
                             ))}
@@ -482,7 +500,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-slate-200 p-4 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-50 flex justify-between items-center">
         <div>
           <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Harga mulai</p>
-          <p className="text-lg font-black text-emerald-600">
+          <p className="text-lg font-black text-primary-600">
             {lowestPrice === 0 ? "Gratis" : `Rp ${lowestPrice.toLocaleString('id-ID')}`}
           </p>
         </div>
@@ -495,7 +513,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
               setShowLoginModal(true);
             }
           }}
-          className="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md flex items-center"
+          className="px-6 py-3.5 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md flex items-center"
         >
           <Ticket className="w-4 h-4 mr-2" />
           Pilih Tiket
@@ -504,7 +522,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
 
       {/* Ticket Benefits Modal */}
       {selectedTicketBenefits && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <div className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 ${themeClass}`} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setSelectedTicketBenefits(null)}></div>
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full relative z-10 shadow-2xl flex flex-col items-center">
             <button 
@@ -522,7 +540,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
             <div className="w-full space-y-3 mb-6 max-h-[60vh] overflow-y-auto px-2">
               {selectedTicketBenefits.benefits.map((benefit: string, idx: number) => (
                 <div key={idx} className="flex items-start bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500 mr-3 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-primary-500 mr-3 shrink-0 mt-0.5" />
                   <span className="text-sm font-medium text-slate-700 leading-snug">{benefit}</span>
                 </div>
               ))}
@@ -541,10 +559,10 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
 
       {/* Login Recommendation Modal */}
       {showLoginModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <div className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 ${themeClass}`} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowLoginModal(false)}></div>
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full relative z-10 shadow-2xl flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center text-3xl mb-4 shadow-inner">
+            <div className="w-16 h-16 bg-primary-100 text-primary-500 rounded-full flex items-center justify-center text-3xl mb-4 shadow-inner">
               🥺
             </div>
             <h3 className="text-2xl font-black text-slate-800 mb-2">Yuk, Login Dulu!</h3>
@@ -554,7 +572,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
             <div className="flex flex-col gap-3 w-full">
               <button 
                 onClick={() => { signIn("google", { callbackUrl: pendingUrl }) }} 
-                className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-[0_8px_30px_rgb(16,185,129,0.3)] hover:-translate-y-0.5 transition-all flex items-center justify-center"
+                className="w-full py-3.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-[0_8px_30px_rgb(16,185,129,0.3)] hover:-translate-y-0.5 transition-all flex items-center justify-center"
               >
                  Login Sekarang 🚀
               </button>

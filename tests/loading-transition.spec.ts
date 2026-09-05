@@ -27,8 +27,11 @@ test('verify loading transition from register to pay', async ({ page }) => {
   // Now we are on step 2. Fill form.
   await page.waitForSelector('input[name="buyerName"]');
   await page.fill('input[name="buyerName"]', 'Playwright Tester');
+  await page.fill('textarea[name="buyerAddress"]', 'Jl. Sudirman No 1');
   await page.fill('input[name="buyerEmail"]', 'test@playwright.com');
   await page.fill('input[name="buyerPhone"]', '81234567890');
+  await page.selectOption('select[name="buyerGender"]', 'Laki-laki');
+  await page.fill('input[name="holderAge_0"]', '25');
   
   // Click Selanjutnya again if there's a step 3, otherwise click Proses Pembayaran
   try {
@@ -46,5 +49,5 @@ test('verify loading transition from register to pay', async ({ page }) => {
   }
   
   // Check if we reached the pay page
-  await expect(page.locator('text="Selesaikan Pembayaran"')).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole('heading', { name: 'Selesaikan Pembayaran' })).toBeVisible({ timeout: 10000 });
 });

@@ -1,6 +1,31 @@
 import { test, expect } from '@playwright/test';
+import prisma from '../src/lib/prisma';
 
 test.describe('Admin Panel Tests', () => {
+  test.beforeAll(async () => {
+    // Clean up any test users that might have been left over from previous failed runs
+    try {
+      await prisma.adminEventAccess.deleteMany({
+        where: {
+          admin: {
+            email: {
+              in: ['e2e-validator@rtio.com', 'e2e-superadmin@rtio.com']
+            }
+          }
+        }
+      });
+      await prisma.admin.deleteMany({
+        where: {
+          email: {
+            in: ['e2e-validator@rtio.com', 'e2e-superadmin@rtio.com']
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Cleanup error:', e);
+    }
+  });
+
   test.beforeEach(async ({ context, page }) => {
     await context.addCookies([
       {
@@ -51,6 +76,9 @@ test.describe('Admin Panel Tests', () => {
     await page.fill('input[name="bankName[]"]', 'BCA');
     await page.fill('input[name="bankNumber[]"]', '1234567890');
     await page.fill('input[name="bankAccountName[]"]', 'PT E2E Testing');
+    
+    // Social Media fields (required default row)
+    await page.fill('input[name="socialLink[]"]', 'https://instagram.com/e2e');
     
     // Submit
     await page.click('button[type="submit"]:has-text("Simpan & Buka Pendaftaran")');
