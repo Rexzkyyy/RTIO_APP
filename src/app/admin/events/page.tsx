@@ -157,18 +157,37 @@ export default async function EventsPage({ searchParams }: Props) {
                             : 'Belum diatur'}
                         </div>
                         <div className="flex flex-col gap-1 mt-1">
-                          {event.ticketCategories.some(c => c.hasDiscount) && (
-                            <>
-                              <div className="flex items-center text-sm text-emerald-600">
-                                <Users className="w-4 h-4 mr-1 text-emerald-500" />
-                                {event.ticketCategories.reduce((acc, curr) => acc + (curr.discountQuota || 0), 0)} Sisa Promo
-                              </div>
-                              <div className="flex items-center text-sm text-blue-600">
-                                <Users className="w-4 h-4 mr-1 text-blue-500" />
-                                {event.ticketCategories.reduce((acc, curr) => acc + curr.quota, 0) - event.ticketCategories.reduce((acc, curr) => acc + (curr.discountQuota || 0), 0)} Sisa Normal
-                              </div>
-                            </>
-                          )}
+                          {(() => {
+                            const now = new Date();
+                            let sisaPromo = 0;
+                            let sisaNormal = 0;
+                            
+                            event.ticketCategories.forEach(curr => {
+                              const isDiscountActive = curr.hasDiscount && curr.discountPrice != null && 
+                                (!curr.discountStartDate || now >= new Date(curr.discountStartDate)) && 
+                                (!curr.discountEndDate || now <= new Date(curr.discountEndDate));
+                              
+                              const activePromoQuota = isDiscountActive ? (curr.discountQuota || 0) : 0;
+                              sisaPromo += activePromoQuota;
+                              sisaNormal += (curr.quota - activePromoQuota);
+                            });
+
+                            if (sisaPromo > 0) {
+                              return (
+                                <>
+                                  <div className="flex items-center text-sm text-emerald-600">
+                                    <Users className="w-4 h-4 mr-1 text-emerald-500" />
+                                    {sisaPromo} Sisa Promo
+                                  </div>
+                                  <div className="flex items-center text-sm text-blue-600">
+                                    <Users className="w-4 h-4 mr-1 text-blue-500" />
+                                    {sisaNormal} Sisa Normal
+                                  </div>
+                                </>
+                              );
+                            }
+                            return null;
+                          })()}
                           <div className="flex items-center text-sm text-slate-600 font-semibold mt-0.5 pt-0.5 border-t border-slate-200">
                             <Users className="w-4 h-4 mr-1 text-slate-400" />
                             {event.ticketCategories.reduce((acc, curr) => acc + curr.quota, 0)} Sisa Total
@@ -242,22 +261,37 @@ export default async function EventsPage({ searchParams }: Props) {
                       </span>
                     </div>
                     <div className="flex flex-col gap-1 justify-center">
-                      {event.ticketCategories.some(c => c.hasDiscount) && (
-                        <>
-                          <div className="flex items-center text-emerald-600">
-                            <Users className="w-3.5 h-3.5 mr-2 text-emerald-500 shrink-0" />
-                            <span className="truncate font-medium">
-                              {event.ticketCategories.reduce((acc, curr) => acc + (curr.discountQuota || 0), 0)} Sisa Promo
-                            </span>
-                          </div>
-                          <div className="flex items-center text-blue-600">
-                            <Users className="w-3.5 h-3.5 mr-2 text-blue-500 shrink-0" />
-                            <span className="truncate font-medium">
-                              {event.ticketCategories.reduce((acc, curr) => acc + curr.quota, 0) - event.ticketCategories.reduce((acc, curr) => acc + (curr.discountQuota || 0), 0)} Sisa Normal
-                            </span>
-                          </div>
-                        </>
-                      )}
+                            {(() => {
+                              const now = new Date();
+                              let sisaPromo = 0;
+                              let sisaNormal = 0;
+                              
+                              event.ticketCategories.forEach(curr => {
+                                const isDiscountActive = curr.hasDiscount && curr.discountPrice != null && 
+                                  (!curr.discountStartDate || now >= new Date(curr.discountStartDate)) && 
+                                  (!curr.discountEndDate || now <= new Date(curr.discountEndDate));
+                                
+                                const activePromoQuota = isDiscountActive ? (curr.discountQuota || 0) : 0;
+                                sisaPromo += activePromoQuota;
+                                sisaNormal += (curr.quota - activePromoQuota);
+                              });
+
+                              if (sisaPromo > 0) {
+                                return (
+                                  <>
+                                    <div className="flex items-center text-sm text-emerald-600">
+                                      <Users className="w-4 h-4 mr-1 text-emerald-500" />
+                                      {sisaPromo} Sisa Promo
+                                    </div>
+                                    <div className="flex items-center text-sm text-blue-600">
+                                      <Users className="w-4 h-4 mr-1 text-blue-500" />
+                                      {sisaNormal} Sisa Normal
+                                    </div>
+                                  </>
+                                );
+                              }
+                              return null;
+                            })()}
                       <div className="flex items-center text-slate-700 font-semibold mt-1 pt-1 border-t border-slate-200">
                         <Users className="w-3.5 h-3.5 mr-2 text-slate-500 shrink-0" />
                         <span className="truncate">

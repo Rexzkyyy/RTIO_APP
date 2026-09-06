@@ -55,15 +55,24 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
     }
   });
 
+  const now = new Date();
   const ticketsMap = new Map();
   event.ticketCategories.forEach(cat => {
+    const discountStart = cat.discountStartDate ? new Date(cat.discountStartDate) : null;
+    const discountEnd = cat.discountEndDate ? new Date(cat.discountEndDate) : null;
+    const isDiscountActive = cat.hasDiscount && cat.discountPrice != null && 
+      (!discountStart || now >= discountStart) && 
+      (!discountEnd || now <= discountEnd);
+    
+    const activePromoQuota = isDiscountActive ? (cat.discountQuota || 0) : 0;
+
     ticketsMap.set(cat.id, {
       name: cat.name,
       terjual: 0,
       terjualPromo: 0,
       terjualNormal: 0,
-      sisaPromo: cat.discountQuota || 0,
-      sisaNormal: cat.quota - (cat.discountQuota || 0),
+      sisaPromo: activePromoQuota,
+      sisaNormal: cat.quota - activePromoQuota,
     });
   });
 

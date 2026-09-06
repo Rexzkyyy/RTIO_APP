@@ -17,11 +17,12 @@ export async function cleanupExpiredTransactions() {
   // biarkan admin mereview-nya.
   const expiredTransactions = await prisma.transaction.findMany({
     where: {
-      status: { in: ["PENDING", "REJECTED"] },
-      paymentProofUrl: null, // Hanya expire yang belum upload bukti pembayaran
-      expiresAt: {
-        lte: now, // expiresAt <= now
-      },
+      OR: [
+        // 1. PENDING yang belum pernah upload bukti
+        { status: "PENDING", paymentProofUrl: null, expiresAt: { lte: now } },
+        // 2. REJECTED yang dikasih waktu tambahan tapi belum di-upload ulang (upload ulang merubahnya jadi PENDING lagi)
+        { status: "REJECTED", expiresAt: { lte: now } }
+      ]
     },
     include: {
       tickets: {
@@ -47,13 +48,13 @@ export async function cleanupExpiredTransactions() {
 
     // Atomically mark as EXPIRED and return quota
     await prisma.$transaction(async (prismaTx) => {
-      // Double-check status is still PENDING (race condition guard)
+      // Double-check status (race condition guard)
       const freshTx = await prismaTx.transaction.findUnique({
         where: { id: tx.id },
         select: { status: true },
       });
 
-      if (freshTx?.status !== "PENDING") return; // Already processed
+      if (freshTx?.status !== "PENDING" && freshTx?.status !== "REJECTED") return; // Already processed
 
       // Mark transaction as EXPIRED
       await prismaTx.transaction.update({

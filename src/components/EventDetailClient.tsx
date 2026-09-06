@@ -173,36 +173,36 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
         </div>
 
         {/* Hero Content (Title & Info) */}
-        <div className="relative z-10 flex-1 flex flex-col justify-end pb-16 sm:pb-32 pt-24">
+        <div className="relative z-10 flex-1 flex flex-col justify-end pb-28 sm:pb-32 pt-24">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col gap-6 w-full">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tighter animate-fade-in-up py-2">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black leading-tight tracking-tighter animate-fade-in-up py-2">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-300 via-white to-secondary-100 drop-shadow-lg">
                 {event.title}
               </span>
             </h1>
             <div className="flex flex-col sm:flex-row flex-wrap gap-4 text-base md:text-lg font-semibold text-white animate-fade-in-up animation-delay-100">
-              <div className="flex items-center w-max bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
-                <CalendarIcon className="w-5 h-5 mr-3 text-primary-400" />
-                {new Date(event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              <div className="flex items-center w-full sm:w-max bg-white/10 backdrop-blur-md px-6 py-3 rounded-xl sm:rounded-full border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+                <CalendarIcon className="w-5 h-5 mr-3 shrink-0 text-primary-400" />
+                <span className="truncate">{new Date(event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
               </div>
-              <div className="flex items-center w-max bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
-                <MapPin className="w-5 h-5 mr-3 text-primary-400" />
-                {event.location}
+              <div className="flex items-center w-full sm:w-max bg-white/10 backdrop-blur-md px-6 py-3 rounded-xl sm:rounded-full border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+                <MapPin className="w-5 h-5 mr-3 shrink-0 text-primary-400" />
+                <span className="truncate">{event.location}</span>
               </div>
             </div>
             
-            <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8 animate-fade-in-up animation-delay-200">
+            <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-6 sm:gap-8 animate-fade-in-up animation-delay-200">
                <button 
                   onClick={() => document.getElementById('tickets-section')?.scrollIntoView({ behavior: 'smooth' })} 
-                  className="px-10 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-lg font-black rounded-2xl shadow-[0_8px_32px_0_rgba(16,185,129,0.4)] hover:shadow-[0_8px_32px_0_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center justify-center w-max"
+                  className="px-10 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-lg font-black rounded-2xl shadow-[0_8px_32px_0_rgba(16,185,129,0.4)] hover:shadow-[0_8px_32px_0_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center justify-center w-full sm:w-max"
                 >
-                  <Ticket className="w-6 h-6 mr-3" />
+                  <Ticket className="w-6 h-6 mr-3 shrink-0" />
                   Dapatkan Tiket
                </button>
                
                {/* Social Proof Marketing UI */}
-               <div className="flex items-center bg-slate-900/40 backdrop-blur-sm p-3 rounded-2xl border border-slate-700/50">
-                 <div className="flex -space-x-3 mr-4">
+               <div className="flex items-center justify-center sm:justify-start bg-slate-900/40 backdrop-blur-sm p-3 rounded-2xl border border-slate-700/50 w-full sm:w-max">
+                 <div className="flex -space-x-3 mr-4 shrink-0">
                    <div className="relative w-10 h-10 rounded-full border-2 border-slate-800 shadow-sm overflow-hidden">
                      <Image src="https://i.pravatar.cc/100?img=33" alt="User 1" fill sizes="40px" className="object-cover"/>
                    </div>
@@ -216,7 +216,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
                      +
                    </div>
                  </div>
-                 <div className="text-white text-sm sm:text-base drop-shadow-md">
+                 <div className="text-white text-sm sm:text-base drop-shadow-md text-left">
                    <p className="font-bold">Lebih dari <span className="text-yellow-400">500+ orang</span></p>
                    <p className="opacity-80 text-xs sm:text-sm mt-0.5">tertarik dengan event ini 🔥</p>
                  </div>

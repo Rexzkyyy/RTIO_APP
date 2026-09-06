@@ -194,6 +194,11 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
                   <div className="ml-4">
                     <span className="block text-sm font-bold text-slate-800">{ticket.name}</span>
                     <span className="block text-sm text-emerald-600 font-medium">
+                      {isDiscountActive && (
+                        <span className="text-slate-400 line-through mr-2 text-xs">
+                          Rp {(ticket.originalPrice || ticket.price).toLocaleString('id-ID')}
+                        </span>
+                      )}
                       {activePrice === 0 ? "Gratis" : `Rp ${activePrice.toLocaleString('id-ID')}`}
                     </span>
                     {isDiscountActive && (
@@ -203,8 +208,15 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
                     )}
                   </div>
                 </div>
-                <div className="text-sm text-slate-500">
-                  Sisa: {ticket.quota}
+                <div className="text-sm text-slate-500 text-right">
+                  {isDiscountActive && ticket.discountQuota !== null ? (
+                    <>
+                      <span className="block text-emerald-600 font-bold text-xs mb-0.5">Sisa Promo: {ticket.discountQuota}</span>
+                      <span className="block text-[10px] text-orange-500 font-medium italic">*Kuota promo terbatas</span>
+                    </>
+                  ) : (
+                    <span>Sisa: {ticket.quota}</span>
+                  )}
                 </div>
               </label>
             );
