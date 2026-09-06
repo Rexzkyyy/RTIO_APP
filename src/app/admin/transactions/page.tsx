@@ -74,10 +74,23 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
             quotaToReturn.set(ticket.ticketCategoryId, current + 1);
           }
           for (const [categoryId, count] of quotaToReturn.entries()) {
-            await prismaTx.ticketCategory.update({
-              where: { id: categoryId },
-              data: { quota: { increment: count } }
-            });
+            const category = await prismaTx.ticketCategory.findUnique({ where: { id: categoryId } });
+            
+            if (category) {
+              const activePrice = tx.totalTickets > 0 ? tx.totalPrice / tx.totalTickets : 0;
+              const usedDiscount = category.hasDiscount && category.discountPrice !== null && activePrice === category.discountPrice;
+              
+              const updateData: any = { quota: { increment: count } };
+              
+              if (usedDiscount && category.discountQuota !== null) {
+                updateData.discountQuota = { increment: count };
+              }
+              
+              await prismaTx.ticketCategory.update({
+                where: { id: categoryId },
+                data: updateData
+              });
+            }
           }
         }
       });
