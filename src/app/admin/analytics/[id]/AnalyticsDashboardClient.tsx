@@ -88,6 +88,10 @@ export default function AnalyticsDashboardClient({ event, analyticsData }: { eve
             </div>
             <p className="text-xs sm:text-sm font-medium text-slate-500 mb-1 line-clamp-1">Tiket Terjual</p>
             <h3 className="text-lg sm:text-2xl font-black text-slate-800 truncate">{analyticsData.totalTicketsSold} <span className="text-[10px] sm:text-sm font-medium text-slate-400">tiket</span></h3>
+            <div className="mt-2 text-xs font-medium text-slate-500 flex justify-between items-center bg-slate-50 p-2 rounded-lg">
+              <span className="text-emerald-600"><span className="w-2 h-2 inline-block bg-emerald-500 rounded-full mr-1"></span>{analyticsData.totalPromo} Promo</span>
+              <span className="text-blue-600"><span className="w-2 h-2 inline-block bg-blue-500 rounded-full mr-1"></span>{analyticsData.totalNormal} Normal</span>
+            </div>
           </div>
 
           <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -112,7 +116,7 @@ export default function AnalyticsDashboardClient({ event, analyticsData }: { eve
         </div>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Bar Chart - Tickets Sold by Category */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 mb-6">Penjualan per Kategori</h3>
@@ -126,11 +130,11 @@ export default function AnalyticsDashboardClient({ event, analyticsData }: { eve
                     cursor={{ fill: '#f8fafc' }}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
-                  <Bar dataKey="terjual" radius={[6, 6, 0, 0]}>
-                    {analyticsData.ticketsByCategory.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Bar>
+                  <Legend verticalAlign="top" height={36} iconType="circle" />
+                  <Bar dataKey="terjualPromo" name="Terjual (Promo)" stackId="a" fill="#10b981" />
+                  <Bar dataKey="terjualNormal" name="Terjual (Normal)" stackId="a" fill="#3b82f6" />
+                  <Bar dataKey="sisaPromo" name="Sisa Stok (Promo)" stackId="a" fill="#a7f3d0" />
+                  <Bar dataKey="sisaNormal" name="Sisa Stok (Normal)" stackId="a" fill="#bfdbfe" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -161,6 +165,42 @@ export default function AnalyticsDashboardClient({ event, analyticsData }: { eve
                   <Legend verticalAlign="bottom" height={36} iconType="circle" />
                 </PieChart>
               </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Pie Chart - Demografi Gender */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-6">Demografi Pembeli</h3>
+            <div className="h-72">
+              {analyticsData.genderData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={analyticsData.genderData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {analyticsData.genderData.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                  <Users className="w-10 h-10 mb-3 text-slate-300" />
+                  <p className="text-sm font-semibold text-slate-500">Belum Ada Data Gender</p>
+                  <p className="text-xs text-slate-400 text-center mt-1 px-4 leading-relaxed">Grafik akan otomatis muncul setelah ada pembeli yang menyelesaikan pesanan.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

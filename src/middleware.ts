@@ -44,8 +44,29 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // --- MAINTENANCE MODE LOGIC ---
+  const isMaintenance = process.env.MAINTENANCE_MODE === 'true';
+  const path = request.nextUrl.pathname;
+  
+  if (isMaintenance) {
+    // Check if the current path is a public path (not admin, not login, not already on maintenance)
+    const isAdminPath = path.startsWith('/admin');
+    const isLoginPath = path === '/login';
+    const isMaintenancePath = path === '/maintenance';
+    
+    // Allow access to admin, login, maintenance page, and static assets
+    if (!isAdminPath && !isLoginPath && !isMaintenancePath) {
+      return NextResponse.redirect(new URL('/maintenance', request.url));
+    }
+  } else {
+    // If not in maintenance mode but user tries to visit /maintenance, redirect to home
+    if (path === '/maintenance') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
+
   // If going to login page but already authenticated as admin, redirect to admin
-  if (request.nextUrl.pathname === '/login') {
+  if (path === '/login') {
     if (token && token.isAdmin === true) {
       // @ts-ignore
       if (token.adminRole === 'VALIDATOR') {
@@ -60,5 +81,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/login'],
+  matcher: ['/((?!api|_next/static|_next/image|images|favicon.ico|public).*)'],
 };

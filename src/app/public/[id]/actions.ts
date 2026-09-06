@@ -11,13 +11,21 @@ export async function uploadPaymentProof(formData: FormData) {
   
   if (file && file.size > 0) {
     const filename = `payments/${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-    const blob = await put(filename, file, { access: "public" });
+    
+    // Konversi File ke Buffer untuk menghindari file korup (bug umum Next.js Server Action ke Blob)
+    const buffer = Buffer.from(await file.arrayBuffer());
+    
+    const blob = await put(filename, buffer, { 
+      access: "public",
+      contentType: file.type || "image/jpeg",
+    });
     
     await prisma.transaction.update({
       where: { id: transactionId },
       data: {
         paymentProofUrl: blob.url,
         senderAccountName: senderAccountName || null,
+        status: "PENDING",
       }
     });
   }

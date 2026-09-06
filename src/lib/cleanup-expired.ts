@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 
-const PAYMENT_TIMEOUT_HOURS = 1; // Batas waktu pembayaran: 1 jam
+const PAYMENT_TIMEOUT_MINUTES = 30; // Batas waktu pembayaran: 30 menit
 
 /**
  * Finds all PENDING transactions that have passed their expiry time,
@@ -12,10 +12,13 @@ const PAYMENT_TIMEOUT_HOURS = 1; // Batas waktu pembayaran: 1 jam
 export async function cleanupExpiredTransactions() {
   const now = new Date();
 
-  // Find all expired PENDING transactions
+  // Find all expired PENDING transactions yang BELUM upload bukti transfer
+  // Jika sudah upload bukti transfer (paymentProofUrl !== null), jangan di-expire otomatis,
+  // biarkan admin mereview-nya.
   const expiredTransactions = await prisma.transaction.findMany({
     where: {
-      status: "PENDING",
+      status: { in: ["PENDING", "REJECTED"] },
+      paymentProofUrl: null, // Hanya expire yang belum upload bukti pembayaran
       expiresAt: {
         lte: now, // expiresAt <= now
       },
@@ -93,8 +96,8 @@ export async function cleanupExpiredTransactions() {
  */
 export function getTransactionExpiryTime(): Date {
   const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + PAYMENT_TIMEOUT_HOURS);
+  expiresAt.setMinutes(expiresAt.getMinutes() + PAYMENT_TIMEOUT_MINUTES);
   return expiresAt;
 }
 
-export { PAYMENT_TIMEOUT_HOURS };
+export { PAYMENT_TIMEOUT_MINUTES };

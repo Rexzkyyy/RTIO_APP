@@ -24,7 +24,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
   if (transaction.totalPrice === 0 || transaction.status === "APPROVED") {
     redirect(`/public/${transaction.id}/ticket`);
   }
-  if (!transaction.paymentProofUrl) {
+  if (!transaction.paymentProofUrl || transaction.status === "REJECTED") {
     redirect(`/public/${transaction.id}/pay`);
   }
 

@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
-import { ChevronLeft, CheckCircle2, XCircle, Search, ExternalLink, ImageIcon, Clock, ChevronRight, Receipt } from "lucide-react";
+import { ChevronLeft, CheckCircle2, XCircle, Search, ExternalLink, ImageIcon, Clock, ChevronRight, Receipt, Timer } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { DeleteButton } from "./DeleteButton";
 
@@ -45,10 +45,22 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
     const status = formData.get("status") as "APPROVED" | "REJECTED";
     
     if (id && status) {
-      await prisma.transaction.update({
-        where: { id },
-        data: { status }
-      });
+      if (status === "REJECTED") {
+        const tx = await prisma.transaction.findUnique({ where: { id } });
+        if (tx) {
+          const newExpiresAt = new Date();
+          newExpiresAt.setMinutes(newExpiresAt.getMinutes() + 60);
+          await prisma.transaction.update({
+            where: { id },
+            data: { status, expiresAt: newExpiresAt }
+          });
+        }
+      } else {
+        await prisma.transaction.update({
+          where: { id },
+          data: { status }
+        });
+      }
       revalidatePath("/admin/transactions");
     }
   }
@@ -223,6 +235,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
           { id: 'PENDING', label: 'Menunggu Validasi', icon: Clock },
           { id: 'APPROVED', label: 'Lunas', icon: CheckCircle2 },
           { id: 'REJECTED', label: 'Ditolak', icon: XCircle },
+          { id: 'EXPIRED', label: 'Kadaluarsa', icon: Timer },
           { id: 'ALL', label: 'Semua', icon: Search }
         ].map(tab => (
           <Link 
@@ -296,7 +309,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                           <div className="pt-2">
                             <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Waktu Transaksi</span>
                             <span className="font-medium text-xs text-slate-600">
-                              {new Date(tx.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB
+                              {new Date(tx.createdAt).toLocaleDateString('id-ID', { timeZone: 'Asia/Makassar', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WITA
                             </span>
                           </div>
                         </div>
@@ -388,7 +401,23 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                         {tx.status === "REJECTED" && (
                           <div className="flex gap-2 items-center">
                             <a
-                              href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nMohon maaf, pembayaran Anda untuk pendaftaran acara *${tx.event.title}* belum dapat kami validasi karena bukti transfer tidak sesuai atau dana belum masuk.\n\nSilakan lakukan konfirmasi ulang atau hubungi kami jika ada kendala.\n\nTerima kasih.`)}`}
+                              href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nMohon maaf, pembayaran Anda untuk tiket *${tx.event.title}* ditolak karena gambar bukti transfer tidak jelas/tidak valid.\n\nKami memberikan waktu tambahan *1 Jam* untuk Anda mengunggah ulang bukti transfer yang benar. Jika melewati batas waktu, tiket Anda akan otomatis hangus.\n\nSilakan upload ulang melalui tautan berikut:\n${process.env.NEXT_PUBLIC_APP_URL || 'https://rtio-tix.vercel.app'}/public/${tx.id}/verify\n\nTerima kasih.`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-4 py-2 text-sm font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 shadow-sm transition-colors h-full"
+                            >
+                              Kirim WA
+                            </a>
+                            <form action={deleteTransaction}>
+                              <input type="hidden" name="id" value={tx.id} />
+                              <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
+                            </form>
+                          </div>
+                        )}
+                        {tx.status === "EXPIRED" && (
+                          <div className="flex gap-2 items-center">
+                            <a
+                              href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Halo ${tx.buyerName},\n\nMohon maaf, pesanan tiket Anda untuk acara *${tx.event.title}* telah dibatalkan secara otomatis karena melewati batas waktu pembayaran.\n\nJika Anda masih berminat, silakan melakukan pemesanan ulang melalui website kami. Terima kasih.`)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center px-4 py-2 text-sm font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 shadow-sm transition-colors h-full"
@@ -509,7 +538,23 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                   {tx.status === "REJECTED" && (
                     <div className="flex gap-2 w-full pt-2">
                       <a
-                        href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nMohon maaf, pembayaran Anda untuk pendaftaran acara *${tx.event.title}* belum dapat kami validasi karena bukti transfer tidak sesuai atau dana belum masuk.\n\nSilakan lakukan konfirmasi ulang atau hubungi kami jika ada kendala.\n\nTerima kasih.`)}`}
+                        href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nMohon maaf, pembayaran Anda untuk tiket *${tx.event.title}* ditolak karena gambar bukti transfer tidak jelas/tidak valid.\n\nKami memberikan waktu tambahan *1 Jam* untuk Anda mengunggah ulang bukti transfer yang benar. Jika melewati batas waktu, tiket Anda akan otomatis hangus.\n\nSilakan upload ulang melalui tautan berikut:\n${process.env.NEXT_PUBLIC_APP_URL || 'https://rtio-tix.vercel.app'}/public/${tx.id}/verify\n\nTerima kasih.`)}`}
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="flex-1 text-center py-2.5 text-sm font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 transition-all flex items-center justify-center"
+                      >
+                        Kirim WA
+                      </a>
+                      <form action={deleteTransaction}>
+                        <input type="hidden" name="id" value={tx.id} />
+                        <DeleteButton className="p-2.5 rounded-xl h-full" />
+                      </form>
+                    </div>
+                  )}
+                  {tx.status === "EXPIRED" && (
+                    <div className="flex gap-2 w-full pt-2">
+                      <a
+                        href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Halo ${tx.buyerName},\n\nMohon maaf, pesanan tiket Anda untuk acara *${tx.event.title}* telah dibatalkan secara otomatis karena melewati batas waktu pembayaran.\n\nJika Anda masih berminat, silakan melakukan pemesanan ulang melalui website kami. Terima kasih.`)}`}
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="flex-1 text-center py-2.5 text-sm font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 transition-all flex items-center justify-center"

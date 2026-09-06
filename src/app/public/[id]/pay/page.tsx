@@ -34,7 +34,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
           </div>
           <h1 className="text-2xl font-bold text-slate-800 mb-2">Waktu Habis</h1>
           <p className="text-slate-600 mb-6">
-            Batas waktu pembayaran untuk transaksi ini telah habis (1 jam). Transaksi dibatalkan dan kuota tiket telah dikembalikan.
+            Batas waktu pembayaran untuk transaksi ini telah habis (30 menit). Transaksi dibatalkan dan kuota tiket telah dikembalikan.
           </p>
           <Link href={`/event/${transaction.event.slug}`} className="block w-full py-3 bg-slate-900 text-white rounded-xl font-bold">
             Pesan Tiket Ulang
@@ -48,7 +48,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
   if (transaction.totalPrice === 0 || transaction.status === "APPROVED") {
     redirect(`/public/${transaction.id}/ticket`);
   }
-  if (transaction.paymentProofUrl) {
+  if (transaction.paymentProofUrl && transaction.status !== "REJECTED") {
     redirect(`/public/${transaction.id}/verify`);
   }
 
@@ -60,6 +60,12 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
 
       <div className="flex-1 max-w-3xl w-full mx-auto px-4 py-8 space-y-8 flex flex-col items-center relative z-10">
         
+        {transaction.status === "REJECTED" && (
+          <div className="bg-red-50 p-4 rounded-xl border border-red-200 text-red-700 w-full max-w-2xl text-sm mb-4">
+            <strong>⚠️ Pembayaran Ditolak:</strong> Bukti transfer Anda sebelumnya ditolak (misalnya karena gambar tidak jelas atau salah). Silakan upload ulang bukti transfer yang benar sebelum waktu habis.
+          </div>
+        )}
+
         {/* Status Header */}
         <div className="text-center w-full max-w-2xl">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 text-emerald-500 mb-4">
@@ -73,7 +79,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
           {transaction.expiresAt && (
             <div className="inline-flex items-center bg-orange-100 text-orange-800 px-4 py-2 rounded-lg font-medium border border-orange-200">
               <Clock className="w-4 h-4 mr-2" />
-              Selesaikan sebelum: {new Date(transaction.expiresAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+              Selesaikan sebelum: {new Date(transaction.expiresAt).toLocaleTimeString('id-ID', { timeZone: 'Asia/Makassar', hour: '2-digit', minute: '2-digit' })} WITA
             </div>
           )}
         </div>

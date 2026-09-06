@@ -179,7 +179,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
                 <div className="p-3 sm:p-4 border-r border-white/20 col-span-1 bg-white/5">
                   <span className="text-[9px] sm:text-[10px] font-bold text-pink-200 uppercase tracking-widest block mb-0.5 sm:mb-1">Waktu</span>
                   <span className="text-xs sm:text-sm font-black text-amber-300 drop-shadow-sm">
-                    {new Date(data.event.eventDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(data.event.eventDate).toLocaleTimeString('id-ID', { timeZone: 'Asia/Makassar', hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
                 <div className="p-3 sm:p-4 col-span-2 border-t sm:border-t-0 border-white/20">

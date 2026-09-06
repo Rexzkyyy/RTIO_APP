@@ -50,23 +50,50 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
       }
     },
     include: {
-      ticketCategory: true
+      ticketCategory: true,
+      transaction: true
     }
   });
 
-  // Kelompokkan tiket yang terjual berdasarkan nama kategori
   const ticketsMap = new Map();
   event.ticketCategories.forEach(cat => {
     ticketsMap.set(cat.id, {
       name: cat.name,
-      terjual: 0
+      terjual: 0,
+      terjualPromo: 0,
+      terjualNormal: 0,
+      sisaPromo: cat.discountQuota || 0,
+      sisaNormal: cat.quota - (cat.discountQuota || 0),
     });
   });
+
+  let totalPromo = 0;
+  let totalNormal = 0;
+  let maleCount = 0;
+  let femaleCount = 0;
 
   tickets.forEach(ticket => {
     const catData = ticketsMap.get(ticket.ticketCategoryId);
     if (catData) {
       catData.terjual += 1;
+      
+      const activePrice = ticket.transaction.totalTickets > 0 
+        ? ticket.transaction.totalPrice / ticket.transaction.totalTickets 
+        : 0;
+      
+      if (ticket.ticketCategory.hasDiscount && ticket.ticketCategory.discountPrice !== null && activePrice === ticket.ticketCategory.discountPrice) {
+        catData.terjualPromo += 1;
+        totalPromo += 1;
+      } else {
+        catData.terjualNormal += 1;
+        totalNormal += 1;
+      }
+    }
+    
+    if (ticket.holderGender === 'L') {
+      maleCount += 1;
+    } else if (ticket.holderGender === 'P') {
+      femaleCount += 1;
     }
   });
 
@@ -93,6 +120,12 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
     transactionStatus,
     ticketsByCategory,
     recentTransactions,
+    totalPromo,
+    totalNormal,
+    genderData: [
+      { name: 'Laki-laki', value: maleCount, color: '#3b82f6' }, // blue-500
+      { name: 'Perempuan', value: femaleCount, color: '#ec4899' }, // pink-500
+    ].filter(g => g.value > 0),
   };
 
   // Kita tidak perlu mengirim object rumit dari Prisma, jadi serialize seperlunya

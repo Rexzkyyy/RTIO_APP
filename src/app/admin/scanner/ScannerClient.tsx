@@ -647,7 +647,7 @@ export function ScannerClient({ adminRole }: { adminRole?: string }) {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-slate-500 text-xs tabular-nums">
-                      {item.time.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                      {item.time.toLocaleTimeString("id-ID", { timeZone: 'Asia/Makassar', hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                     </p>
                     <p className={`text-[10px] font-bold mt-0.5 ${
                       item.status === "valid" ? "text-emerald-500" :

@@ -492,7 +492,7 @@ export default function CreateEventPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-emerald-800 mb-1">Mulai Diskon (WIB)</label>
+                        <label className="block text-xs font-medium text-emerald-800 mb-1">Mulai Diskon (WITA)</label>
                         <input 
                           type="datetime-local" 
                           name="discountStartDate[]" 
@@ -503,7 +503,7 @@ export default function CreateEventPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-emerald-800 mb-1">Selesai Diskon (WIB)</label>
+                        <label className="block text-xs font-medium text-emerald-800 mb-1">Selesai Diskon (WITA)</label>
                         <input 
                           type="datetime-local" 
                           name="discountEndDate[]" 

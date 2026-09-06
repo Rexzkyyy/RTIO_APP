@@ -1,0 +1,1 @@
+﻿import prisma from './src/lib/prisma'; async function main() { const t = await prisma.ticketCategory.findUnique({ where: { id: '7f1145dc-c984-4dc0-9114-1c1de0a5de7b' } }); console.log(JSON.stringify(t, null, 2)); } main();
