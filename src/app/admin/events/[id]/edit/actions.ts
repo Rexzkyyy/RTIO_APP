@@ -167,9 +167,7 @@ export async function updateEvent(id: string, formData: FormData) {
     }
   }
 
-  revalidatePath("/");
-  revalidatePath("/admin/events");
-  revalidatePath(`/event/${slug}`);
+  revalidatePath("/", "layout");
   
   redirect("/admin/events");
 }
