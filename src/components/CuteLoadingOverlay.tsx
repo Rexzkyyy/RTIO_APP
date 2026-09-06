@@ -12,7 +12,7 @@ const FUNNY_MESSAGES = [
   "Membangunkan server yang lagi tidur...",
   "Menyeduh kopi untuk admin...",
   "Sabar ya, orang sabar tiketnya VIP...",
-  "Mengamankan kursi barisan depan...",
+  "Menyiapkan tiket terbaik untukmu...",
 ];
 
 export const showCuteLoader = () => {

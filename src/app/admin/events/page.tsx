@@ -156,9 +156,17 @@ export default async function EventsPage({ searchParams }: Props) {
                             ? `Mulai Rp ${Math.min(...event.ticketCategories.map(t => t.price)).toLocaleString('id-ID')}` 
                             : 'Belum diatur'}
                         </div>
-                        <div className="flex items-center text-sm text-slate-500 mt-1">
-                          <Users className="w-4 h-4 mr-1 text-slate-400" />
-                          {event.ticketCategories.reduce((acc, curr) => acc + curr.quota, 0)} Total Kuota
+                        <div className="flex flex-col gap-1 mt-1">
+                          <div className="flex items-center text-sm text-slate-500">
+                            <Users className="w-4 h-4 mr-1 text-slate-400" />
+                            {event.ticketCategories.reduce((acc, curr) => acc + curr.quota, 0)} Total Kuota
+                          </div>
+                          {event.ticketCategories.some(c => c.hasDiscount) && (
+                            <div className="flex items-center text-sm text-emerald-600">
+                              <Users className="w-4 h-4 mr-1 text-emerald-500" />
+                              {event.ticketCategories.reduce((acc, curr) => acc + (curr.discountQuota || 0), 0)} Kuota Promo
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -227,11 +235,21 @@ export default async function EventsPage({ searchParams }: Props) {
                           : 'Belum diatur'}
                       </span>
                     </div>
-                    <div className="flex items-center text-slate-600">
-                      <Users className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
-                      <span className="truncate font-medium">
-                        {event.ticketCategories.reduce((acc, curr) => acc + curr.quota, 0)} Kuota
-                      </span>
+                    <div className="flex flex-col gap-1 justify-center">
+                      <div className="flex items-center text-slate-600">
+                        <Users className="w-3.5 h-3.5 mr-2 text-slate-400 shrink-0" />
+                        <span className="truncate font-medium">
+                          {event.ticketCategories.reduce((acc, curr) => acc + curr.quota, 0)} Total Kuota
+                        </span>
+                      </div>
+                      {event.ticketCategories.some(c => c.hasDiscount) && (
+                        <div className="flex items-center text-emerald-600">
+                          <Users className="w-3.5 h-3.5 mr-2 text-emerald-500 shrink-0" />
+                          <span className="truncate font-medium">
+                            {event.ticketCategories.reduce((acc, curr) => acc + (curr.discountQuota || 0), 0)} Promo
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

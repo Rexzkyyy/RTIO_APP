@@ -9,7 +9,7 @@ test('verify loading transition from register to pay', async ({ page }) => {
   await page.click('a[href^="/event/"]');
   // Wait for the event detail page to load by waiting for its title or button
   await page.waitForSelector('h1');
-  await page.click('a:has-text("Amankan Kursi Sekarang"), a:has-text("Pilih Tiket")');
+  await page.click('a:has-text("Pesan Tiket Sekarang"), a:has-text("Pilih Tiket")');
   
   // Choose Gold ticket if present
   try {

@@ -484,7 +484,7 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
 
                     <div className="pt-4 border-t border-slate-100 mt-3">
                       <div className={`w-full py-3 bg-gradient-to-r ${style.colors} text-white rounded-xl shadow-md group-hover/ticket:shadow-lg transition-all flex items-center justify-center text-sm sm:text-base font-bold whitespace-nowrap`}>
-                        Amankan Kursi Sekarang <ChevronRight className="w-5 h-5 ml-1" />
+                        Pesan Tiket Sekarang <ChevronRight className="w-5 h-5 ml-1" />
                       </div>
                       <p className="text-center text-xs text-slate-500 mt-2 font-medium">Garansi informasi & support 24/7</p>
                     </div>
