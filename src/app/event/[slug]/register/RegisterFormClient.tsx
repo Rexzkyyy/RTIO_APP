@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { Ticket, CheckCircle2, AlertCircle, XCircle, Loader2, Users } from "lucide-react";
-import imageCompression from "browser-image-compression";
 import { submitRegistration } from "./actions";
 import { useRouter } from "next/navigation";
 import { showCuteLoader } from "@/components/CuteLoadingOverlay";
@@ -59,7 +58,6 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           setErrorMsg(null);
           
           try {
-            const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: true };
             
             const formatPhone = (val: string | null) => {
               if (!val) return val;
@@ -85,9 +83,8 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
               }
               if (field.type === 'FILE') {
                 const file = formData.get(`customAnswer_${field.id}`) as File;
-                if (file && file.size > 0) {
-                  const compressedFile = await imageCompression(file, options);
-                  formData.set(`customAnswer_${field.id}`, compressedFile, file.name);
+                if (file && file.size > 4 * 1024 * 1024) {
+                   throw new Error(`Ukuran file ${field.name} terlalu besar. Maksimal 4MB.`);
                 }
               }
             }

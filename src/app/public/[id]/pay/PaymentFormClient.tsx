@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useTransition } from "react";
-import imageCompression from "browser-image-compression";
 import { uploadPaymentProof } from "../actions";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -28,11 +27,13 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
       
       try {
         const file = formData.get("paymentProof") as File;
-        if (file && file.size > 0) {
-          const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: true };
-          const compressedFile = await imageCompression(file, options);
-          formData.set("paymentProof", compressedFile, file.name);
+        if (file && file.size > 4 * 1024 * 1024) {
+          setErrorMsg("Ukuran file terlalu besar. Maksimal 4MB.");
+          setIsSubmitting(false);
+          hideCuteLoader();
+          return;
         }
+        
         const result = await uploadPaymentProof(formData);
         if (result && result.success) {
           router.push(result.url);
