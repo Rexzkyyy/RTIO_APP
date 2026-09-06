@@ -164,7 +164,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
                 </div>
                 <div className="p-3 sm:p-4 bg-white/5">
                   <span className="text-[9px] sm:text-[10px] font-bold text-pink-200 uppercase tracking-widest block mb-0.5 sm:mb-1">Jml Tiket</span>
-                  <span className="text-base sm:text-lg font-bold uppercase">{data.transaction.totalTickets} Org</span>
+                  <span className="text-base sm:text-lg font-bold uppercase">{data.transaction.totalTickets} Tiket</span>
                 </div>
               </div>
               
