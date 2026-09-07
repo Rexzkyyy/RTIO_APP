@@ -99,9 +99,9 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
       }
     }
     
-    if (ticket.holderGender === 'L') {
+    if (ticket.holderGender === 'L' || ticket.holderGender === 'Laki-laki') {
       maleCount += 1;
-    } else if (ticket.holderGender === 'P') {
+    } else if (ticket.holderGender === 'P' || ticket.holderGender === 'Perempuan') {
       femaleCount += 1;
     }
   });
