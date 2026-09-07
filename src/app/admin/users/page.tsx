@@ -55,11 +55,12 @@ export default async function AdminUsersPage({ searchParams }: Props) {
 
   async function addAdminAction(formData: FormData) {
     "use server";
-    const email = formData.get("email") as string;
+    let email = formData.get("email") as string;
     const role = formData.get("role") as "SUPER_ADMIN" | "VALIDATOR";
     const eventIds = formData.getAll("eventIds") as string[];
     
     if (!email) return;
+    email = email.trim().toLowerCase();
 
     // Cek apakah sudah ada
     const existing = await prisma.admin.findUnique({ where: { email } });

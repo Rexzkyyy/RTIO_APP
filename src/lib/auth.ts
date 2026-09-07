@@ -10,6 +10,13 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
     CredentialsProvider({
         name: "Test Login",
@@ -58,8 +65,14 @@ export const authOptions: NextAuthOptions = {
         
         // Check if this email exists in the Admin table
         if (user.email) {
-          const admin = await prisma.admin.findUnique({
-            where: { email: user.email }
+          const emailLower = user.email.trim().toLowerCase();
+          const admin = await prisma.admin.findFirst({
+            where: { 
+              email: { 
+                equals: emailLower,
+                mode: 'insensitive'
+              } 
+            }
           });
           token.isAdmin = !!admin;
           token.adminRole = admin ? admin.role : null;

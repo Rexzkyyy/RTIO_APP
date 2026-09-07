@@ -1,10 +1,20 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function AdminLoginButton() {
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm text-center font-medium">
+          {error === 'unauthorized' ? 'Akun Anda tidak terdaftar sebagai Administrator.' : 'Terjadi kesalahan saat login.'}
+        </div>
+      )}
       <div className="pt-2">
         <button
           onClick={() => signIn("google", { callbackUrl: "/admin/events" })}
@@ -55,5 +65,14 @@ export default function AdminLoginButton() {
         </p>
       </div>
     </div>
+    </div>
+  );
+}
+
+export default function AdminLoginButton() {
+  return (
+    <Suspense fallback={<div className="h-20 flex items-center justify-center text-slate-400 text-sm">Memuat...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
