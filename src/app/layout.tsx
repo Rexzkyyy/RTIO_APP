@@ -49,6 +49,9 @@ export const metadata: Metadata = {
     description: "Platform Ticketing Modern & Mudah oleh Ruang Tenang",
     images: ["/logo.png"],
   },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport = {

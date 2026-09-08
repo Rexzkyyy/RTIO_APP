@@ -108,7 +108,10 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
                 <div key={idx} className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50">
                   <div>
                     <div className="font-bold text-slate-800 text-lg">{account.bank}</div>
-                    <div className="font-mono text-slate-600 mt-1">{account.number}</div>
+                    <div className="font-mono text-slate-600 mt-1">
+                      <span className="text-slate-400 font-sans text-xs mr-2">No. Rekening:</span>
+                      {account.number}
+                    </div>
                     <div className="text-xs text-slate-500 mt-1">a.n. {account.name}</div>
                   </div>
                   <CopyButton text={account.number} />
@@ -118,7 +121,10 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
               <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50">
                 <div>
                   <div className="font-bold text-slate-800 text-lg">BCA</div>
-                  <div className="font-mono text-slate-600 mt-1">1234 5678 90</div>
+                  <div className="font-mono text-slate-600 mt-1">
+                    <span className="text-slate-400 font-sans text-xs mr-2">No. Rekening:</span>
+                    1234 5678 90
+                  </div>
                   <div className="text-xs text-slate-500 mt-1">a.n. PT RTIO Ticketing</div>
                 </div>
                 <CopyButton text="1234567890" />

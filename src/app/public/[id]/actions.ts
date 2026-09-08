@@ -18,6 +18,7 @@ export async function uploadPaymentProof(formData: FormData) {
     const blob = await put(filename, buffer, { 
       access: "public",
       contentType: file.type || "image/jpeg",
+      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
     
     await prisma.transaction.update({

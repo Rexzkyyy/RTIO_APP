@@ -102,7 +102,7 @@ export async function updateEvent(id: string, formData: FormData) {
   const file = formData.get("bannerImage") as File;
   if (file && file.size > 0) {
     const filename = `banners/${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-    const blob = await put(filename, file, { access: 'public' });
+    const blob = await put(filename, file, { access: 'public', token: process.env.BLOB_READ_WRITE_TOKEN });
     dataToUpdate.bannerUrl = blob.url;
   }
 
@@ -110,7 +110,7 @@ export async function updateEvent(id: string, formData: FormData) {
   const ticketFile = formData.get("ticketDesignImage") as File;
   if (ticketFile && ticketFile.size > 0) {
     const filename = `tickets/${Date.now()}-${ticketFile.name.replace(/\s+/g, '-')}`;
-    const blob = await put(filename, ticketFile, { access: 'public' });
+    const blob = await put(filename, ticketFile, { access: 'public', token: process.env.BLOB_READ_WRITE_TOKEN });
     dataToUpdate.ticketDesignUrl = blob.url;
   }
 

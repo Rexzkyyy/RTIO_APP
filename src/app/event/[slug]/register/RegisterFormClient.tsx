@@ -15,6 +15,8 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState(1);
   const totalSteps = event.fields.length > 0 ? 3 : 2;
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleNext = () => {
     const currentStepEl = document.getElementById(`step-${step}`);
@@ -51,6 +53,11 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
         if (step < totalSteps) {
           handleNext();
         } else {
+          if (!acceptedTerms) {
+            setShowTermsModal(true);
+            return;
+          }
+
           setIsSubmitting(true);
           showCuteLoader(); // Panggil loader global
           
@@ -537,6 +544,80 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
           </button>
         )}
       </div>
+
+      {/* Terms and Conditions Modal */}
+      {showTermsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="relative z-10 p-6 border-b border-slate-200 bg-white rounded-t-2xl flex items-center justify-between">
+              <h3 className="text-xl font-bold text-slate-800">Syarat & Ketentuan</h3>
+              <button 
+                type="button" 
+                onClick={() => setShowTermsModal(false)}
+                className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1 text-sm text-slate-600 space-y-4">
+              <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl mb-4">
+                <p className="font-bold text-orange-800 text-center uppercase">Mohon Dibaca Sebelum Melakukan Pembayaran</p>
+              </div>
+              <p>Sebelum melakukan pembayaran, pastikan Anda telah memahami dan menyetujui ketentuan berikut:</p>
+              <ol className="list-decimal pl-5 space-y-3">
+                <li><strong className="text-slate-700">Tiket yang telah dibeli tidak dapat dibatalkan atau meminta pengembalian uang</strong> karena alasan pribadi, termasuk berhalangan hadir, perubahan rencana, atau alasan lainnya dari pihak peserta.</li>
+                <li>Pengembalian uang hanya diberikan apabila terdapat kesalahan atau kelalaian dari pihak penyelenggara yang menyebabkan hak/fasilitas peserta tidak dapat diberikan.</li>
+                <li>Pastikan <strong className="text-slate-700">nama, nomor WhatsApp, kategori tiket, dan jumlah tiket sudah benar</strong> sebelum melakukan pembayaran.</li>
+                <li>File tiket yang hilang akibat dari kelalaian peserta tidak dapat digantikan oleh pihak Penyelenggara.</li>
+                <li>Pembayaran yang telah dilakukan dianggap sebagai persetujuan peserta terhadap seluruh ketentuan tiket.</li>
+                <li>Dengan melanjutkan pembayaran, peserta menyatakan telah membaca, memahami, dan menyetujui ketentuan tersebut.</li>
+              </ol>
+            </div>
+            
+            <div className="relative z-10 p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
+              <label className="flex items-start gap-3 cursor-pointer mb-6 group">
+                <div className="relative flex items-center justify-center mt-0.5">
+                  <input 
+                    type="checkbox" 
+                    className="peer w-6 h-6 text-emerald-600 rounded-md border-2 border-slate-300 bg-white focus:ring-emerald-500 cursor-pointer appearance-none checked:bg-emerald-500 checked:border-emerald-500 transition-colors"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  />
+                  <CheckCircle2 className="w-4 h-4 text-white absolute pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" />
+                </div>
+                <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">
+                  Saya telah membaca dan menyetujui ketentuan di atas dan siap melakukan pembayaran.
+                </span>
+              </label>
+              
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(false)}
+                  className="flex-1 py-3 px-4 bg-slate-200 text-slate-800 font-bold rounded-xl hover:bg-slate-300 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={!acceptedTerms || isSubmitting}
+                  className={`flex-1 flex justify-center items-center py-3 px-4 font-bold rounded-xl transition-all ${
+                    !acceptedTerms ? 'bg-emerald-200 text-emerald-50 cursor-not-allowed' : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/30'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Proses...
+                    </>
+                  ) : "Lanjut Pembayaran"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

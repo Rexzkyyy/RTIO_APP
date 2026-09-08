@@ -45,7 +45,7 @@ export async function submitRegistration(formData: FormData) {
       const file = rawAnswer as File;
       if (file.size > 0) {
         const filename = `answers/${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-        const blob = await put(filename, file, { access: "public" });
+        const blob = await put(filename, file, { access: "public", token: process.env.BLOB_READ_WRITE_TOKEN });
         answerValue = blob.url;
       }
     } else {
