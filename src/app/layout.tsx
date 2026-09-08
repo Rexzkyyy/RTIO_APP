@@ -14,9 +14,20 @@ const geistMono = Geist_Mono({
 });
 
 const getBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
+  let url = "http://localhost:3000";
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    url = process.env.NEXT_PUBLIC_APP_URL;
+  } else if (process.env.VERCEL_URL) {
+    url = process.env.VERCEL_URL.startsWith("http")
+      ? process.env.VERCEL_URL
+      : `https://${process.env.VERCEL_URL}`;
+  }
+  try {
+    new URL(url);
+    return url;
+  } catch (error) {
+    return "http://localhost:3000";
+  }
 };
 
 export const metadata: Metadata = {
