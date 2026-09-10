@@ -121,7 +121,7 @@ function useFadeInRef<T extends HTMLElement>() {
   return ref;
 }
 
-export default function EventDetailClient({ event, lowestPrice, navbar, isLoggedIn = false }: { event: any, lowestPrice: number, navbar: React.ReactNode, isLoggedIn?: boolean }) {
+export default function EventDetailClient({ event, lowestPrice, originalPrice, navbar, isLoggedIn = false }: { event: any, lowestPrice: number, originalPrice?: number | null, navbar: React.ReactNode, isLoggedIn?: boolean }) {
   const config = event.ticketConfig || {};
   const themeClass = config.themeName === 'pink' ? 'theme-pink' : 'theme-primary';
 
@@ -500,7 +500,12 @@ export default function EventDetailClient({ event, lowestPrice, navbar, isLogged
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-slate-200 p-4 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-50 flex justify-between items-center">
         <div>
           <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Harga mulai</p>
-          <p className="text-lg font-black text-primary-600">
+          {originalPrice && originalPrice > lowestPrice && (
+            <p className="text-[10px] text-slate-400 line-through leading-none mb-0.5">
+              Rp {originalPrice.toLocaleString('id-ID')}
+            </p>
+          )}
+          <p className="text-lg font-black text-primary-600 leading-none">
             {lowestPrice === 0 ? "Gratis" : `Rp ${lowestPrice.toLocaleString('id-ID')}`}
           </p>
         </div>

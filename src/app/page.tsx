@@ -121,9 +121,30 @@ export default async function Home({ searchParams }: Props) {
           <>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
               {events.map((event) => {
-                const lowestPrice = event.ticketCategories.length > 0 
-                  ? Math.min(...event.ticketCategories.map(t => t.price))
-                  : 0;
+                const now = new Date();
+                
+                let lowestActivePrice = Infinity;
+                let originalPriceForLowest: number | null = null;
+                let isLowestDiscounted = false;
+
+                if (event.ticketCategories && event.ticketCategories.length > 0) {
+                  for (const t of event.ticketCategories) {
+                    const isDiscountActive = t.hasDiscount && t.discountPrice != null && 
+                      (!t.discountStartDate || now >= new Date(t.discountStartDate)) && 
+                      (!t.discountEndDate || now <= new Date(t.discountEndDate)) &&
+                      (t.discountQuota === null || t.discountQuota > 0);
+                    
+                    const activePrice = isDiscountActive ? (t.discountPrice as number) : t.price;
+                    
+                    if (activePrice < lowestActivePrice) {
+                      lowestActivePrice = activePrice;
+                      isLowestDiscounted = isDiscountActive;
+                      originalPriceForLowest = t.price;
+                    }
+                  }
+                } else {
+                  lowestActivePrice = 0;
+                }
 
                 return (
                   <Link key={event.id} href={`/event/${event.slug}`} prefetch={false} className="group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden transition-all duration-300 transform sm:hover:-translate-y-1 flex flex-col h-full active:scale-[0.98] sm:active:scale-100">
@@ -153,8 +174,15 @@ export default async function Home({ searchParams }: Props) {
                         
                         <div className="pt-2 sm:pt-4 mt-2 sm:mt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-0">
                           <div className="text-[9px] sm:text-sm font-medium text-slate-500">Mulai dari</div>
-                          <div className="text-sm sm:text-lg font-black text-teal-600">
-                            {lowestPrice === 0 ? "Gratis" : `Rp ${lowestPrice.toLocaleString('id-ID')}`}
+                          <div className="flex flex-col items-end">
+                            {isLowestDiscounted && originalPriceForLowest !== null && originalPriceForLowest > lowestActivePrice && (
+                              <span className="text-[10px] sm:text-xs text-slate-400 line-through leading-none mb-0.5">
+                                Rp {originalPriceForLowest.toLocaleString('id-ID')}
+                              </span>
+                            )}
+                            <div className="text-sm sm:text-lg font-black text-teal-600 leading-none">
+                              {lowestActivePrice === 0 ? "Gratis" : `Rp ${lowestActivePrice.toLocaleString('id-ID')}`}
+                            </div>
                           </div>
                         </div>
                       </div>
