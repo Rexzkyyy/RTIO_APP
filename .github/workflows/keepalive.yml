@@ -1,0 +1,47 @@
+name: Ping Database to Prevent Pausing
+
+on:
+  schedule:
+    - cron: '0 9 * * 1,4' # Berjalan setiap Senin dan Kamis 09:00 UTC
+  workflow_dispatch: # Supaya bisa di-trigger manual
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install PostgreSQL Client
+        run: npm install pg
+
+      - name: Ping PostgreSQL Database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          node -e "
+          const { Client } = require('pg');
+          (async () => {
+            const dbUrl = process.env.DATABASE_URL;
+            if (!dbUrl) {
+              console.error('DATABASE_URL tidak ditemukan di GitHub Secrets.');
+              process.exit(1);
+            }
+            const client = new Client({ connectionString: dbUrl });
+            try {
+              await client.connect();
+              const res = await client.query('SELECT 1 as ping');
+              console.log('Ping berhasil menjaga database tetap aktif:', res.rows);
+            } catch (err) {
+              console.error('Gagal ping database:', err.message);
+              process.exit(1);
+            } finally {
+              await client.end();
+            }
+          })();
+          "
