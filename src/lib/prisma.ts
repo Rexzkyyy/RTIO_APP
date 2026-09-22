@@ -13,7 +13,8 @@ const isSupabaseUrl = (url?: string) => {
 };
 
 const prismaClientSingleton = () => {
-  const connectionString = process.env.DATABASE_URL
+  // Gunakan DIRECT_URL sementara untuk bypass cache PgBouncer di Supabase
+  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL
   const pool = new Pool({ 
     connectionString,
     max: 1, // Limit connections per lambda to prevent exhaustion in serverless
