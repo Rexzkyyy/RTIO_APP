@@ -2,9 +2,10 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
-import { ChevronLeft, CheckCircle2, XCircle, Search, ExternalLink, ImageIcon, Clock, ChevronRight, Receipt, Timer } from "lucide-react";
+import { ChevronLeft, CheckCircle2, XCircle, Search, ImageIcon, Clock, ChevronRight, Receipt, Timer, ArrowUpCircle, RefreshCw } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { DeleteButton } from "./DeleteButton";
+import { UpgradeButton, ReactivateButton, ExpiredApproveButton } from "./TransactionActionsClient";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +111,144 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
     }
   }
 
+  // -------- Server Action: Reaktivasi EXPIRED → PENDING --------
+  async function reactivateTransaction(formData: FormData) {
+    "use server";
+    const id = formData.get("id") as string;
+    if (!id) return;
+
+    await prisma.$transaction(async (prismaTx) => {
+      const tx = await prismaTx.transaction.findUnique({
+        where: { id },
+        include: { tickets: true }
+      });
+      if (!tx || tx.status !== "EXPIRED") return;
+
+      // Kurangi kuota kembali (karena saat EXPIRED kuota sudah dikembalikan)
+      const quotaMap = new Map<string, number>();
+      for (const ticket of tx.tickets) {
+        const current = quotaMap.get(ticket.ticketCategoryId) ?? 0;
+        quotaMap.set(ticket.ticketCategoryId, current + 1);
+      }
+      for (const [categoryId, count] of quotaMap.entries()) {
+        await prismaTx.ticketCategory.update({
+          where: { id: categoryId },
+          data: { quota: { decrement: count } }
+        });
+      }
+
+      // Set status PENDING, reset bukti TF agar peserta upload ulang
+      await prismaTx.transaction.update({
+        where: { id },
+        data: {
+          status: "PENDING",
+          expiresAt: null,
+          paymentProofUrl: null,
+          senderAccountName: null,
+        }
+      });
+    });
+
+    revalidatePath("/admin/transactions");
+  }
+
+  // -------- Server Action: Approve langsung transaksi EXPIRED (admin input bukti TF) --------
+  async function approveExpiredTransaction(formData: FormData) {
+    "use server";
+    const id = formData.get("id") as string;
+    const paymentProofUrl = formData.get("paymentProofUrl") as string;
+    const senderAccountName = formData.get("senderAccountName") as string;
+
+    if (!id || !paymentProofUrl || !senderAccountName) return;
+
+    await prisma.$transaction(async (prismaTx) => {
+      const tx = await prismaTx.transaction.findUnique({
+        where: { id },
+        include: { tickets: true }
+      });
+      if (!tx || tx.status !== "EXPIRED") return;
+
+      // Kurangi kembali kuota (kuota sudah dikembalikan saat EXPIRED, sekarang approve → pakai kuota)
+      const quotaMap = new Map<string, number>();
+      for (const ticket of tx.tickets) {
+        const current = quotaMap.get(ticket.ticketCategoryId) ?? 0;
+        quotaMap.set(ticket.ticketCategoryId, current + 1);
+      }
+      for (const [categoryId, count] of quotaMap.entries()) {
+        await prismaTx.ticketCategory.update({
+          where: { id: categoryId },
+          data: { quota: { decrement: count } }
+        });
+      }
+
+      // Set data pembayaran + langsung APPROVED
+      await prismaTx.transaction.update({
+        where: { id },
+        data: {
+          status: "APPROVED",
+          paymentProofUrl,
+          senderAccountName,
+          expiresAt: null,
+        }
+      });
+    });
+
+    revalidatePath("/admin/transactions");
+  }
+
+  // -------- Server Action: Upgrade Kategori Tiket --------
+  async function upgradeTicketCategory(formData: FormData) {
+    "use server";
+    const transactionId = formData.get("transactionId") as string;
+    const newCategoryId = formData.get("newCategoryId") as string;
+    const paymentProofUrl2 = formData.get("paymentProofUrl2") as string;
+    const priceDiff = parseInt(formData.get("priceDiff") as string, 10) || 0;
+    const oldCategoryId = formData.get("oldCategoryId") as string;
+
+    if (!transactionId || !newCategoryId || !paymentProofUrl2) return;
+
+    await prisma.$transaction(async (prismaTx) => {
+      const tx = await prismaTx.transaction.findUnique({
+        where: { id: transactionId },
+        include: { tickets: true }
+      });
+      if (!tx || tx.status !== "APPROVED") return;
+
+      const newCat = await prismaTx.ticketCategory.findUnique({ where: { id: newCategoryId } });
+      if (!newCat) return;
+
+      // Kurangi kuota kategori baru
+      await prismaTx.ticketCategory.update({
+        where: { id: newCategoryId },
+        data: { quota: { decrement: tx.tickets.length } }
+      });
+
+      // Kembalikan kuota kategori lama
+      await prismaTx.ticketCategory.update({
+        where: { id: oldCategoryId },
+        data: { quota: { increment: tx.tickets.length } }
+      });
+
+      // Update semua tiket ke kategori baru
+      await prismaTx.ticket.updateMany({
+        where: { transactionId },
+        data: { ticketCategoryId: newCategoryId }
+      });
+
+      // Update transaksi: harga, bukti TF kedua, track kategori lama
+      await prismaTx.transaction.update({
+        where: { id: transactionId },
+        data: {
+          totalPrice: tx.totalPrice + priceDiff,
+          paymentProofUrl2,
+          upgradedFromCatId: oldCategoryId,
+        }
+      });
+    });
+
+    revalidatePath("/admin/transactions");
+  }
+
   if (!eventId) {
     const eventsWhere = isValidator ? { id: { in: allowedEventIds } } : {};
     const events = await prisma.event.findMany({
@@ -197,6 +336,13 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
         }
       }
     }
+  });
+
+  // Fetch kategori tiket event ini untuk modal upgrade
+  const eventTicketCategories = await prisma.ticketCategory.findMany({
+    where: { eventId },
+    select: { id: true, name: true, price: true },
+    orderBy: { price: 'asc' }
   });
 
   return (
@@ -331,12 +477,23 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                             className="inline-flex items-center text-sm font-bold bg-white border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 px-4 py-2 rounded-xl transition-all shadow-sm w-max"
                           >
                             <ImageIcon className="w-4 h-4 mr-2" />
-                            Cek Bukti
+                            Bukti #1
                           </a>
                         ) : (
                           <span className="text-sm font-medium text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 inline-block w-max">Belum ada</span>
                         )}
                         
+                        {tx.paymentProofUrl2 && (
+                          <a 
+                            href={tx.paymentProofUrl2} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-sm font-bold bg-white border-2 border-violet-100 text-violet-600 hover:bg-violet-50 hover:border-violet-200 px-4 py-2 rounded-xl transition-all shadow-sm w-max"
+                          >
+                            <ImageIcon className="w-4 h-4 mr-2" />
+                            Bukti #2 (Upgrade)
+                          </a>
+                        )}
                         
                         {tx.senderAccountName && (
                           <div className="text-xs text-slate-600 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200 shadow-sm w-max min-w-[120px] flex items-start gap-2">
@@ -384,6 +541,16 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                             >
                               Lihat Tiket
                             </a>
+                            <UpgradeButton
+                              transactionId={tx.id}
+                              currentCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
+                              currentCategoryName={tx.tickets[0]?.ticketCategory?.name || ''}
+                              currentPrice={tx.totalPrice}
+                              totalTickets={tx.totalTickets}
+                              categories={eventTicketCategories}
+                              upgradeAction={upgradeTicketCategory}
+                              className="px-4 py-2"
+                            />
                             <a
                               href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nPembayaran Anda untuk acara *${tx.event.title}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${tx.buyerName}\n- Acara: *${tx.event.title}*\n- Jenis Kelamin: ${tx.buyerGender || '-'}\n- Jenis Tiket: ${tx.tickets[0]?.ticketCategory.name || '-'}\n- Jumlah: ${tx.tickets.length} Tiket\n- Tanggal: ${new Date(tx.event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n- Lokasi: ${tx.event.location}${tx.tickets.length > 0 ? `\n\n*Daftar Peserta:*\n${tx.tickets.map((t: any, i: number) => `${i + 1}. ${t.holderName || '-'} (${t.holderGender || '-'})`).join('\n')}` : ''}${tx.event.waGroupLink ? `\n\n*Grup WhatsApp Event:*\nSilakan bergabung melalui link berikut:\n${tx.event.waGroupLink}` : ''}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${process.env.NEXT_PUBLIC_APP_URL || 'https://rtio-tix.vercel.app'}/public/${tx.id}/verify\n\nTerima kasih.`)}`}
                               target="_blank"
@@ -415,7 +582,23 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                           </div>
                         )}
                         {tx.status === "EXPIRED" && (
-                          <div className="flex gap-2 items-center">
+                          <div className="flex gap-2 items-center flex-wrap">
+                            <ExpiredApproveButton
+                              transactionId={tx.id}
+                              buyerName={tx.buyerName}
+                              categoryName={tx.tickets[0]?.ticketCategory?.name || 'Tiket'}
+                              ticketCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
+                              totalTickets={tx.totalTickets}
+                              existingProofUrl={tx.paymentProofUrl}
+                              existingSenderName={tx.senderAccountName}
+                              approveExpiredAction={approveExpiredTransaction}
+                              className="px-4 py-2"
+                            />
+                            <ReactivateButton
+                              transactionId={tx.id}
+                              reactivateAction={reactivateTransaction}
+                              className="px-4 py-2"
+                            />
                             <a
                               href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Halo ${tx.buyerName},\n\nMohon maaf, pesanan tiket Anda untuk acara *${tx.event.title}* telah dibatalkan secara otomatis karena melewati batas waktu pembayaran.\n\nJika Anda masih berminat, silakan melakukan pemesanan ulang melalui website kami. Terima kasih.`)}`}
                               target="_blank"
@@ -454,11 +637,18 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                       </div>
                     </div>
                   </div>
-                  {tx.paymentProofUrl && (
+                  {(tx.paymentProofUrl || tx.paymentProofUrl2) && (
                     <div className="flex flex-col items-end gap-2">
-                      <a href={tx.paymentProofUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 shadow-sm border border-indigo-100">
-                        <ImageIcon className="w-5 h-5" />
-                      </a>
+                      {tx.paymentProofUrl && (
+                        <a href={tx.paymentProofUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 shadow-sm border border-indigo-100" title="Bukti TF #1">
+                          <ImageIcon className="w-5 h-5" />
+                        </a>
+                      )}
+                      {tx.paymentProofUrl2 && (
+                        <a href={tx.paymentProofUrl2} target="_blank" rel="noopener noreferrer" className="p-2 bg-violet-50 text-violet-600 rounded-lg hover:bg-violet-100 shadow-sm border border-violet-100" title="Bukti TF #2 (Upgrade)">
+                          <ArrowUpCircle className="w-5 h-5" />
+                        </a>
+                      )}
                     </div>
                   )}
                 </div>
@@ -512,7 +702,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                     </div>
                   )}
                   {tx.status === "APPROVED" && (
-                    <div className="flex gap-2 w-full pt-2">
+                    <div className="flex gap-2 w-full pt-2 flex-wrap">
                       <a 
                         href={`/public/${tx.id}`}
                         target="_blank"
@@ -521,6 +711,16 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                       >
                         Lihat Tiket
                       </a>
+                      <UpgradeButton
+                        transactionId={tx.id}
+                        currentCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
+                        currentCategoryName={tx.tickets[0]?.ticketCategory?.name || ''}
+                        currentPrice={tx.totalPrice}
+                        totalTickets={tx.totalTickets}
+                        categories={eventTicketCategories}
+                        upgradeAction={upgradeTicketCategory}
+                        className="px-4 py-2.5"
+                      />
                       <a 
                         href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nPembayaran Anda untuk acara *${tx.event.title}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${tx.buyerName}\n- Acara: *${tx.event.title}*\n- Jenis Kelamin: ${tx.buyerGender || '-'}\n- Jenis Tiket: ${tx.tickets[0]?.ticketCategory.name || '-'}\n- Jumlah: ${tx.tickets.length} Tiket\n- Tanggal: ${new Date(tx.event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n- Lokasi: ${tx.event.location}${tx.tickets.length > 0 ? `\n\n*Daftar Peserta:*\n${tx.tickets.map((t: any, i: number) => `${i + 1}. ${t.holderName || '-'} (${t.holderGender || '-'})`).join('\n')}` : ''}${tx.event.waGroupLink ? `\n\n*Grup WhatsApp Event:*\nSilakan bergabung melalui link berikut:\n${tx.event.waGroupLink}` : ''}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${process.env.NEXT_PUBLIC_APP_URL || 'https://rtio-tix.vercel.app'}/public/${tx.id}/verify\n\nTerima kasih.`)}`}
                         target="_blank" 
@@ -552,19 +752,37 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                     </div>
                   )}
                   {tx.status === "EXPIRED" && (
-                    <div className="flex gap-2 w-full pt-2">
-                      <a
-                        href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Halo ${tx.buyerName},\n\nMohon maaf, pesanan tiket Anda untuk acara *${tx.event.title}* telah dibatalkan secara otomatis karena melewati batas waktu pembayaran.\n\nJika Anda masih berminat, silakan melakukan pemesanan ulang melalui website kami. Terima kasih.`)}`}
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="flex-1 text-center py-2.5 text-sm font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 transition-all flex items-center justify-center"
-                      >
-                        Kirim WA
-                      </a>
-                      <form action={deleteTransaction}>
-                        <input type="hidden" name="id" value={tx.id} />
-                        <DeleteButton className="p-2.5 rounded-xl h-full" />
-                      </form>
+                    <div className="flex flex-col gap-2 w-full pt-2">
+                      <ExpiredApproveButton
+                        transactionId={tx.id}
+                        buyerName={tx.buyerName}
+                        categoryName={tx.tickets[0]?.ticketCategory?.name || 'Tiket'}
+                        ticketCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
+                        totalTickets={tx.totalTickets}
+                        existingProofUrl={tx.paymentProofUrl}
+                        existingSenderName={tx.senderAccountName}
+                        approveExpiredAction={approveExpiredTransaction}
+                        className="w-full py-2.5 justify-center"
+                      />
+                      <div className="flex gap-2">
+                        <ReactivateButton
+                          transactionId={tx.id}
+                          reactivateAction={reactivateTransaction}
+                          className="flex-1 py-2.5 justify-center"
+                        />
+                        <a
+                          href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Halo ${tx.buyerName},\n\nMohon maaf, pesanan tiket Anda untuk acara *${tx.event.title}* telah dibatalkan secara otomatis karena melewati batas waktu pembayaran.\n\nJika Anda masih berminat, silakan melakukan pemesanan ulang melalui website kami. Terima kasih.`)}`}
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="flex-1 text-center py-2.5 text-sm font-bold rounded-xl text-white bg-green-500 hover:bg-green-600 transition-all flex items-center justify-center"
+                        >
+                          Kirim WA
+                        </a>
+                        <form action={deleteTransaction}>
+                          <input type="hidden" name="id" value={tx.id} />
+                          <DeleteButton className="p-2.5 rounded-xl h-full" />
+                        </form>
+                      </div>
                     </div>
                   )}
                 </div>

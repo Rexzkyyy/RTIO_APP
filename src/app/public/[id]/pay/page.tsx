@@ -24,7 +24,8 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
 
   if (!transaction) notFound();
 
-  // If transaction is expired
+  // Jika transaksi di-reaktivasi admin, statusnya sudah PENDING kembali.
+  // Hanya tampilkan pesan "Waktu Habis" jika masih EXPIRED
   if (transaction.status === "EXPIRED") {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
@@ -34,7 +35,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
           </div>
           <h1 className="text-2xl font-bold text-slate-800 mb-2">Waktu Habis</h1>
           <p className="text-slate-600 mb-6">
-            Batas waktu pembayaran untuk transaksi ini telah habis (30 menit). Transaksi dibatalkan dan kuota tiket telah dikembalikan.
+            Batas waktu pembayaran untuk transaksi ini telah habis. Transaksi dibatalkan dan kuota tiket telah dikembalikan.
           </p>
           <Link href={`/event/${transaction.event.slug}`} className="block w-full py-3 bg-slate-900 text-white rounded-xl font-bold">
             Pesan Tiket Ulang

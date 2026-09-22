@@ -127,6 +127,8 @@ model Transaction {
   totalTickets      Int
   totalPrice        Int
   paymentProofUrl   String? // Link gambar bukti transfer (Supabase Storage)
+  paymentProofUrl2  String? // Bukti TF kedua untuk upgrade tiket
+  upgradedFromCatId String? // ID kategori asal sebelum di-upgrade
   senderAccountName String? // Nama pemilik rekening bank pengirim
   status            TxStatus  @default(PENDING)
   expiresAt         DateTime? // Batas waktu pembayaran (null = tidak ada batas)
