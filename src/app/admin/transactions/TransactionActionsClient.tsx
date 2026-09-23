@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpCircle, RefreshCw, CheckCircle2 } from "lucide-react";
+import { ArrowUpCircle, RefreshCw, CheckCircle2, ImageIcon } from "lucide-react";
 import UpgradeModal from "./UpgradeModal";
 import ExpiredApproveModal from "./ExpiredApproveModal";
+import EditImageModal from "./EditImageModal";
 
 type Category = {
   id: string;
@@ -155,6 +156,47 @@ export function ExpiredApproveButton({
           existingSenderName={existingSenderName}
           onClose={() => setOpen(false)}
           onConfirm={approveExpiredAction}
+        />
+      )}
+    </>
+  );
+}
+
+// -------- Edit Image Button (Any Status where Proof exists or is missing) --------
+type EditImageButtonProps = {
+  transactionId: string;
+  existingProofUrl?: string | null;
+  editImageAction: (formData: FormData) => Promise<void>;
+  className?: string;
+};
+
+export function EditImageButton({
+  transactionId,
+  existingProofUrl,
+  editImageAction,
+  className = "",
+}: EditImageButtonProps) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          setOpen(true);
+        }}
+        className={`inline-flex items-center justify-center p-2 rounded-xl text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 shadow-sm border border-blue-100 transition-colors ${className}`}
+        title="Edit Bukti Transfer"
+      >
+        <ImageIcon className="w-5 h-5" />
+      </button>
+
+      {open && (
+        <EditImageModal
+          transactionId={transactionId}
+          existingProofUrl={existingProofUrl}
+          onClose={() => setOpen(false)}
+          onConfirm={editImageAction}
         />
       )}
     </>

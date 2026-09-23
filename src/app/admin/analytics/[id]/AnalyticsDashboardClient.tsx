@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend, AreaChart, Area, LineChart, Line } from "recharts";
 import { ArrowLeft, Download, Users, CreditCard, Ticket, DollarSign, TrendingUp, Calendar } from "lucide-react";
 import Link from "next/link";
 import { toPng } from "html-to-image";
@@ -115,91 +115,221 @@ export default function AnalyticsDashboardClient({ event, analyticsData }: { eve
           </div>
         </div>
 
-        {/* Charts Row */}
+        {/* Row 1: Tren Penjualan Harian & Demografi Usia */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Bar Chart - Tickets Sold by Category */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">Penjualan per Kategori</h3>
+          {/* Tren Penjualan Harian */}
+          <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-6">1. Tren Pendapatan Harian</h3>
             <div className="h-72">
+              {analyticsData.revenueOverTime && analyticsData.revenueOverTime.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={analyticsData.revenueOverTime} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => { const d = new Date(val); return `${d.getDate()}/${d.getMonth()+1}`; }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(val) => `Rp${(val / 1000000).toFixed(0)}M`} />
+                    <Tooltip cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value: any, name: any) => { if (name === "revenue") return [`Rp ${value.toLocaleString("id-ID")}`, "Pendapatan"]; return [value, "Tiket Terjual"]; }} labelFormatter={(label: any) => new Date(label).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} />
+                    <Area type="monotone" dataKey="revenue" name="revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                  <TrendingUp className="w-10 h-10 mb-3 text-slate-300" />
+                  <p className="text-sm font-semibold text-slate-500">Belum Ada Data Penjualan</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Demografi Usia */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-6">2. Demografi Usia</h3>
+            <div className="h-72">
+              {analyticsData.ageData && analyticsData.ageData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analyticsData.ageData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                    <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} width={80} />
+                    <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value: any) => [value, "Jumlah Orang"]} />
+                    <Bar dataKey="value" name="Jumlah" fill="#8b5cf6" radius={[0, 4, 4, 0]}>
+                      {analyticsData.ageData.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={['#8b5cf6', '#6366f1', '#3b82f6', '#0ea5e9', '#94a3b8'][index % 5]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                  <Users className="w-10 h-10 mb-3 text-slate-300" />
+                  <p className="text-sm font-semibold text-slate-500">Belum Ada Data Usia</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Waktu (Jam) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Puncak Waktu Transaksi */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-6">3. Puncak Waktu Transaksi</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={analyticsData.txByHour} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} interval={3} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} allowDecimals={false} />
+                  <Tooltip cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '4 4' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value: any) => [value, "Transaksi"]} />
+                  <Line type="monotone" dataKey="total" stroke="#f59e0b" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Puncak Waktu Check-in */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-6">4. Puncak Waktu Check-in</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analyticsData.checkinByHour} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} interval={3} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} allowDecimals={false} />
+                  <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value: any) => [value, "Orang Check-in"]} />
+                  <Bar dataKey="total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Kategori */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Penjualan per Kategori */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-6">5. Tiket Terjual per Kategori</h3>
+            <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analyticsData.ticketsByCategory} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                  <Tooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Legend verticalAlign="top" height={36} iconType="circle" />
+                  <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
                   <Bar dataKey="terjualPromo" name="Terjual (Promo)" stackId="a" fill="#10b981" />
                   <Bar dataKey="terjualNormal" name="Terjual (Normal)" stackId="a" fill="#3b82f6" />
-                  <Bar dataKey="sisaPromo" name="Sisa Stok (Promo)" stackId="a" fill="#a7f3d0" />
-                  <Bar dataKey="sisaNormal" name="Sisa Stok (Normal)" stackId="a" fill="#bfdbfe" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="sisaPromo" name="Sisa (Promo)" stackId="a" fill="#a7f3d0" />
+                  <Bar dataKey="sisaNormal" name="Sisa (Normal)" stackId="a" fill="#bfdbfe" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Pie Chart - Status Transaksi */}
+          {/* Pendapatan per Kategori */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">Status Transaksi</h3>
-            <div className="h-72">
+            <h3 className="text-lg font-bold text-slate-800 mb-6">6. Pendapatan per Kategori</h3>
+            <div className="h-64">
+              {analyticsData.revenueByCategory && analyticsData.revenueByCategory.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={analyticsData.revenueByCategory} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value" labelLine={false} label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}>
+                      {analyticsData.revenueByCategory.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'][index % 5]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value: any) => [`Rp ${value.toLocaleString("id-ID")}`, "Pendapatan"]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                  <DollarSign className="w-10 h-10 mb-3 text-slate-300" />
+                  <p className="text-sm font-semibold text-slate-500">Belum Ada Data Pendapatan</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Row 4: Grid of 4 Pie Charts (Status & Demografi) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Status Transaksi */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+            <h3 className="text-sm font-bold text-slate-800 mb-4 text-center">7. Status Transaksi</h3>
+            <div className="flex-1 min-h-[180px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={analyticsData.transactionStatus}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {analyticsData.transactionStatus.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
+                  <Pie data={analyticsData.transactionStatus} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={5} dataKey="value">
+                    {analyticsData.transactionStatus.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Pie Chart - Demografi Gender */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">Demografi Pembeli</h3>
-            <div className="h-72">
-              {analyticsData.genderData.length > 0 ? (
+          {/* Status Check-in */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+            <h3 className="text-sm font-bold text-slate-800 mb-4 text-center">8. Status Check-in</h3>
+            <div className="flex-1 min-h-[180px]">
+              {analyticsData.checkinData && analyticsData.checkinData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
-                      data={analyticsData.genderData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={90}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {analyticsData.genderData.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
+                    <Pie data={analyticsData.checkinData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={5} dataKey="value">
+                      {analyticsData.checkinData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                     </Pie>
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                  <Users className="w-10 h-10 mb-3 text-slate-300" />
-                  <p className="text-sm font-semibold text-slate-500">Belum Ada Data Gender</p>
-                  <p className="text-xs text-slate-400 text-center mt-1 px-4 leading-relaxed">Grafik akan otomatis muncul setelah ada pembeli yang menyelesaikan pesanan.</p>
-                </div>
+                <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">Belum ada data</div>
+              )}
+            </div>
+          </div>
+
+          {/* Proporsi Harga */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+            <h3 className="text-sm font-bold text-slate-800 mb-4 text-center">9. Tipe Harga (Promo)</h3>
+            <div className="flex-1 min-h-[180px]">
+              {analyticsData.promoData && analyticsData.promoData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={analyticsData.promoData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={5} dataKey="value">
+                      {analyticsData.promoData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">Belum ada data</div>
+              )}
+            </div>
+          </div>
+
+          {/* Demografi Gender */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+            <h3 className="text-sm font-bold text-slate-800 mb-4 text-center">10. Demografi Gender</h3>
+            <div className="flex-1 min-h-[180px]">
+              {analyticsData.genderData && analyticsData.genderData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={analyticsData.genderData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={5} dataKey="value">
+                      {analyticsData.genderData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">Belum ada data</div>
               )}
             </div>
           </div>

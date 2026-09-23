@@ -76,10 +76,42 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
     });
   });
 
+  // Revenue Over Time & Transaksi per Jam
+  const revenueByDate = new Map<string, { date: string, revenue: number, tickets: number }>();
+  const txByHour = new Array(24).fill(0).map((_, i) => ({ hour: `${i.toString().padStart(2, '0')}:00`, total: 0 }));
+  
+  approvedTx.forEach(tx => {
+    // By Date
+    const date = tx.createdAt.toISOString().split('T')[0];
+    if (!revenueByDate.has(date)) {
+      revenueByDate.set(date, { date, revenue: 0, tickets: 0 });
+    }
+    const current = revenueByDate.get(date)!;
+    current.revenue += tx.totalPrice;
+    current.tickets += tx.totalTickets;
+
+    // By Hour
+    const hour = tx.createdAt.getHours();
+    txByHour[hour].total += 1;
+  });
+  const revenueOverTime = Array.from(revenueByDate.values()).sort((a, b) => a.date.localeCompare(b.date));
+
   let totalPromo = 0;
   let totalNormal = 0;
   let maleCount = 0;
   let femaleCount = 0;
+  let checkedIn = 0;
+  let notCheckedIn = 0;
+
+  const ageGroups = {
+    '< 18': 0,
+    '18-24': 0,
+    '25-34': 0,
+    '35+': 0,
+    'Tidak Diketahui': 0
+  };
+
+  const checkinByHour = new Array(24).fill(0).map((_, i) => ({ hour: `${i.toString().padStart(2, '0')}:00`, total: 0 }));
 
   tickets.forEach(ticket => {
     const catData = ticketsMap.get(ticket.ticketCategoryId);
@@ -93,20 +125,59 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
       if (ticket.ticketCategory.hasDiscount && ticket.ticketCategory.discountPrice !== null && activePrice === ticket.ticketCategory.discountPrice) {
         catData.terjualPromo += 1;
         totalPromo += 1;
+        catData.revenue += ticket.ticketCategory.discountPrice;
       } else {
         catData.terjualNormal += 1;
         totalNormal += 1;
+        catData.revenue += ticket.ticketCategory.price;
       }
     }
     
+    // Demografi Gender
     if (ticket.holderGender === 'L' || ticket.holderGender === 'Laki-laki') {
       maleCount += 1;
     } else if (ticket.holderGender === 'P' || ticket.holderGender === 'Perempuan') {
       femaleCount += 1;
     }
+
+    // Demografi Umur
+    if (ticket.holderAge) {
+      if (ticket.holderAge < 18) ageGroups['< 18']++;
+      else if (ticket.holderAge <= 24) ageGroups['18-24']++;
+      else if (ticket.holderAge <= 34) ageGroups['25-34']++;
+      else ageGroups['35+']++;
+    } else {
+      ageGroups['Tidak Diketahui']++;
+    }
+
+    // Check-in
+    if (ticket.isValidated) {
+      checkedIn++;
+      if (ticket.checkedInAt) {
+        const hour = ticket.checkedInAt.getHours();
+        checkinByHour[hour].total += 1;
+      }
+    } else {
+      notCheckedIn++;
+    }
   });
 
   const ticketsByCategory = Array.from(ticketsMap.values());
+  const revenueByCategory = ticketsByCategory.map(cat => ({ name: cat.name, value: cat.revenue || 0 })).filter(c => c.value > 0);
+
+  const ageData = Object.entries(ageGroups)
+    .map(([name, value]) => ({ name, value }))
+    .filter(g => g.value > 0);
+
+  const checkinData = [
+    { name: 'Sudah Check-in', value: checkedIn, color: '#10b981' }, // emerald-500
+    { name: 'Belum Check-in', value: notCheckedIn, color: '#94a3b8' }, // slate-400
+  ].filter(c => c.value > 0);
+
+  const promoData = [
+    { name: 'Harga Promo', value: totalPromo, color: '#10b981' }, // emerald-500
+    { name: 'Harga Normal', value: totalNormal, color: '#3b82f6' }, // blue-500
+  ].filter(p => p.value > 0);
 
   // Recent Transactions (5 Latest Approved)
   const recentTransactions = approvedTx
@@ -128,9 +199,16 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
     conversionRate,
     transactionStatus,
     ticketsByCategory,
+    revenueByCategory,
     recentTransactions,
     totalPromo,
     totalNormal,
+    promoData,
+    revenueOverTime,
+    txByHour,
+    checkinByHour,
+    checkinData,
+    ageData,
     genderData: [
       { name: 'Laki-laki', value: maleCount, color: '#3b82f6' }, // blue-500
       { name: 'Perempuan', value: femaleCount, color: '#ec4899' }, // pink-500

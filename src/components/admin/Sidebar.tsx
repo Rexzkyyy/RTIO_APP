@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -9,7 +10,6 @@ import { signOut, useSession } from "next-auth/react";
 export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  // @ts-ignore
   const isValidator = isValidatorServer ?? session?.user?.adminRole === 'VALIDATOR';
 
   // For desktop sidebar collapse

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, CheckCircle2, XCircle, Search, ImageIcon, Clock, ChevronRight, Receipt, Timer, ArrowUpCircle, RefreshCw } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { DeleteButton } from "./DeleteButton";
-import { UpgradeButton, ReactivateButton, ExpiredApproveButton } from "./TransactionActionsClient";
+import { UpgradeButton, ReactivateButton, ExpiredApproveButton, EditImageButton } from "./TransactionActionsClient";
 
 export const dynamic = "force-dynamic";
 
@@ -249,6 +249,21 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
     revalidatePath("/admin/transactions");
   }
 
+  // -------- Server Action: Edit Payment Proof --------
+  async function updatePaymentProof(formData: FormData) {
+    "use server";
+    const id = formData.get("id") as string;
+    const paymentProofUrl = formData.get("paymentProofUrl") as string;
+
+    if (id && paymentProofUrl) {
+      await prisma.transaction.update({
+        where: { id },
+        data: { paymentProofUrl }
+      });
+      revalidatePath("/admin/transactions");
+    }
+  }
+
   if (!eventId) {
     const eventsWhere = isValidator ? { id: { in: allowedEventIds } } : {};
     const events = await prisma.event.findMany({
@@ -437,20 +452,80 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                         <summary className="text-emerald-600 cursor-pointer hover:underline font-semibold list-none flex items-center select-none w-max">
                           Info Tambahan <ChevronRight className="w-3 h-3 ml-1 group-open:rotate-90 transition-transform" />
                         </summary>
-                        <div className="mt-2 space-y-2 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-                          {tx.tickets[0]?.answers?.map((ans: any) => (
-                            <div key={ans.id} className="flex flex-col gap-0.5">
-                              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{ans.field.name}</span>
-                              {ans.field.type === 'FILE' ? (
-                                <a href={ans.value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Lihat Lampiran</a>
-                              ) : (
-                                <span className="font-medium text-slate-700">{ans.value}</span>
+                        <div className="mt-2 space-y-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm max-h-64 overflow-y-auto">
+                          {tx.tickets.map((ticket: any, index: number) => (
+                            <div key={ticket.id} className="space-y-1 mb-2">
+                              <div className="font-bold text-slate-800 text-[11px] pb-1.5 mb-1.5 border-b border-slate-100 uppercase tracking-wider">
+                                Peserta {index + 1}
+                              </div>
+                              {ticket.holderName && (
+                                <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider shrink-0 mt-0.5">Nama</span>
+                                  <span className="font-medium text-slate-700 text-right">{ticket.holderName}</span>
+                                </div>
+                              )}
+                              {ticket.holderGender && (
+                                <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider shrink-0 mt-0.5">Jenis Kelamin</span>
+                                  <span className="font-medium text-slate-700 text-right">{ticket.holderGender === 'L' ? 'Laki-laki' : ticket.holderGender === 'P' ? 'Perempuan' : ticket.holderGender}</span>
+                                </div>
+                              )}
+                              {ticket.holderAge !== null && ticket.holderAge !== undefined && (
+                                <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider shrink-0 mt-0.5">Usia</span>
+                                  <span className="font-medium text-slate-700 text-right">{ticket.holderAge} Tahun</span>
+                                </div>
+                              )}
+                              {ticket.holderPhone && (
+                                <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider shrink-0 mt-0.5">No. HP</span>
+                                  <span className="font-medium text-slate-700 text-right">{ticket.holderPhone}</span>
+                                </div>
+                              )}
+                              {ticket.answers?.map((ans: any) => (
+                                <div key={ans.id} className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider shrink-0 mt-0.5">{ans.field.name}</span>
+                                  {ans.field.type === 'FILE' ? (
+                                    <a href={ans.value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-right block max-w-[150px] truncate">Lampiran</a>
+                                  ) : (
+                                    <span className="font-medium text-slate-700 text-right break-words">{ans.value}</span>
+                                  )}
+                                </div>
+                              ))}
+                              <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider shrink-0 mt-1">Barcode</span>
+                                <span className="font-mono text-[9px] font-semibold text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 text-right break-all">{ticket.barcodeString}</span>
+                              </div>
+                              {ticket.isValidated && (
+                                <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                                  <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider shrink-0 mt-0.5">Status</span>
+                                  <span className="font-bold text-xs text-emerald-600 text-right">
+                                    Check-In {ticket.checkedInAt ? `(${new Date(ticket.checkedInAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })})` : ''}
+                                  </span>
+                                </div>
                               )}
                             </div>
                           ))}
-                          <div className="pt-2 mt-2 border-t border-slate-100">
-                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">WhatsApp</span>
-                            <a href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="font-medium text-emerald-600 hover:underline">{tx.buyerPhone}</a>
+                          <div className="pt-2 mt-2 border-t border-slate-200">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5">Data Pemesan (Utama)</span>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="block text-[10px] font-bold text-slate-400 tracking-wider">WhatsApp</span>
+                                <a href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="font-medium text-emerald-600 hover:underline">{tx.buyerPhone}</a>
+                              </div>
+                              {tx.buyerGender && (
+                                <div>
+                                  <span className="block text-[10px] font-bold text-slate-400 tracking-wider">Gender</span>
+                                  <span className="font-medium text-slate-700">{tx.buyerGender === 'L' ? 'Laki-laki' : tx.buyerGender === 'P' ? 'Perempuan' : tx.buyerGender}</span>
+                                </div>
+                              )}
+                              {tx.buyerAddress && (
+                                <div className="col-span-2 mt-1">
+                                  <span className="block text-[10px] font-bold text-slate-400 tracking-wider">Alamat</span>
+                                  <span className="font-medium text-slate-700">{tx.buyerAddress}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                           <div className="pt-2">
                             <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Waktu Transaksi</span>
@@ -470,17 +545,31 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                     <td className="px-6 py-4 align-top">
                       <div className="flex flex-col gap-2">
                         {tx.paymentProofUrl ? (
-                          <a 
-                            href={tx.paymentProofUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center text-sm font-bold bg-white border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 px-4 py-2 rounded-xl transition-all shadow-sm w-max"
-                          >
-                            <ImageIcon className="w-4 h-4 mr-2" />
-                            Bukti #1
-                          </a>
+                          <div className="flex items-center gap-1">
+                            <a 
+                              href={tx.paymentProofUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center text-sm font-bold bg-white border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 px-4 py-2 rounded-xl transition-all shadow-sm w-max"
+                            >
+                              <ImageIcon className="w-4 h-4 mr-2" />
+                              Bukti #1
+                            </a>
+                            <EditImageButton 
+                              transactionId={tx.id} 
+                              existingProofUrl={tx.paymentProofUrl}
+                              editImageAction={updatePaymentProof}
+                            />
+                          </div>
                         ) : (
-                          <span className="text-sm font-medium text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 inline-block w-max">Belum ada</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 inline-block w-max">Belum ada</span>
+                            <EditImageButton 
+                              transactionId={tx.id} 
+                              existingProofUrl={null}
+                              editImageAction={updatePaymentProof}
+                            />
+                          </div>
                         )}
                         
                         {tx.paymentProofUrl2 && (
@@ -637,20 +726,33 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                       </div>
                     </div>
                   </div>
-                  {(tx.paymentProofUrl || tx.paymentProofUrl2) && (
-                    <div className="flex flex-col items-end gap-2">
-                      {tx.paymentProofUrl && (
+                  <div className="flex flex-col items-end gap-2">
+                    {tx.paymentProofUrl ? (
+                      <div className="flex items-center gap-1">
                         <a href={tx.paymentProofUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 shadow-sm border border-indigo-100" title="Bukti TF #1">
                           <ImageIcon className="w-5 h-5" />
                         </a>
-                      )}
-                      {tx.paymentProofUrl2 && (
-                        <a href={tx.paymentProofUrl2} target="_blank" rel="noopener noreferrer" className="p-2 bg-violet-50 text-violet-600 rounded-lg hover:bg-violet-100 shadow-sm border border-violet-100" title="Bukti TF #2 (Upgrade)">
-                          <ArrowUpCircle className="w-5 h-5" />
-                        </a>
-                      )}
-                    </div>
-                  )}
+                        <EditImageButton 
+                          transactionId={tx.id} 
+                          existingProofUrl={tx.paymentProofUrl}
+                          editImageAction={updatePaymentProof}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <EditImageButton 
+                          transactionId={tx.id} 
+                          existingProofUrl={null}
+                          editImageAction={updatePaymentProof}
+                        />
+                      </div>
+                    )}
+                    {tx.paymentProofUrl2 && (
+                      <a href={tx.paymentProofUrl2} target="_blank" rel="noopener noreferrer" className="p-2 bg-violet-50 text-violet-600 rounded-lg hover:bg-violet-100 shadow-sm border border-violet-100" title="Bukti TF #2 (Upgrade)">
+                        <ArrowUpCircle className="w-5 h-5" />
+                      </a>
+                    )}
+                  </div>
                 </div>
 
                 <div className="p-4 bg-slate-50/50 flex flex-col gap-3">
@@ -669,16 +771,80 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                     <summary className="text-emerald-600 cursor-pointer hover:underline font-semibold list-none flex items-center select-none w-max">
                       Info Tambahan <ChevronRight className="w-3 h-3 ml-1 group-open:rotate-90 transition-transform" />
                     </summary>
-                    <div className="mt-2 space-y-2 p-3 bg-white rounded-xl border border-slate-200">
-                      {tx.tickets[0]?.answers?.map((ans: any) => (
-                        <div key={ans.id} className="flex flex-col gap-0.5">
-                          <span className="text-[10px] uppercase font-bold text-slate-400">{ans.field.name}</span>
-                          <span className="font-medium text-slate-700">{ans.value}</span>
+                    <div className="mt-2 space-y-3 p-3 bg-white rounded-xl border border-slate-200 max-h-64 overflow-y-auto">
+                      {tx.tickets.map((ticket: any, index: number) => (
+                        <div key={ticket.id} className="space-y-1 mb-2">
+                          <div className="font-bold text-slate-800 text-[11px] pb-1.5 mb-1.5 border-b border-slate-100 uppercase tracking-wider">
+                            Peserta {index + 1}
+                          </div>
+                          {ticket.holderName && (
+                            <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 mt-0.5">Nama</span>
+                              <span className="font-medium text-slate-700 text-right">{ticket.holderName}</span>
+                            </div>
+                          )}
+                          {ticket.holderGender && (
+                            <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 mt-0.5">Jenis Kelamin</span>
+                              <span className="font-medium text-slate-700 text-right">{ticket.holderGender === 'L' ? 'Laki-laki' : ticket.holderGender === 'P' ? 'Perempuan' : ticket.holderGender}</span>
+                            </div>
+                          )}
+                          {ticket.holderAge !== null && ticket.holderAge !== undefined && (
+                            <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 mt-0.5">Usia</span>
+                              <span className="font-medium text-slate-700 text-right">{ticket.holderAge} Tahun</span>
+                            </div>
+                          )}
+                          {ticket.holderPhone && (
+                            <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 mt-0.5">No. HP</span>
+                              <span className="font-medium text-slate-700 text-right">{ticket.holderPhone}</span>
+                            </div>
+                          )}
+                          {ticket.answers?.map((ans: any) => (
+                            <div key={ans.id} className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 mt-0.5">{ans.field.name}</span>
+                              {ans.field.type === 'FILE' ? (
+                                <a href={ans.value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-right block max-w-[150px] truncate">Lampiran</a>
+                              ) : (
+                                <span className="font-medium text-slate-700 text-right break-words">{ans.value}</span>
+                              )}
+                            </div>
+                          ))}
+                          <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                            <span className="text-[9px] uppercase font-bold text-slate-400 mt-1">Barcode</span>
+                            <span className="font-mono text-[9px] font-semibold text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 text-right break-all">{ticket.barcodeString}</span>
+                          </div>
+                          {ticket.isValidated && (
+                            <div className="flex justify-between items-start gap-3 border-b border-slate-50 pb-1.5">
+                              <span className="text-[9px] uppercase font-bold text-slate-400 mt-0.5">Status</span>
+                              <span className="font-bold text-xs text-emerald-600 text-right">
+                                Check-In {ticket.checkedInAt ? `(${new Date(ticket.checkedInAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })})` : ''}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       ))}
-                      <div className="pt-1 mt-1 border-t border-slate-100">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block">WhatsApp</span>
-                        <a href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="font-medium text-emerald-600">{tx.buyerPhone}</a>
+                      <div className="pt-2 mt-2 border-t border-slate-200">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1.5">Data Pemesan (Utama)</span>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="block text-[10px] font-bold text-slate-400">WhatsApp</span>
+                            <a href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="font-medium text-emerald-600">{tx.buyerPhone}</a>
+                          </div>
+                          {tx.buyerGender && (
+                            <div>
+                              <span className="block text-[10px] font-bold text-slate-400">Gender</span>
+                              <span className="font-medium text-slate-700">{tx.buyerGender === 'L' ? 'Laki-laki' : tx.buyerGender === 'P' ? 'Perempuan' : tx.buyerGender}</span>
+                            </div>
+                          )}
+                          {tx.buyerAddress && (
+                            <div className="col-span-2 mt-1">
+                              <span className="block text-[10px] font-bold text-slate-400">Alamat</span>
+                              <span className="font-medium text-slate-700">{tx.buyerAddress}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </details>

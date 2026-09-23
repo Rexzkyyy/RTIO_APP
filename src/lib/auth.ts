@@ -86,13 +86,11 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token.sub) {
-        // @ts-ignore
+        // @ts-expect-error Extend session user
         session.user.id = token.sub;
-        // @ts-ignore
+        // @ts-expect-error Extend session user
         session.user.isAdmin = token.isAdmin;
-        // @ts-ignore
         session.user.adminRole = token.adminRole;
-        // @ts-ignore
         session.user.adminId = token.adminId;
       }
       return session;

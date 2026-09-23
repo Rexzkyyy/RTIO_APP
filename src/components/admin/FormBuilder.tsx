@@ -6,7 +6,7 @@ import { useState } from "react";
 import { saveFormFields } from "@/app/admin/events/[id]/form-builder/actions";
 
 export function FormBuilder({ event, initialFields }: { event: any, initialFields: any[] }) {
-  const [fields, setFields] = useState(
+  const [fields, setFields] = useState(() =>
     initialFields.length > 0 
       ? initialFields.map(f => ({
           ...f,

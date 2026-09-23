@@ -27,7 +27,6 @@ export async function middleware(request: NextRequest) {
     }
 
     // Role-based access control
-    // @ts-ignore
     if (token.adminRole === 'VALIDATOR') {
       // Validators can only access transactions and the main admin dashboard (which we can redirect to transactions)
       const allowedPaths = ['/admin/transactions', '/admin/scanner', '/admin'];
@@ -68,7 +67,6 @@ export async function middleware(request: NextRequest) {
   // If going to login page but already authenticated as admin, redirect to admin
   if (path === '/login') {
     if (token && token.isAdmin === true) {
-      // @ts-ignore
       if (token.adminRole === 'VALIDATOR') {
         return NextResponse.redirect(new URL('/admin/transactions', request.url));
       }
