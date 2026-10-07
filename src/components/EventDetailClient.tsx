@@ -177,7 +177,7 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
         </div>
 
         {/* Mobile Portrait Banner (Inline, separated from text) */}
-        <div className="block sm:hidden w-full relative bg-slate-950 min-h-[50vh]">
+        <div className="block sm:hidden w-full relative bg-slate-950">
           {event.bannerPortraitUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img 
@@ -190,10 +190,10 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
             <img 
               src={(event.imageUrl || event.bannerUrl) as string}
               alt={event.title}
-              className="w-full h-[55vh] object-cover object-center block"
+              className="w-full h-auto object-contain object-center block"
             />
           ) : (
-            <div className="w-full h-[55vh] bg-gradient-to-tr from-primary-900 to-slate-900 opacity-80"></div>
+            <div className="w-full aspect-[4/3] bg-gradient-to-tr from-primary-900 to-slate-900 opacity-80"></div>
           )}
           {/* Smooth gradient transition to the dark text block below */}
           <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-900 to-transparent z-10 pointer-events-none"></div>
