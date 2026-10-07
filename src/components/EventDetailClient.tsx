@@ -6,7 +6,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Calendar as CalendarIcon, MapPin, Users, ChevronRight, ArrowLeft, Ticket, Crown, Star, Shield, HelpCircle, Flame, CheckCircle2, Rocket, Zap, Target, Award, Sparkles, Building2, Briefcase, Globe, MessageCircle, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, Users, ChevronRight, ChevronDown, ArrowLeft, Ticket, Crown, Star, Shield, HelpCircle, Flame, CheckCircle2, Rocket, Zap, Target, Award, Sparkles, Building2, Briefcase, Globe, MessageCircle, Loader2 } from "lucide-react";
 
 const InstagramIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -123,7 +123,7 @@ function useFadeInRef<T extends HTMLElement>() {
 
 export default function EventDetailClient({ event, lowestPrice, originalPrice, navbar, isLoggedIn = false }: { event: any, lowestPrice: number, originalPrice?: number | null, navbar: React.ReactNode, isLoggedIn?: boolean }) {
   const config = event.ticketConfig || {};
-  const themeClass = config.themeName === 'pink' ? 'theme-pink' : 'theme-primary';
+  const themeClass = config.themeName === 'emerald' ? 'theme-emerald' : 'theme-pink';
 
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingUrl, setPendingUrl] = useState("");
@@ -132,6 +132,11 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
   // Refs for fade-in animations
   const descRef = useFadeInRef<HTMLDivElement>();
   const artistsRef = useFadeInRef<HTMLDivElement>();
+
+  useEffect(() => {
+    // Memastikan halaman selalu mulai dari paling atas (mencegah scroll jump)
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className={`min-h-screen relative pb-32 md:pb-12 overflow-x-hidden bg-slate-50 ${themeClass}`}>
@@ -150,13 +155,13 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
         <div className="absolute bottom-0 left-0 w-[150vw] md:w-[60vw] h-[60vh] bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-secondary-400/20 via-transparent to-transparent" />
       </div>
 
-      {/* Immersive Hero Section */}
-      <div className="relative w-full min-h-[60vh] md:min-h-[75vh] flex flex-col overflow-hidden bg-slate-900 z-10">
+      {/* Immersive Hero Section (Separated Layout for both Mobile and Desktop) */}
+      <div className="relative w-full flex flex-col overflow-hidden bg-slate-900 z-10">
         <div className="relative z-50 shrink-0">{navbar}</div>
         
-        {/* Banner Image (static, no parallax for performance) */}
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0 bg-slate-950 overflow-hidden">
+        {/* Background Image Container */}
+        <div className="absolute inset-0 z-0 bg-slate-950 overflow-hidden hidden sm:block">
+          {/* Desktop Banner */}
           {event.imageUrl || event.bannerUrl ? (
             <Image 
               src={event.imageUrl || event.bannerUrl}
@@ -168,15 +173,41 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
           ) : (
             <div className="w-full h-full bg-gradient-to-tr from-primary-900 to-slate-900 opacity-80"></div>
           )}
-          {/* Background Overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent z-10 pointer-events-none"></div>
         </div>
 
+        {/* Mobile Portrait Banner (Inline, separated from text) */}
+        <div className="block sm:hidden w-full relative bg-slate-950" style={{ minHeight: '50vh' }}>
+          {event.bannerPortraitUrl || event.imageUrl || event.bannerUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img 
+              src={(event.bannerPortraitUrl || event.imageUrl || event.bannerUrl) as string}
+              alt={event.title}
+              className="w-full h-auto block"
+            />
+          ) : (
+            <div className="w-full aspect-[3/4] bg-gradient-to-tr from-primary-900 to-slate-900 opacity-80"></div>
+          )}
+          {/* Smooth gradient transition to the dark text block below */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-900 to-transparent z-10 pointer-events-none"></div>
+          
+          {/* Subtle Scroll Indicator */}
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center z-20 animate-fade-in-up animation-delay-200">
+            <button 
+              onClick={() => document.getElementById('tickets-section')?.scrollIntoView({ behavior: 'smooth' })}
+              className="flex flex-col items-center animate-bounce bg-black/60 hover:bg-black/80 active:scale-95 transition-all backdrop-blur-md px-6 py-2.5 rounded-full border border-white/20 shadow-2xl cursor-pointer"
+            >
+              <span className="text-white text-sm font-bold mb-1 tracking-wider uppercase">Geser</span>
+              <ChevronDown className="w-6 h-6 text-primary-400" />
+            </button>
+          </div>
+        </div>
+
         {/* Hero Content (Title & Info) */}
-        <div className="relative z-10 flex-1 flex flex-col justify-end pb-28 sm:pb-32 pt-24">
+        <div className="relative z-10 flex-1 flex flex-col justify-end pb-12 pt-6 sm:pb-32 sm:pt-24 sm:min-h-[75vh] bg-slate-900 sm:bg-transparent">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col gap-6 w-full">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black leading-tight tracking-tighter animate-fade-in-up py-2">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-300 via-white to-secondary-100 drop-shadow-lg">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black leading-tight tracking-tighter animate-fade-in-up py-2" style={{ filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.8))' }}>
+              <span className="text-transparent bg-clip-text bg-gradient-to-br from-white via-primary-200 to-primary-500">
                 {event.title}
               </span>
             </h1>
@@ -227,7 +258,7 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
       </div>
 
       {/* Main Content Area (Single Column Centered) */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-20 -mt-20 md:-mt-24 flex flex-col gap-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-20 mt-8 sm:-mt-24 flex flex-col gap-10">
         
         {/* Top Card: Description & Event Info */}
         <div className="bg-white rounded-3xl p-6 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden group">

@@ -149,7 +149,7 @@ export default async function Home({ searchParams }: Props) {
                 return (
                   <Link key={event.id} href={event.isLocked ? '#' : `/event/${event.slug}`} prefetch={false} className={`group bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full ${event.isLocked ? 'opacity-90 cursor-not-allowed pointer-events-none' : 'hover:shadow-xl transition-all duration-300 transform sm:hover:-translate-y-1 active:scale-[0.98] sm:active:scale-100'}`}>
                     {/* Card Image */}
-                    <div className="h-28 sm:h-48 bg-slate-200 relative overflow-hidden">
+                    <div className="aspect-video w-full bg-slate-100 relative overflow-hidden flex items-center justify-center">
                       {event.bannerUrl ? (
                         <Image src={event.bannerUrl} alt={event.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className={`object-cover ${event.isLocked ? 'grayscale opacity-70' : 'group-hover:scale-105 transition-transform duration-500'}`} />
                       ) : (
@@ -158,7 +158,7 @@ export default async function Home({ searchParams }: Props) {
                       
                       {event.isLocked ? (
                         <div className="absolute inset-0 bg-slate-900/20 flex items-center justify-center">
-                           <span className="bg-slate-800/80 backdrop-blur-md text-white font-bold px-4 py-2 rounded-lg border border-slate-600/50 shadow-lg text-sm tracking-wider uppercase">
+                           <span className="bg-slate-800/80 backdrop-blur-md text-white font-bold px-2 py-1 text-[10px] sm:px-4 sm:py-2 sm:text-sm rounded-md sm:rounded-lg border border-slate-600/50 shadow-lg tracking-wider uppercase">
                               Coming Soon
                            </span>
                         </div>

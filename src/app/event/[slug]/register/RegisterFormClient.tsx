@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Ticket, CheckCircle2, AlertCircle, XCircle, Loader2, Users } from "lucide-react";
 import { submitRegistration } from "./actions";
 import { useRouter } from "next/navigation";
-import { showCuteLoader } from "@/components/CuteLoadingOverlay";
+import { showCuteLoader, playSuccessSound } from "@/components/CuteLoadingOverlay";
 
 export default function RegisterFormClient({ event, initialTicketId }: { event: any, initialTicketId?: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,6 +100,7 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
             if (result && result.success) {
               // Do NOT set isSubmitting to false, keep the button spinning while navigating!
               startTransition(() => {
+                playSuccessSound();
                 router.push(result.url);
               });
             }

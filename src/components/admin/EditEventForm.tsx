@@ -70,6 +70,7 @@ export function EditEventForm({ event }: { event: any }) {
   const [socialMedias, setSocialMedias] = useState(initialSocialMedias);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(event.bannerUrl || null);
+  const [portraitImagePreview, setPortraitImagePreview] = useState<string | null>(event.bannerPortraitUrl || null);
   const [ticketImagePreview, setTicketImagePreview] = useState<string | null>(event.ticketDesignUrl || null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [slug, setSlug] = useState(event.slug || "");
@@ -101,6 +102,13 @@ export function EditEventForm({ event }: { event: any }) {
     const file = e.target.files?.[0];
     if (file) {
       setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handlePortraitImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPortraitImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -234,6 +242,12 @@ export function EditEventForm({ event }: { event: any }) {
               const compressedBanner = await imageCompression(bannerFile, options);
               formData.set("bannerImage", compressedBanner, bannerFile.name);
             }
+            
+            const portraitFile = formData.get("bannerPortraitImage") as File;
+            if (portraitFile && portraitFile.size > 0) {
+              const compressedPortrait = await imageCompression(portraitFile, options);
+              formData.set("bannerPortraitImage", compressedPortrait, portraitFile.name);
+            }
 
             const ticketFile = formData.get("ticketDesignImage") as File;
             if (ticketFile && ticketFile.size > 0) {
@@ -279,6 +293,28 @@ export function EditEventForm({ event }: { event: any }) {
                        <p className="text-white font-medium text-sm">Ganti</p>
                     </div>
                     <input type="file" name="bannerImage" onChange={handleImageChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
+                  </label>
+                </div>
+              </div>
+
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-slate-700 mb-2">Banner Mobile (Opsional)</label>
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors overflow-hidden relative">
+                    {portraitImagePreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={sanitizeImageUrl(portraitImagePreview)} alt="Preview Portrait" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <ImageIcon className="w-8 h-8 mb-3 text-slate-400" />
+                        <p className="mb-2 text-sm text-slate-500 text-center"><span className="font-semibold">Upload Portrait</span></p>
+                        <p className="text-xs text-slate-500 text-center">Bentuk HP (9:16)</p>
+                      </div>
+                    )}
+                    <div className={portraitImagePreview ? "absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity" : "hidden"}>
+                       <p className="text-white font-medium text-sm">Ganti</p>
+                    </div>
+                    <input type="file" name="bannerPortraitImage" onChange={handlePortraitImageChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
                   </label>
                 </div>
               </div>

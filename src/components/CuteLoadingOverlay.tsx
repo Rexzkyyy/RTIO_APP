@@ -23,6 +23,33 @@ export const hideCuteLoader = () => {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('hideCuteLoader'));
 };
 
+export const playSuccessSound = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const playNote = (freq: number, startTime: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + startTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration);
+    };
+    // Fast Ting Ting
+    playNote(1046.50, 0, 0.3); // C6
+    playNote(1318.51, 0.15, 0.5); // E6
+  } catch (e) {
+    // Ignore audio errors
+  }
+};
+
 export default function CuteLoadingOverlay({ isVisible: propIsVisible = false }: { isVisible?: boolean }) {
   const [internalVisible, setInternalVisible] = useState(false);
   const [messageIndex, setMessageIndex] = useState(0);

@@ -113,6 +113,14 @@ export async function createEvent(formData: FormData) {
     bannerUrl = blob.url;
   }
 
+  let bannerPortraitUrl = ""; 
+  const portraitFile = formData.get("bannerPortraitImage") as File;
+  if (portraitFile && portraitFile.size > 0) {
+    const filename = `banners/${Date.now()}-portrait-${portraitFile.name.replace(/\s+/g, '-')}`;
+    const blob = await put(filename, portraitFile, { access: 'public', token: process.env.BLOB_READ_WRITE_TOKEN });
+    bannerPortraitUrl = blob.url;
+  }
+
   let ticketDesignUrl = ""; 
   const ticketFile = formData.get("ticketDesignImage") as File;
   if (ticketFile && ticketFile.size > 0) {
@@ -133,6 +141,7 @@ export async function createEvent(formData: FormData) {
       socialMedias: socialMedias.length > 0 ? (socialMedias as any) : undefined,
       bankAccounts: bankAccounts.length > 0 ? (bankAccounts as any) : undefined,
       bannerUrl,
+      bannerPortraitUrl,
       ticketDesignUrl,
       waGroupLink,
       isActive: true,

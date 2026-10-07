@@ -48,8 +48,9 @@ model Event {
   title           String
   slug            String   @unique // Untuk URL ramah SEO (misal: /event/konser-musik)
   description     String   @db.Text
-  bannerUrl       String? // Link gambar banner dari Supabase Storage
-  ticketDesignUrl String? // Link gambar desain tiket
+  bannerUrl         String? // Link gambar banner dari Supabase Storage
+  bannerPortraitUrl String? // Link gambar banner khusus mobile (Portrait)
+  ticketDesignUrl   String? // Link gambar desain tiket
   eventDate       DateTime
   location        String
   isActive        Boolean  @default(true)

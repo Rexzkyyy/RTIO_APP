@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useTransition } from "react";
 import { uploadPaymentProof } from "../actions";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { showCuteLoader, hideCuteLoader } from "@/components/CuteLoadingOverlay";
+import { showCuteLoader, hideCuteLoader, playSuccessSound } from "@/components/CuteLoadingOverlay";
 
 export default function PaymentFormClient({ transactionId }: { transactionId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,6 +36,7 @@ export default function PaymentFormClient({ transactionId }: { transactionId: st
         
         const result = await uploadPaymentProof(formData);
         if (result && result.success) {
+          playSuccessSound();
           router.push(result.url);
         }
       } catch (error) {

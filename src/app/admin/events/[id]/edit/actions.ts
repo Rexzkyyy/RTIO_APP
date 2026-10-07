@@ -106,6 +106,13 @@ export async function updateEvent(id: string, formData: FormData) {
     dataToUpdate.bannerUrl = blob.url;
   }
 
+  // Handle Portrait Banner Image Upload if provided
+  const portraitFile = formData.get("bannerPortraitImage") as File;
+  if (portraitFile && portraitFile.size > 0) {
+    const filename = `banners/${Date.now()}-portrait-${portraitFile.name.replace(/\s+/g, '-')}`;
+    const blob = await put(filename, portraitFile, { access: 'public', token: process.env.BLOB_READ_WRITE_TOKEN });
+    dataToUpdate.bannerPortraitUrl = blob.url;
+  }
   // Handle Ticket Design Upload if provided
   const ticketFile = formData.get("ticketDesignImage") as File;
   if (ticketFile && ticketFile.size > 0) {

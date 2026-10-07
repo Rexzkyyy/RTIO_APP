@@ -1,10 +1,14 @@
-import prisma from '../src/lib/prisma';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 async function main() {
-  const events = await prisma.event.findMany({
-    include: { ticketCategories: true }
-  });
-  console.log(JSON.stringify(events, null, 2));
+  const count = await prisma.event.count();
+  console.log(`Total events in database: ${count}`);
+  const events = await prisma.event.findMany({ select: { title: true, isLocked: true } });
+  console.log(events);
 }
 
-main().catch(console.error).finally(() => prisma.$disconnect());
+main()
+  .catch(e => console.error(e))
+  .finally(() => prisma.$disconnect());
