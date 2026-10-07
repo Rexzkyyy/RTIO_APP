@@ -177,16 +177,23 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
         </div>
 
         {/* Mobile Portrait Banner (Inline, separated from text) */}
-        <div className="block sm:hidden w-full relative bg-slate-950" style={{ minHeight: '50vh' }}>
-          {event.bannerPortraitUrl || event.imageUrl || event.bannerUrl ? (
+        <div className="block sm:hidden w-full relative bg-slate-950 min-h-[50vh]">
+          {event.bannerPortraitUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img 
-              src={(event.bannerPortraitUrl || event.imageUrl || event.bannerUrl) as string}
+              src={event.bannerPortraitUrl}
               alt={event.title}
               className="w-full h-auto block"
             />
+          ) : event.imageUrl || event.bannerUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img 
+              src={(event.imageUrl || event.bannerUrl) as string}
+              alt={event.title}
+              className="w-full h-[55vh] object-cover object-center block"
+            />
           ) : (
-            <div className="w-full aspect-[3/4] bg-gradient-to-tr from-primary-900 to-slate-900 opacity-80"></div>
+            <div className="w-full h-[55vh] bg-gradient-to-tr from-primary-900 to-slate-900 opacity-80"></div>
           )}
           {/* Smooth gradient transition to the dark text block below */}
           <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-900 to-transparent z-10 pointer-events-none"></div>
