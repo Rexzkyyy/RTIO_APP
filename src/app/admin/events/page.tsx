@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PlusCircle, Calendar as CalendarIcon, MapPin, Users, ListPlus, ExternalLink, Receipt, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { DeleteEventButton } from "@/components/admin/DeleteEventButton";
+import { ToggleEventLockButton } from "@/components/admin/ToggleEventLockButton";
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -206,22 +207,25 @@ export default async function EventsPage({ searchParams }: Props) {
                         </a>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        {/* @ts-ignore */}
-                        {(!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR") && (
-                          <>
-                            <Link prefetch={false} href={`/admin/events/${event.id}/form-builder`} className="text-emerald-600 hover:text-emerald-900 mr-4" title="Form Builder">
-                              <ListPlus className="w-5 h-5 inline-block" />
-                            </Link>
-                            <Link prefetch={false} href={`/admin/events/${event.id}/edit`} className="text-indigo-600 hover:text-indigo-900 mr-4" title="Edit Event">
-                              Edit
-                            </Link>
-                            <DeleteEventButton id={event.id} />
-                          </>
-                        )}
-                        <Link prefetch={false} href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="text-blue-600 hover:text-blue-900 ml-4 border border-blue-200 px-3 py-1.5 rounded-lg inline-flex items-center" title="Validasi Tiket">
-                          <Receipt className="w-4 h-4 mr-1.5" />
-                          <span>Validasi ({event._count.transactions})</span>
-                        </Link>
+                        <div className="flex items-center justify-end gap-3">
+                          {/* @ts-ignore */}
+                          {(!session?.user?.adminRole || (session?.user?.adminRole as string) !== "VALIDATOR") && (
+                            <>
+                              <Link prefetch={false} href={`/admin/events/${event.id}/form-builder`} className="text-slate-500 hover:text-emerald-600 p-1.5 rounded-md hover:bg-emerald-50 transition-colors" title="Form Builder">
+                                <ListPlus className="w-5 h-5" />
+                              </Link>
+                              <Link prefetch={false} href={`/admin/events/${event.id}/edit`} className="text-slate-500 hover:text-indigo-600 p-1.5 rounded-md hover:bg-indigo-50 transition-colors" title="Edit Event">
+                                <span className="font-medium">Edit</span>
+                              </Link>
+                              <ToggleEventLockButton id={event.id} isLocked={event.isLocked} className={`flex items-center p-1.5 rounded-md transition-colors font-medium ${event.isLocked ? 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700' : 'text-slate-500 hover:text-orange-600 hover:bg-orange-50'}`} />
+                              <DeleteEventButton id={event.id} className="text-slate-500 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors font-medium" />
+                            </>
+                          )}
+                          <Link prefetch={false} href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="text-blue-600 hover:text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 px-3 py-1.5 rounded-lg flex items-center transition-colors shadow-sm" title="Validasi Tiket">
+                            <Receipt className="w-4 h-4 mr-1.5" />
+                            <span className="font-medium">Validasi ({event._count.transactions})</span>
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -319,6 +323,7 @@ export default async function EventsPage({ searchParams }: Props) {
                           <Link prefetch={false} href={`/admin/events/${event.id}/edit`} className="flex-1 min-w-[45%] py-2 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-lg hover:bg-indigo-100 text-center flex items-center justify-center transition-colors">
                             Edit
                           </Link>
+                          <ToggleEventLockButton id={event.id} isLocked={event.isLocked} className={`flex-1 min-w-[45%] py-2 text-xs font-medium rounded-lg text-center flex items-center justify-center transition-colors ${event.isLocked ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-orange-50 text-orange-700 hover:bg-orange-100'}`} />
                           <DeleteEventButton id={event.id} className="flex-1 min-w-[45%] py-2 bg-red-50 text-red-700 text-xs font-medium rounded-lg hover:bg-red-100 text-center transition-colors" />
                         </>
                       )}

@@ -21,7 +21,7 @@ export function DeleteEventButton({ id, className }: { id: string, className?: s
     <button 
       onClick={handleDelete}
       disabled={isDeleting}
-      className={className || `text-red-600 hover:text-red-900 ml-4 font-medium ${isDeleting ? "opacity-50 cursor-wait" : ""}`}
+      className={`${className || "text-red-600 hover:text-red-900 ml-4 font-medium"} ${isDeleting ? "opacity-50 cursor-wait pointer-events-none" : ""}`}
     >
       {isDeleting ? "Menghapus..." : "Hapus"}
     </button>

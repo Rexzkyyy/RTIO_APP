@@ -53,6 +53,7 @@ model Event {
   eventDate       DateTime
   location        String
   isActive        Boolean  @default(true)
+  isLocked        Boolean  @default(false)
   artists         String[] // Daftar artis
   sponsors        String[] // Daftar sponsor
   socialMedias    Json? // Array of { platform: string, link: string }

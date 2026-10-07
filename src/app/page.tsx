@@ -147,22 +147,31 @@ export default async function Home({ searchParams }: Props) {
                 }
 
                 return (
-                  <Link key={event.id} href={`/event/${event.slug}`} prefetch={false} className="group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden transition-all duration-300 transform sm:hover:-translate-y-1 flex flex-col h-full active:scale-[0.98] sm:active:scale-100">
+                  <Link key={event.id} href={event.isLocked ? '#' : `/event/${event.slug}`} prefetch={false} className={`group bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full ${event.isLocked ? 'opacity-90 cursor-not-allowed pointer-events-none' : 'hover:shadow-xl transition-all duration-300 transform sm:hover:-translate-y-1 active:scale-[0.98] sm:active:scale-100'}`}>
                     {/* Card Image */}
                     <div className="h-28 sm:h-48 bg-slate-200 relative overflow-hidden">
                       {event.bannerUrl ? (
-                        <Image src={event.bannerUrl} alt={event.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <Image src={event.bannerUrl} alt={event.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className={`object-cover ${event.isLocked ? 'grayscale opacity-70' : 'group-hover:scale-105 transition-transform duration-500'}`} />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-tr from-blue-800 to-teal-400 group-hover:scale-105 transition-transform duration-500"></div>
+                        <div className={`w-full h-full bg-gradient-to-tr from-blue-800 to-teal-400 ${event.isLocked ? 'grayscale opacity-70' : 'group-hover:scale-105 transition-transform duration-500'}`}></div>
                       )}
-                      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-white/90 backdrop-blur-sm px-2 py-1 sm:px-3 rounded-md sm:rounded-lg text-[9px] sm:text-xs font-bold text-slate-800 shadow-sm">
-                        {event.eventDate.toLocaleDateString('id-ID', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </div>
+                      
+                      {event.isLocked ? (
+                        <div className="absolute inset-0 bg-slate-900/20 flex items-center justify-center">
+                           <span className="bg-slate-800/80 backdrop-blur-md text-white font-bold px-4 py-2 rounded-lg border border-slate-600/50 shadow-lg text-sm tracking-wider uppercase">
+                              Coming Soon
+                           </span>
+                        </div>
+                      ) : (
+                        <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-white/90 backdrop-blur-sm px-2 py-1 sm:px-3 rounded-md sm:rounded-lg text-[9px] sm:text-xs font-bold text-slate-800 shadow-sm">
+                          {event.eventDate.toLocaleDateString('id-ID', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </div>
+                      )}
                     </div>
 
                     {/* Card Content */}
                     <div className="p-3 sm:p-6 flex flex-col flex-1">
-                      <h3 className="text-sm sm:text-lg font-bold text-slate-800 line-clamp-2 mb-1.5 sm:mb-3 group-hover:text-emerald-600 transition-colors">
+                      <h3 className={`text-sm sm:text-lg font-bold text-slate-800 line-clamp-2 mb-1.5 sm:mb-3 ${event.isLocked ? 'text-slate-600' : 'group-hover:text-emerald-600 transition-colors'}`}>
                         {event.title}
                       </h3>
                       
@@ -173,17 +182,25 @@ export default async function Home({ searchParams }: Props) {
                         </div>
                         
                         <div className="pt-2 sm:pt-4 mt-2 sm:mt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-0">
-                          <div className="text-[9px] sm:text-sm font-medium text-slate-500">Mulai dari</div>
-                          <div className="flex flex-col items-end">
-                            {isLowestDiscounted && originalPriceForLowest !== null && originalPriceForLowest > lowestActivePrice && (
-                              <span className="text-[10px] sm:text-xs text-slate-400 line-through leading-none mb-0.5">
-                                Rp {originalPriceForLowest.toLocaleString('id-ID')}
-                              </span>
-                            )}
-                            <div className="text-sm sm:text-lg font-black text-teal-600 leading-none">
-                              {lowestActivePrice === 0 ? "Gratis" : `Rp ${lowestActivePrice.toLocaleString('id-ID')}`}
+                          {event.isLocked ? (
+                            <div className="text-sm sm:text-base font-bold text-slate-400 w-full text-center py-1 bg-slate-100 rounded-md">
+                              Segera Hadir
                             </div>
-                          </div>
+                          ) : (
+                            <>
+                              <div className="text-[9px] sm:text-sm font-medium text-slate-500">Mulai dari</div>
+                              <div className="flex flex-col items-end">
+                                {isLowestDiscounted && originalPriceForLowest !== null && originalPriceForLowest > lowestActivePrice && (
+                                  <span className="text-[10px] sm:text-xs text-slate-400 line-through leading-none mb-0.5">
+                                    Rp {originalPriceForLowest.toLocaleString('id-ID')}
+                                  </span>
+                                )}
+                                <div className="text-sm sm:text-lg font-black text-teal-600 leading-none">
+                                  {lowestActivePrice === 0 ? "Gratis" : `Rp ${lowestActivePrice.toLocaleString('id-ID')}`}
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
