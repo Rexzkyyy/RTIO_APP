@@ -115,6 +115,21 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
             {!isCollapsed && <span>Scanner Tiket</span>}
           </Link>
 
+          <Link 
+            prefetch={false}
+            href="/admin/attendance" 
+            className={`flex items-center p-3 transition-colors rounded-xl ${
+              pathname.includes('/admin/attendance') 
+                ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
+                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+            }`}
+            title="Kehadiran"
+          >
+            <Users className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
+            {!isCollapsed && <span>Kehadiran</span>}
+          </Link>
+
+
           {!isValidator && (
             <Link 
               prefetch={false}
@@ -310,6 +325,18 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
                   <BarChart className="w-5 h-5" />
                 </div>
                 <span className="text-[11px] font-bold text-slate-600 text-center">Analisis<br/>Penjualan</span>
+              </Link>
+              
+              <Link 
+                prefetch={false}
+                href="/admin/attendance" 
+                className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${pathname.includes('/admin/attendance') ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                  <Users className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-600 text-center">Kehadiran<br/>Peserta</span>
               </Link>
             </div>
             
