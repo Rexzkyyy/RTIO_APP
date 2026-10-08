@@ -126,9 +126,11 @@ export default async function Home({ searchParams }: Props) {
                 let lowestActivePrice = Infinity;
                 let originalPriceForLowest: number | null = null;
                 let isLowestDiscounted = false;
+                let totalQuota = 0;
 
                 if (event.ticketCategories && event.ticketCategories.length > 0) {
                   for (const t of event.ticketCategories) {
+                    totalQuota += t.quota;
                     const isDiscountActive = t.hasDiscount && t.discountPrice != null && 
                       (!t.discountStartDate || now >= new Date(t.discountStartDate)) && 
                       (!t.discountEndDate || now <= new Date(t.discountEndDate)) &&
@@ -188,7 +190,15 @@ export default async function Home({ searchParams }: Props) {
                             </div>
                           ) : (
                             <>
-                              <div className="text-[9px] sm:text-sm font-medium text-slate-500">Mulai dari</div>
+                              <div className="flex flex-col justify-center">
+                                <div className="text-[9px] sm:text-sm font-medium text-slate-500">
+                                  {totalQuota <= 0 ? (
+                                    <span className="text-orange-500 font-bold">Habis</span>
+                                  ) : (
+                                    "Mulai dari"
+                                  )}
+                                </div>
+                              </div>
                               <div className="flex flex-col items-end">
                                 {isLowestDiscounted && originalPriceForLowest !== null && originalPriceForLowest > lowestActivePrice && (
                                   <span className="text-[10px] sm:text-xs text-slate-400 line-through leading-none mb-0.5">

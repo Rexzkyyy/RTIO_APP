@@ -476,17 +476,9 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
                       <div className={`p-3 rounded-xl ${style.bgClass} border ${style.borderClass} shadow-sm transform group-hover/ticket:scale-110 group-hover/ticket:rotate-3 transition-transform duration-300`}>
                         {style.icon}
                       </div>
-                      {isDiscountActive && ticket.discountQuota !== null ? (
-                        <span className="text-sm font-black px-3 py-1.5 rounded-md border border-rose-300 bg-rose-50 text-rose-600 animate-pulse shadow-sm">
-                          🔥 Sisa Promo: {ticket.discountQuota}
-                        </span>
-                      ) : isLowStock ? (
-                        <span className="text-sm font-black px-3 py-1.5 rounded-md border border-orange-300 bg-orange-50 text-orange-600 animate-pulse shadow-sm">
-                          🔥 Sisa {ticket.quota} Kursi!
-                        </span>
-                      ) : (
-                        <span className={`text-sm font-black px-3 py-1.5 rounded-md border ${style.borderClass} ${style.bgClass} ${style.textClass} shadow-sm`}>
-                          Sisa {ticket.quota} Tiket
+                      {ticket.quota <= 0 && (
+                        <span className="text-sm font-black px-3 py-1.5 rounded-md border border-slate-300 bg-slate-100 text-slate-500 shadow-sm uppercase">
+                          Habis
                         </span>
                       )}
                     </div>

@@ -189,19 +189,23 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
             const activePrice = isDiscountActive ? ticket.discountPrice : ticket.price;
 
             return (
-              <label key={ticket.id} className="relative flex items-center justify-between p-4 border rounded-xl cursor-pointer hover:border-emerald-500 transition-colors bg-slate-50">
+              <label key={ticket.id} className={`relative flex items-center justify-between p-4 border rounded-xl ${ticket.quota <= 0 ? 'bg-slate-100 opacity-60 cursor-not-allowed border-slate-200 grayscale' : 'cursor-pointer hover:border-emerald-500 transition-colors bg-slate-50'}`}>
                 <div className="flex items-center">
                   <input 
                     type="radio" 
                     name="ticketCategoryId" 
                     value={ticket.id}
                     required
-                    defaultChecked={initialTicketId ? ticket.id === initialTicketId : index === 0}
-                    className="w-5 h-5 text-emerald-600 border-slate-300 focus:ring-emerald-500"
+                    disabled={ticket.quota <= 0}
+                    defaultChecked={ticket.quota > 0 && (initialTicketId ? ticket.id === initialTicketId : index === 0)}
+                    className="w-5 h-5 text-emerald-600 border-slate-300 focus:ring-emerald-500 disabled:opacity-50"
                   />
                   <div className="ml-4">
-                    <span className="block text-sm font-bold text-slate-800">{ticket.name}</span>
-                    <span className="block text-sm text-emerald-600 font-medium">
+                    <span className="flex items-center text-sm font-bold text-slate-800">
+                      {ticket.name}
+                      {ticket.quota <= 0 && <span className="ml-2 px-2 py-0.5 bg-slate-200 text-slate-500 text-[10px] rounded-full uppercase tracking-wider">Habis</span>}
+                    </span>
+                    <span className="block text-sm text-emerald-600 font-medium mt-0.5">
                       {isDiscountActive && (
                         <span className="text-slate-400 line-through mr-2 text-xs">
                           Rp {(ticket.originalPrice || ticket.price).toLocaleString('id-ID')}
@@ -209,7 +213,7 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
                       )}
                       {activePrice === 0 ? "Gratis" : `Rp ${activePrice.toLocaleString('id-ID')}`}
                     </span>
-                    {isDiscountActive && (
+                    {isDiscountActive && ticket.quota > 0 && (
                       <span className="inline-block mt-1 text-[10px] font-bold text-white bg-emerald-500 px-1.5 py-0.5 rounded-full">
                         🔥 FLASH SALE
                       </span>
@@ -217,13 +221,10 @@ export default function RegisterFormClient({ event, initialTicketId }: { event: 
                   </div>
                 </div>
                 <div className="text-sm text-slate-500 text-right">
-                  {isDiscountActive && ticket.discountQuota !== null ? (
+                  {isDiscountActive && ticket.discountQuota !== null && ticket.quota > 0 && (
                     <>
-                      <span className="block text-emerald-600 font-bold text-xs mb-0.5">Sisa Promo: {ticket.discountQuota}</span>
                       <span className="block text-[10px] text-orange-500 font-medium italic">*Kuota promo terbatas</span>
                     </>
-                  ) : (
-                    <span>Sisa: {ticket.quota}</span>
                   )}
                 </div>
               </label>
