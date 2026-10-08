@@ -9,6 +9,8 @@ import WhatsAppSaveButton from "@/components/WhatsAppSaveButton";
 import PaymentFormClient from "./PaymentFormClient";
 import PublicNavbar from "@/components/PublicNavbar";
 
+export const dynamic = "force-dynamic";
+
 export default async function PayPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   

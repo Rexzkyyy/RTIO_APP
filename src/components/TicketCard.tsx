@@ -133,7 +133,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
         )}
 
         {/* Left Side: Poster */}
-        <div className={`w-full ${forceMobile ? 'min-h-[280px]' : 'min-h-[280px] md:min-h-[420px] md:h-auto md:w-[32%]'} relative flex-shrink-0 p-3 sm:p-4`}>
+        <div className={`w-full ${forceMobile ? 'min-h-[360px]' : 'min-h-[360px] md:min-h-[420px] md:h-auto md:w-[32%]'} relative flex-shrink-0 p-3 sm:p-4`}>
           <div className={`absolute inset-3 sm:inset-4 rounded-xl sm:rounded-2xl overflow-hidden shadow-xl border border-white/20 ${imgOverlay} backdrop-blur-sm`}>
             {(data.event.ticketDesignUrl || data.event.bannerUrl) ? (
               /* eslint-disable-next-line @next/next/no-img-element */

@@ -6,6 +6,8 @@ import InteractiveBackground from "@/components/InteractiveBackground";
 import WhatsAppSaveButton from "@/components/WhatsAppSaveButton";
 import PublicNavbar from "@/components/PublicNavbar";
 
+export const dynamic = "force-dynamic";
+
 export default async function VerifyPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   

@@ -201,7 +201,7 @@ export default function CreateEventPage() {
           
           let compressionError = false;
           try {
-            const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: true };
+            const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: false };
             
             // Compress banner
             const bannerFile = formData.get("bannerImage") as File;

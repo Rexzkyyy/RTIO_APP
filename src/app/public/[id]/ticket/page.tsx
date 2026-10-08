@@ -6,6 +6,8 @@ import TicketCard from "@/components/TicketCard";
 import InteractiveBackground from "@/components/InteractiveBackground";
 import PublicNavbar from "@/components/PublicNavbar";
 
+export const dynamic = "force-dynamic";
+
 export default async function TicketPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   

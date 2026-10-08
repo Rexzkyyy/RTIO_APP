@@ -235,7 +235,7 @@ export function EditEventForm({ event }: { event: any }) {
           
           let compressionError = false;
           try {
-            const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: true };
+            const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1280, useWebWorker: false };
             
             const bannerFile = formData.get("bannerImage") as File;
             if (bannerFile && bannerFile.size > 0) {
