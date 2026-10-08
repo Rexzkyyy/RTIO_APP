@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import QRCode from 'react-qr-code';
-import { Download, Image as ImageIcon, Heart, Globe, MessageCircle } from "lucide-react";
+import { Download, Image as ImageIcon, Heart, Globe, MessageCircle, Flower2, Sparkles } from "lucide-react";
 
 type TicketData = {
   barcodeString: string;
@@ -88,26 +88,53 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
     return 'bg-pink-100 text-pink-800 shadow-pink-100/20';
   };
 
+  const isKajian = data.event.title.toLowerCase().includes('mamah dedeh') || data.event.title.toLowerCase().includes('kajian');
+
+  // Custom Variables for Background & Styling
+  const ticketBg = isKajian 
+    ? 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)' // Bright Blue to Deep Blue
+    : 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)'; // Pink
+    
+  const ticketShadow = isKajian
+    ? '0 20px 50px rgba(37,99,235,0.3)'
+    : '0 20px 50px rgba(236,72,153,0.3)';
+
+  const blob1 = isKajian ? 'bg-pink-400/30' : 'bg-amber-400/20'; // Pink blobs for blue theme
+  const blob2 = isKajian ? 'bg-fuchsia-400/30' : 'bg-rose-400/30';
+  const imgOverlay = isKajian ? 'bg-blue-900/50' : 'bg-pink-900/50';
+  const textMuted = isKajian ? 'text-blue-200' : 'text-pink-200';
+  const stubHeader = isKajian ? 'bg-pink-500' : 'bg-pink-600';
+
   return (
     <div className="w-full flex flex-col items-center gap-6 font-sans">
       {/* Ticket Wrapper */}
       <div 
         ref={ticketRef} 
-        className={`w-full flex flex-col ${forceMobile ? '' : 'md:flex-row'} shadow-[0_20px_50px_rgba(236,72,153,0.3)] rounded-[2rem] overflow-hidden relative`}
+        className={`w-full flex flex-col ${forceMobile ? '' : 'md:flex-row'} rounded-[2rem] overflow-hidden relative`}
         style={{ 
-          background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', // pink-500 to pink-700
+          background: ticketBg,
+          boxShadow: ticketShadow,
           color: '#ffffff'
         }}
       >
         {/* Decorative background blobs (Seni Memahami Cinta aesthetic) */}
-        <div className="absolute top-0 right-0 w-72 h-72 bg-amber-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/4 w-56 h-56 bg-rose-400/30 rounded-full blur-2xl translate-y-1/3 pointer-events-none"></div>
-        <Heart className="absolute top-12 left-1/2 w-32 h-32 text-white/5 -rotate-12 pointer-events-none" />
-        <Heart className="absolute bottom-12 right-[250px] w-24 h-24 text-white/5 rotate-12 pointer-events-none" />
+        <div className={`absolute top-0 right-0 w-72 h-72 ${blob1} rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none`}></div>
+        <div className={`absolute bottom-0 left-1/4 w-56 h-56 ${blob2} rounded-full blur-2xl translate-y-1/3 pointer-events-none`}></div>
+        {isKajian ? (
+          <>
+            <Flower2 className="absolute top-[35%] md:top-12 -right-10 md:left-1/2 md:right-auto w-48 h-48 md:w-32 md:h-32 text-white/15 md:text-white/10 -rotate-12 pointer-events-none" />
+            <Sparkles className="absolute bottom-[25%] md:bottom-12 -left-8 md:left-auto md:right-[250px] w-32 h-32 md:w-24 md:h-24 text-white/15 md:text-white/10 rotate-12 pointer-events-none" />
+          </>
+        ) : (
+          <>
+            <Heart className="absolute top-[35%] md:top-12 -right-10 md:left-1/2 md:right-auto w-48 h-48 md:w-32 md:h-32 text-white/10 md:text-white/5 -rotate-12 pointer-events-none" />
+            <Heart className="absolute bottom-[25%] md:bottom-12 -left-8 md:left-auto md:right-[250px] w-32 h-32 md:w-24 md:h-24 text-white/10 md:text-white/5 rotate-12 pointer-events-none" />
+          </>
+        )}
 
         {/* Left Side: Poster */}
         <div className={`w-full ${forceMobile ? 'min-h-[280px]' : 'min-h-[280px] md:min-h-[420px] md:h-auto md:w-[32%]'} relative flex-shrink-0 p-3 sm:p-4`}>
-          <div className="absolute inset-3 sm:inset-4 rounded-xl sm:rounded-2xl overflow-hidden shadow-xl border border-white/20 bg-pink-900/50 backdrop-blur-sm">
+          <div className={`absolute inset-3 sm:inset-4 rounded-xl sm:rounded-2xl overflow-hidden shadow-xl border border-white/20 ${imgOverlay} backdrop-blur-sm`}>
             {(data.event.ticketDesignUrl || data.event.bannerUrl) ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img 
@@ -159,11 +186,11 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               {/* Row 1: Name & Category */}
               <div className="grid grid-cols-3 border-b border-white/20">
                 <div className="p-3 sm:p-4 border-r border-white/20 col-span-2">
-                  <span className="text-[9px] sm:text-[10px] font-bold text-pink-200 uppercase tracking-widest block mb-0.5 sm:mb-1">Nama Peserta</span>
+                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5 sm:mb-1`}>Nama Peserta</span>
                   <span className="text-base sm:text-lg font-black uppercase truncate block drop-shadow-sm">{data.transaction.buyerName}</span>
                 </div>
                 <div className="p-3 sm:p-4 bg-white/5">
-                  <span className="text-[9px] sm:text-[10px] font-bold text-pink-200 uppercase tracking-widest block mb-0.5 sm:mb-1">Jml Tiket</span>
+                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5 sm:mb-1`}>Jml Tiket</span>
                   <span className="text-base sm:text-lg font-bold uppercase">{data.transaction.totalTickets} Tiket</span>
                 </div>
               </div>
@@ -171,19 +198,19 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               {/* Row 2: Date, Time, Location */}
               <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-white/20">
                 <div className="p-3 sm:p-4 border-r border-white/20 col-span-1">
-                  <span className="text-[9px] sm:text-[10px] font-bold text-pink-200 uppercase tracking-widest block mb-0.5 sm:mb-1">Tanggal</span>
+                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5 sm:mb-1`}>Tanggal</span>
                   <span className="text-xs sm:text-sm font-bold">
                     {new Date(data.event.eventDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </span>
                 </div>
                 <div className="p-3 sm:p-4 border-r border-white/20 col-span-1 bg-white/5">
-                  <span className="text-[9px] sm:text-[10px] font-bold text-pink-200 uppercase tracking-widest block mb-0.5 sm:mb-1">Waktu</span>
+                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5 sm:mb-1`}>Waktu</span>
                   <span className="text-xs sm:text-sm font-black text-amber-300 drop-shadow-sm">
                     {new Date(data.event.eventDate).toLocaleTimeString('id-ID', { timeZone: 'Asia/Makassar', hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
                 <div className="p-3 sm:p-4 col-span-2 border-t sm:border-t-0 border-white/20">
-                  <span className="text-[9px] sm:text-[10px] font-bold text-pink-200 uppercase tracking-widest block mb-0.5 sm:mb-1">Lokasi</span>
+                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5 sm:mb-1`}>Lokasi</span>
                   <span className="text-xs sm:text-sm font-bold truncate block">{data.event.location}</span>
                 </div>
               </div>
@@ -211,7 +238,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
           <div className="w-full md:w-[240px] border-t-[3px] md:border-t-0 md:border-l-[3px] border-dashed border-white/30 flex flex-col p-4 sm:p-6 bg-white relative z-10 flex-shrink-0 text-slate-900 rounded-b-[2rem] md:rounded-bl-none md:rounded-r-[2rem]">
             
             {/* Stub Header */}
-            <div className="w-full py-2 sm:py-2.5 mb-4 sm:mb-6 rounded-lg sm:rounded-xl bg-pink-600 text-white text-center shadow-md">
+            <div className={`w-full py-2 sm:py-2.5 mb-4 sm:mb-6 rounded-lg sm:rounded-xl ${stubHeader} text-white text-center shadow-md`}>
               <span className="text-[10px] sm:text-[11px] font-black tracking-[0.25em] uppercase">Entry Pass</span>
             </div>
             

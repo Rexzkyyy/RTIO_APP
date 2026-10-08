@@ -250,11 +250,12 @@ export default function CreateEventPage() {
                   <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors overflow-hidden relative">
                     {imagePreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={sanitizeImageUrl(imagePreview)} alt="Preview Banner" className="w-full h-full object-cover" />
+                      <img src={sanitizeImageUrl(imagePreview)} alt="Preview Banner" className="w-full h-full object-contain p-2" />
                     ) : (
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <ImageIcon className="w-8 h-8 mb-3 text-slate-400" />
                         <p className="mb-2 text-sm text-slate-500 text-center"><span className="font-semibold">Upload Banner</span></p>
+                        <p className="text-xs text-slate-500 text-center px-4">Lanskap 16:9 (Ideal: 1920x1080px)</p>
                       </div>
                     )}
                     <div className={imagePreview ? "absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity" : "hidden"}>
@@ -271,12 +272,12 @@ export default function CreateEventPage() {
                   <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors overflow-hidden relative">
                     {portraitImagePreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={sanitizeImageUrl(portraitImagePreview)} alt="Preview Portrait Banner" className="w-full h-full object-cover" />
+                      <img src={sanitizeImageUrl(portraitImagePreview)} alt="Preview Portrait Banner" className="w-full h-full object-contain p-2" />
                     ) : (
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <ImageIcon className="w-8 h-8 mb-3 text-slate-400" />
                         <p className="mb-2 text-sm text-slate-500 text-center"><span className="font-semibold">Upload Portrait</span></p>
-                        <p className="text-xs text-slate-500 text-center">Bentuk HP (9:16)</p>
+                        <p className="text-xs text-slate-500 text-center px-4">Potret 9:16 (Ideal: 1080x1920px)</p>
                       </div>
                     )}
                     <div className={portraitImagePreview ? "absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity" : "hidden"}>
@@ -293,11 +294,12 @@ export default function CreateEventPage() {
                   <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors overflow-hidden relative">
                     {ticketImagePreview ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={sanitizeImageUrl(ticketImagePreview)} alt="Preview Tiket" className="w-full h-full object-cover" />
+                      <img src={sanitizeImageUrl(ticketImagePreview)} alt="Preview Tiket" className="w-full h-full object-contain p-2" />
                     ) : (
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <Ticket className="w-8 h-8 mb-3 text-slate-400" />
                         <p className="mb-2 text-sm text-slate-500 text-center"><span className="font-semibold">Upload Desain Tiket</span></p>
+                        <p className="text-xs text-slate-500 text-center px-4">Kotak 1:1 atau 3:4 (Ideal: 1080x1080px)</p>
                       </div>
                     )}
                     <div className={ticketImagePreview ? "absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity" : "hidden"}>
