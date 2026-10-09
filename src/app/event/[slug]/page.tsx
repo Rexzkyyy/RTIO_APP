@@ -45,7 +45,11 @@ export default async function PublicEventPage({ params }: { params: Promise<{ sl
   const event = await prisma.event.findUnique({
     where: { slug: resolvedParams.slug },
     include: {
-      ticketCategories: true,
+      ticketCategories: {
+        orderBy: {
+          price: 'asc'
+        }
+      },
     }
   });
 

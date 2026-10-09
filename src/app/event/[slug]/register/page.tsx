@@ -19,7 +19,11 @@ export default async function RegisterPage({
   const event = await prisma.event.findUnique({
     where: { slug: resolvedParams.slug },
     include: {
-      ticketCategories: true,
+      ticketCategories: {
+        orderBy: {
+          price: 'asc'
+        }
+      },
       fields: true,
     }
   });
