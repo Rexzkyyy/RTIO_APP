@@ -131,7 +131,19 @@ export default async function EventsPage({ searchParams }: Props) {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
-                  {events.map((event) => (
+                  {[...events].sort((a, b) => {
+                    const nowCheck = new Date();
+                    const isAFinished = nowCheck > new Date(new Date(a.eventDate).setHours(23, 59, 59, 999));
+                    const isBFinished = nowCheck > new Date(new Date(b.eventDate).setHours(23, 59, 59, 999));
+                    if (isAFinished && !isBFinished) return 1;
+                    if (!isAFinished && isBFinished) return -1;
+                    return 0;
+                  }).map((event) => {
+                    const nowCheck = new Date();
+                    const eventDateForCheck = new Date(event.eventDate);
+                    const isFinished = nowCheck > new Date(eventDateForCheck.setHours(23, 59, 59, 999));
+                    
+                    return (
                     <tr key={event.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -196,8 +208,8 @@ export default async function EventsPage({ searchParams }: Props) {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${event.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
-                          {event.isActive ? 'Aktif' : 'Tutup'}
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${!event.isActive ? 'bg-red-100 text-red-800' : isFinished ? 'bg-slate-100 text-slate-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                          {!event.isActive ? 'Tutup' : isFinished ? 'Berakhir' : 'Aktif'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -228,22 +240,35 @@ export default async function EventsPage({ searchParams }: Props) {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-slate-100 bg-slate-50">
-              {events.map((event) => (
+              {[...events].sort((a, b) => {
+                const nowCheck = new Date();
+                const isAFinished = nowCheck > new Date(new Date(a.eventDate).setHours(23, 59, 59, 999));
+                const isBFinished = nowCheck > new Date(new Date(b.eventDate).setHours(23, 59, 59, 999));
+                if (isAFinished && !isBFinished) return 1;
+                if (!isAFinished && isBFinished) return -1;
+                return 0;
+              }).map((event) => {
+                const nowCheck = new Date();
+                const eventDateForCheck = new Date(event.eventDate);
+                const isFinished = nowCheck > new Date(eventDateForCheck.setHours(23, 59, 59, 999));
+                
+                return (
                 <div key={event.id} className="p-5 bg-white space-y-4">
                   <div className="flex justify-between items-start gap-2">
                     <div>
                       <div className="text-base font-bold text-slate-900 leading-tight">{event.title}</div>
                       <div className="text-xs text-slate-500 mt-0.5">/{event.slug}</div>
                     </div>
-                    <span className={`px-2 py-1 text-[9px] uppercase tracking-wider font-bold rounded-md shrink-0 ${event.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                      {event.isActive ? 'Aktif' : 'Tutup'}
+                    <span className={`px-2 py-1 text-[9px] uppercase tracking-wider font-bold rounded-md shrink-0 ${!event.isActive ? 'bg-red-100 text-red-700' : isFinished ? 'bg-slate-100 text-slate-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                      {!event.isActive ? 'Tutup' : isFinished ? 'Berakhir' : 'Aktif'}
                     </span>
                   </div>
 
@@ -334,7 +359,8 @@ export default async function EventsPage({ searchParams }: Props) {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}

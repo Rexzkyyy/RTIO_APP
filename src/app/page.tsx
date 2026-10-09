@@ -120,8 +120,17 @@ export default async function Home({ searchParams }: Props) {
         ) : (
           <>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
-              {events.map((event) => {
+              {[...events].sort((a, b) => {
+                const nowCheck = new Date();
+                const isAFinished = nowCheck > new Date(new Date(a.eventDate).setHours(23, 59, 59, 999));
+                const isBFinished = nowCheck > new Date(new Date(b.eventDate).setHours(23, 59, 59, 999));
+                if (isAFinished && !isBFinished) return 1;
+                if (!isAFinished && isBFinished) return -1;
+                return 0;
+              }).map((event) => {
                 const now = new Date();
+                const eventDateForCheck = new Date(event.eventDate);
+                const isFinished = now > new Date(eventDateForCheck.setHours(23, 59, 59, 999));
                 
                 let lowestActivePrice = Infinity;
                 let originalPriceForLowest: number | null = null;
@@ -153,15 +162,21 @@ export default async function Home({ searchParams }: Props) {
                     {/* Card Image */}
                     <div className="aspect-video w-full bg-slate-100 relative overflow-hidden flex items-center justify-center">
                       {event.bannerUrl ? (
-                        <Image src={event.bannerUrl} alt={event.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className={`object-cover ${event.isLocked ? 'grayscale opacity-70' : 'group-hover:scale-105 transition-transform duration-500'}`} />
+                        <Image src={event.bannerUrl} alt={event.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className={`object-cover ${event.isLocked || isFinished ? 'grayscale opacity-70' : 'group-hover:scale-105 transition-transform duration-500'}`} />
                       ) : (
-                        <div className={`w-full h-full bg-gradient-to-tr from-blue-800 to-teal-400 ${event.isLocked ? 'grayscale opacity-70' : 'group-hover:scale-105 transition-transform duration-500'}`}></div>
+                        <div className={`w-full h-full bg-gradient-to-tr from-blue-800 to-teal-400 ${event.isLocked || isFinished ? 'grayscale opacity-70' : 'group-hover:scale-105 transition-transform duration-500'}`}></div>
                       )}
                       
                       {event.isLocked ? (
                         <div className="absolute inset-0 bg-slate-900/20 flex items-center justify-center">
                            <span className="bg-slate-800/80 backdrop-blur-md text-white font-bold px-2 py-1 text-[10px] sm:px-4 sm:py-2 sm:text-sm rounded-md sm:rounded-lg border border-slate-600/50 shadow-lg tracking-wider uppercase">
                               Coming Soon
+                           </span>
+                        </div>
+                      ) : isFinished ? (
+                        <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
+                           <span className="bg-red-600/90 backdrop-blur-md text-white font-bold px-3 py-1 text-[10px] sm:px-4 sm:py-2 sm:text-sm rounded-md sm:rounded-lg shadow-lg tracking-wider uppercase">
+                              Event Selesai
                            </span>
                         </div>
                       ) : (
@@ -187,6 +202,10 @@ export default async function Home({ searchParams }: Props) {
                           {event.isLocked ? (
                             <div className="text-sm sm:text-base font-bold text-slate-400 w-full text-center py-1 bg-slate-100 rounded-md">
                               Segera Hadir
+                            </div>
+                          ) : isFinished ? (
+                            <div className="text-sm sm:text-base font-bold text-red-500 w-full text-center py-1 bg-red-50 rounded-md">
+                              Telah Berakhir
                             </div>
                           ) : (
                             <>

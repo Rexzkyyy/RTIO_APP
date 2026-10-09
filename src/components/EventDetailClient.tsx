@@ -138,6 +138,10 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
     window.scrollTo(0, 0);
   }, []);
 
+  const nowCheck = new Date();
+  const eventDateForCheck = new Date(event.eventDate);
+  const isFinished = nowCheck > new Date(eventDateForCheck.setHours(23, 59, 59, 999));
+
   return (
     <div className={`min-h-screen relative pb-32 md:pb-12 overflow-x-hidden bg-slate-50 ${themeClass}`}>
       
@@ -230,13 +234,22 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
             </div>
             
             <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-6 sm:gap-8 animate-fade-in-up animation-delay-200">
-               <button 
-                  onClick={() => document.getElementById('tickets-section')?.scrollIntoView({ behavior: 'smooth' })} 
-                  className="px-10 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-lg font-black rounded-2xl shadow-[0_8px_32px_0_rgba(16,185,129,0.4)] hover:shadow-[0_8px_32px_0_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center justify-center w-full sm:w-max"
-                >
-                  <Ticket className="w-6 h-6 mr-3 shrink-0" />
-                  Dapatkan Tiket
-               </button>
+               {isFinished ? (
+                 <button 
+                    disabled
+                    className="px-10 py-4 bg-slate-800 text-slate-400 text-lg font-black rounded-2xl cursor-not-allowed flex items-center justify-center w-full sm:w-max border border-slate-700"
+                  >
+                    Event Telah Berakhir
+                 </button>
+               ) : (
+                 <button 
+                    onClick={() => document.getElementById('tickets-section')?.scrollIntoView({ behavior: 'smooth' })} 
+                    className="px-10 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-lg font-black rounded-2xl shadow-[0_8px_32px_0_rgba(16,185,129,0.4)] hover:shadow-[0_8px_32px_0_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center justify-center w-full sm:w-max"
+                  >
+                    <Ticket className="w-6 h-6 mr-3 shrink-0" />
+                    Dapatkan Tiket
+                 </button>
+               )}
                
                {/* Social Proof Marketing UI */}
                <div className="flex items-center justify-center sm:justify-start bg-slate-900/40 backdrop-blur-sm p-3 rounded-2xl border border-slate-700/50 w-full sm:w-max">
@@ -421,14 +434,18 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
                 })[0]?.id;
               const isBestSeller = ticket.id === cheapestTicketId && !isSoldOut;
               
-              if (isSoldOut) {
+              if (isSoldOut || isFinished) {
                 return (
                   <div key={ticket.id} className="block shrink-0 w-[310px] sm:w-[340px] snap-center opacity-60 grayscale cursor-not-allowed">
                     <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 relative overflow-hidden flex flex-col h-full">
-                      <div className="absolute top-0 right-0 bg-slate-700 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-2xl z-10">HABIS TERJUAL</div>
+                      <div className="absolute top-0 right-0 bg-slate-700 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-2xl z-10">
+                        {isFinished ? "EVENT SELESAI" : "HABIS TERJUAL"}
+                      </div>
                       <div className="flex justify-between items-center mb-4">
                         <div className="p-2.5 rounded-xl bg-slate-200">{style.icon}</div>
-                        <span className="text-sm font-bold px-2.5 py-1 rounded-md border border-slate-300 bg-slate-200 text-slate-500">Habis</span>
+                        <span className="text-sm font-bold px-2.5 py-1 rounded-md border border-slate-300 bg-slate-200 text-slate-500">
+                          {isFinished ? "Selesai" : "Habis"}
+                        </span>
                       </div>
                       <h3 className="text-xl font-bold text-slate-500 mb-1">{ticket.name}</h3>
                       <div className="text-2xl font-black text-slate-500 mb-4">
@@ -436,7 +453,7 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
                       </div>
                       <div className="mt-auto pt-4 border-t border-slate-200">
                         <div className="w-full py-3 bg-slate-300 text-slate-500 font-bold rounded-xl flex items-center justify-center text-base">
-                          Tiket Habis
+                          {isFinished ? "Event Berakhir" : "Tiket Habis"}
                         </div>
                       </div>
                     </div>
@@ -527,33 +544,35 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
       </div>
 
       {/* Mobile Sticky Bottom Action Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-slate-200 p-4 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-50 flex justify-between items-center">
-        <div>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Harga mulai</p>
-          {originalPrice && originalPrice > lowestPrice && (
-            <p className="text-[10px] text-slate-400 line-through leading-none mb-0.5">
-              Rp {originalPrice.toLocaleString('id-ID')}
+      {!isFinished && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-slate-200 p-4 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-50 flex justify-between items-center">
+          <div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Harga mulai</p>
+            {originalPrice && originalPrice > lowestPrice && (
+              <p className="text-[10px] text-slate-400 line-through leading-none mb-0.5">
+                Rp {originalPrice.toLocaleString('id-ID')}
+              </p>
+            )}
+            <p className="text-lg font-black text-primary-600 leading-none">
+              {lowestPrice === 0 ? "Gratis" : `Rp ${lowestPrice.toLocaleString('id-ID')}`}
             </p>
-          )}
-          <p className="text-lg font-black text-primary-600 leading-none">
-            {lowestPrice === 0 ? "Gratis" : `Rp ${lowestPrice.toLocaleString('id-ID')}`}
-          </p>
+          </div>
+          <Link 
+            href={`/event/${event.slug}/register`}
+            onClick={(e) => {
+              if (!isLoggedIn) {
+                e.preventDefault();
+                setPendingUrl(`/event/${event.slug}/register`);
+                setShowLoginModal(true);
+              }
+            }}
+            className="px-6 py-3.5 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md flex items-center"
+          >
+            <Ticket className="w-4 h-4 mr-2" />
+            Pilih Tiket
+          </Link>
         </div>
-        <Link 
-          href={`/event/${event.slug}/register`}
-          onClick={(e) => {
-            if (!isLoggedIn) {
-              e.preventDefault();
-              setPendingUrl(`/event/${event.slug}/register`);
-              setShowLoginModal(true);
-            }
-          }}
-          className="px-6 py-3.5 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md flex items-center"
-        >
-          <Ticket className="w-4 h-4 mr-2" />
-          Pilih Tiket
-        </Link>
-      </div>
+      )}
 
       {/* Ticket Benefits Modal */}
       {selectedTicketBenefits && typeof document !== 'undefined' && createPortal(
