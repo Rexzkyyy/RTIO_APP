@@ -83,8 +83,12 @@ export default async function TicketsPage({ searchParams }: Props) {
             <p className="mt-1 text-slate-500">Mulai buat event terlebih dahulu.</p>
           </div>
         ) : (
-          events.map((event) => (
-            <div key={event.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          events.map((event) => {
+            const nowCheck = new Date();
+            const eventDateForCheck = new Date(event.eventDate);
+            const isFinished = nowCheck > new Date(eventDateForCheck.setHours(23, 59, 59, 999));
+            return (
+            <div key={event.id} className={`rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col ${isFinished ? 'bg-slate-100/70 opacity-75 grayscale-[0.5]' : 'bg-white'}`}>
               <div className="h-32 bg-slate-900 relative overflow-hidden">
                 {(event.ticketDesignUrl || event.bannerUrl) ? (
                   <img src={(event.ticketDesignUrl || event.bannerUrl) as string} alt={event.title} className="absolute inset-0 w-full h-full object-cover opacity-60" />
@@ -115,7 +119,7 @@ export default async function TicketsPage({ searchParams }: Props) {
                 </div>
               </div>
             </div>
-          ))
+          )})
         )}
       </div>
 

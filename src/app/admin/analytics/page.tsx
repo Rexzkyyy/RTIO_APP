@@ -66,12 +66,15 @@ export default async function AnalyticsPage({ searchParams }: Props) {
         {events.map((event) => {
           const totalRevenue = event.transactions.reduce((sum, tx) => sum + tx.totalPrice, 0);
           const totalTickets = event.transactions.reduce((sum, tx) => sum + tx.totalTickets, 0);
+          const nowCheck = new Date();
+          const eventDateForCheck = new Date(event.eventDate);
+          const isFinished = nowCheck > new Date(eventDateForCheck.setHours(23, 59, 59, 999));
 
           return (
             <Link 
               key={event.id} 
               href={`/admin/analytics/${event.id}`}
-              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group block"
+              className={`rounded-2xl p-6 border border-slate-200 shadow-sm transition-all group block ${isFinished ? 'bg-slate-100/70 opacity-75 grayscale-[0.5]' : 'bg-white hover:shadow-md hover:border-emerald-200'}`}
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-110 transition-transform">

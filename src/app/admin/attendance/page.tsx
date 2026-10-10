@@ -70,11 +70,15 @@ export default async function AttendanceSelectEventPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {eventsWithCount.map(event => (
+          {eventsWithCount.map(event => {
+            const nowCheck = new Date();
+            const eventDateForCheck = new Date(event.eventDate);
+            const isFinished = nowCheck > new Date(eventDateForCheck.setHours(23, 59, 59, 999));
+            return (
             <Link 
               key={event.id}
               href={`/admin/attendance/${event.id}`}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all group flex flex-col h-full"
+              className={`rounded-2xl border border-slate-200 overflow-hidden transition-all group flex flex-col h-full ${isFinished ? 'bg-slate-100/70 opacity-75 grayscale-[0.5]' : 'bg-white hover:shadow-xl hover:-translate-y-1'}`}
             >
               <div className="h-40 bg-slate-100 relative overflow-hidden shrink-0">
                 {event.bannerUrl ? (
@@ -115,7 +119,7 @@ export default async function AttendanceSelectEventPage() {
                 </div>
               </div>
             </Link>
-          ))}
+          )})}
         </div>
       )}
     </div>

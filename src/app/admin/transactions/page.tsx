@@ -268,7 +268,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
     const eventsWhere = isValidator ? { id: { in: allowedEventIds } } : {};
     const events = await prisma.event.findMany({
       where: eventsWhere,
-      select: { id: true, title: true, _count: { select: { transactions: { where: { status: 'PENDING' } } } } },
+      select: { id: true, title: true, eventDate: true, _count: { select: { transactions: { where: { status: 'PENDING' } } } } },
       orderBy: { eventDate: 'desc' }
     });
 
@@ -281,8 +281,12 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {events.map(event => (
-            <Link prefetch={false} key={event.id} href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all group">
+          {events.map(event => {
+            const nowCheck = new Date();
+            const eventDateForCheck = new Date(event.eventDate);
+            const isFinished = nowCheck > new Date(eventDateForCheck.setHours(23, 59, 59, 999));
+            return (
+            <Link prefetch={false} key={event.id} href={`/admin/transactions?eventId=${event.id}&status=PENDING`} className={`p-5 rounded-2xl border border-slate-200 shadow-sm transition-all group ${isFinished ? 'bg-slate-100/70 opacity-75 grayscale-[0.5]' : 'bg-white hover:border-emerald-500 hover:shadow-md'}`}>
               <h3 className="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors">{event.title}</h3>
               <div className="mt-4 flex items-center text-sm font-medium text-slate-500">
                 <span className={`px-2 py-0.5 rounded-md mr-2 ${event._count.transactions > 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
@@ -291,7 +295,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                 Cek Transaksi <ChevronRight className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
               </div>
             </Link>
-          ))}
+          )})}
           {events.length === 0 && (
             <div className="col-span-full p-8 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
               Tidak ada event yang dapat diakses.
