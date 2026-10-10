@@ -269,7 +269,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
     const events = await prisma.event.findMany({
       where: eventsWhere,
       select: { id: true, title: true, _count: { select: { transactions: { where: { status: 'PENDING' } } } } },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { eventDate: 'desc' }
     });
 
     return (

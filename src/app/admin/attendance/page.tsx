@@ -29,7 +29,7 @@ export default async function AttendanceSelectEventPage() {
   // Fetch all active events
   const events = await prisma.event.findMany({
     where: { isActive: true },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { eventDate: 'desc' },
     select: {
       id: true,
       title: true,

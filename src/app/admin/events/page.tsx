@@ -49,7 +49,7 @@ export default async function EventsPage({ searchParams }: Props) {
   // Fetch events from the database
   const events = await prisma.event.findMany({
     where,
-    orderBy: { createdAt: 'desc' },
+    orderBy: { eventDate: 'desc' },
     skip,
     take: limit,
     include: {

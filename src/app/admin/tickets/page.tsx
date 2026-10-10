@@ -44,7 +44,7 @@ export default async function TicketsPage({ searchParams }: Props) {
 
   const events = await prisma.event.findMany({
     where,
-    orderBy: { createdAt: 'desc' },
+    orderBy: { eventDate: 'desc' },
     skip,
     take: limit,
   });

@@ -29,7 +29,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
 
   const events = await prisma.event.findMany({
     where: whereEvent,
-    orderBy: { createdAt: "desc" },
+    orderBy: { eventDate: "desc" },
     skip,
     take: limit,
     include: {

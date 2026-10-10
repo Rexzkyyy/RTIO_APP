@@ -50,7 +50,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
 
   const allEvents = await prisma.event.findMany({
     select: { id: true, title: true },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { eventDate: 'desc' }
   });
 
   async function addAdminAction(formData: FormData) {
