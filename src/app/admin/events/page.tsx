@@ -144,7 +144,7 @@ export default async function EventsPage({ searchParams }: Props) {
                     const isFinished = nowCheck > new Date(eventDateForCheck.setHours(23, 59, 59, 999));
                     
                     return (
-                    <tr key={event.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={event.id} className={`transition-colors ${isFinished ? 'bg-slate-100/70 opacity-70 grayscale-[0.5]' : 'hover:bg-slate-50'}`}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="ml-4">
@@ -261,7 +261,7 @@ export default async function EventsPage({ searchParams }: Props) {
                 const isFinished = nowCheck > new Date(eventDateForCheck.setHours(23, 59, 59, 999));
                 
                 return (
-                <div key={event.id} className="p-5 bg-white space-y-4">
+                <div key={event.id} className={`p-5 space-y-4 border-b border-slate-100 ${isFinished ? 'bg-slate-100/70 opacity-70 grayscale-[0.5]' : 'bg-white'}`}>
                   <div className="flex justify-between items-start gap-2">
                     <div>
                       <div className="text-base font-bold text-slate-900 leading-tight">{event.title}</div>
