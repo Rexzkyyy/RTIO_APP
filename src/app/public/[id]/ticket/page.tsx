@@ -40,7 +40,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
 
   return (
     <div 
-      className="min-h-screen flex flex-col relative z-0 pb-32 md:pb-0 transition-colors duration-300"
+      className="min-h-screen flex flex-col relative z-0 pb-12 transition-colors duration-300"
       style={{ backgroundColor: pageBgColor }}
     >
       <InteractiveBackground />
@@ -105,19 +105,13 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
           </div>
         )}
 
-        {/* Desktop Bottom Button */}
-        <div className="hidden md:flex justify-center w-full max-w-2xl no-print pb-12">
-          <Link href="/" className="text-emerald-600 font-medium hover:underline">
-            Kembali ke Beranda
-          </Link>
-        </div>
-
-        {/* Mobile Sticky Bottom Button */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-50 no-print">
+        {/* Bottom Button */}
+        <div className="flex justify-center w-full max-w-2xl no-print pt-2 pb-8">
           <Link 
-            href="/"
-            className="w-full flex justify-center items-center px-6 py-3.5 bg-emerald-500 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md"
+            href="/" 
+            className="inline-flex items-center justify-center px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition-all shadow-sm active:scale-95 text-sm"
           >
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Kembali ke Beranda
           </Link>
         </div>

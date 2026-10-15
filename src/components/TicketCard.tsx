@@ -123,7 +123,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
       {/* Ticket Wrapper */}
       <div 
         ref={ticketRef} 
-        className={`w-full flex flex-col ${forceMobile ? '' : 'md:flex-row'} rounded-[2rem] overflow-hidden relative`}
+        className={`w-full max-w-[1040px] flex flex-col ${forceMobile ? '' : 'md:flex-row'} rounded-[2rem] overflow-hidden relative shadow-2xl`}
         style={{ 
           background: ticketBg,
           boxShadow: ticketShadow,
@@ -145,125 +145,152 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
           </>
         )}
 
-        {/* Left Side: Poster */}
-        <div className={`w-full ${forceMobile ? 'min-h-[360px]' : 'min-h-[360px] md:min-h-[420px] md:h-auto md:w-[32%]'} relative flex-shrink-0 p-3 sm:p-4`}>
-          <div className={`absolute inset-3 sm:inset-4 rounded-xl sm:rounded-2xl overflow-hidden shadow-xl border border-white/20 ${imgOverlay} backdrop-blur-sm`}>
+        {/* Left Side: Poster (100% full view, zero crop) */}
+        <div className={`w-full ${forceMobile ? 'p-4' : 'md:w-[320px] md:min-w-[280px] md:max-w-[340px] p-3 sm:p-4'} flex flex-col items-center justify-center relative flex-shrink-0`}>
+          <div className="w-full max-w-[320px] md:max-w-none aspect-square relative rounded-xl sm:rounded-2xl overflow-hidden shadow-xl border border-white/20 bg-black/20 flex items-center justify-center">
             {(data.event.ticketDesignUrl || data.event.bannerUrl) ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img 
-                src={(data.event.ticketDesignUrl || data.event.bannerUrl) as string} 
-                alt="Desain Tiket" 
-                className="absolute inset-0 w-full h-full object-cover" 
-                style={{ objectPosition: `50% 0%` }}
-              />
+              <>
+                {/* Ambient blur backdrop for seamless aesthetic */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src={(data.event.ticketDesignUrl || data.event.bannerUrl) as string} 
+                  alt="" 
+                  className="absolute inset-0 w-full h-full object-cover blur-md scale-110 opacity-30 pointer-events-none" 
+                />
+                {/* Full, uncropped poster */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src={(data.event.ticketDesignUrl || data.event.bannerUrl) as string} 
+                  alt="Desain Tiket" 
+                  className="relative z-10 w-full h-full object-contain p-0.5 sm:p-1 drop-shadow-md" 
+                />
+              </>
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center opacity-50">
+              <div className="w-full h-full flex items-center justify-center opacity-50">
                 <Globe className="w-12 h-12 text-white" />
               </div>
             )}
           </div>
         </div>
 
-        {/* Physical Ticket Perforation Line & Notches (Desktop Only) */}
+        {/* Physical Ticket Perforation Line & Notches (Desktop Only: Poster | Info) */}
         {!forceMobile && (
           <div className="hidden md:flex flex-col justify-between w-0 relative border-l-[3px] border-dashed border-white/30 z-20">
             {/* Top Notch */}
-            <div className="w-10 h-10 rounded-full absolute -top-5 -left-5 shadow-inner" style={{ backgroundColor: '#f8fafc', boxShadow: 'inset 0 -4px 6px -2px rgba(0,0,0,0.1)' }}></div>
+            <div className="w-8 h-8 rounded-full absolute -top-4 -left-4 shadow-inner" style={{ backgroundColor: '#f8fafc', boxShadow: 'inset 0 -3px 5px -1px rgba(0,0,0,0.1)' }}></div>
             {/* Bottom Notch */}
-            <div className="w-10 h-10 rounded-full absolute -bottom-5 -left-5 shadow-inner" style={{ backgroundColor: '#f8fafc', boxShadow: 'inset 0 4px 6px -2px rgba(0,0,0,0.1)' }}></div>
+            <div className="w-8 h-8 rounded-full absolute -bottom-4 -left-4 shadow-inner" style={{ backgroundColor: '#f8fafc', boxShadow: 'inset 0 3px 5px -1px rgba(0,0,0,0.1)' }}></div>
           </div>
         )}
 
         {/* Right Side: Details & Barcode (Authentic Boarding Pass Layout) */}
-        <div className={`w-full ${forceMobile ? '' : 'md:w-[68%]'} flex flex-col md:flex-row relative z-10 overflow-hidden`}>
+        <div className={`w-full ${forceMobile ? '' : 'md:flex-1'} flex flex-col md:flex-row relative z-10 overflow-hidden`}>
           
           {/* MAIN TICKET INFO */}
-          <div className="flex-1 flex flex-col p-4 sm:p-8 relative z-10">
+          <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-7 relative z-10 justify-between">
             
             {/* Top Bar */}
-            <div className="flex flex-col sm:flex-row items-start justify-between mb-4 sm:mb-6 pb-2 gap-2 sm:gap-0">
+            <div className="flex flex-col sm:flex-row items-start justify-between mb-3 sm:mb-4 pb-1 gap-2 sm:gap-0">
               <h2 
-                className="text-xl sm:text-4xl font-black uppercase tracking-tight leading-[1.1] drop-shadow-md pr-0 sm:pr-4"
+                className="text-lg sm:text-2xl lg:text-3xl font-black uppercase tracking-tight leading-[1.15] drop-shadow-md pr-0 sm:pr-4 line-clamp-2"
                 title={data.event.title}
               >
                 {data.event.title}
               </h2>
-              <div className={`inline-flex px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl ${getCategoryBadgeClass(data.ticketCategoryName)} shadow-md text-[9px] sm:text-xs font-black tracking-widest uppercase flex-shrink-0 border border-white/20`}>
+              <div className={`inline-flex px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl ${getCategoryBadgeClass(data.ticketCategoryName)} shadow-md text-[9px] sm:text-xs font-black tracking-widest uppercase flex-shrink-0 border border-white/20`}>
                 {data.ticketCategoryName}
               </div>
             </div>
 
             {/* Glassmorphism Grid */}
-            <div className="rounded-xl sm:rounded-2xl overflow-hidden flex flex-col mt-auto bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
+            <div className="rounded-xl sm:rounded-2xl overflow-hidden flex flex-col bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
               
               {/* Row 1: Name & Category */}
               <div className="grid grid-cols-3 border-b border-white/20">
-                <div className="p-3 sm:p-4 border-r border-white/20 col-span-2">
-                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5 sm:mb-1`}>Nama Peserta</span>
-                  <span className="text-base sm:text-lg font-black uppercase truncate block drop-shadow-sm">{data.transaction.buyerName}</span>
+                <div className="p-2.5 sm:p-3.5 border-r border-white/20 col-span-2">
+                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5`}>Nama Peserta</span>
+                  <span className="text-sm sm:text-base lg:text-lg font-black uppercase truncate block drop-shadow-sm">{data.transaction.buyerName}</span>
                 </div>
-                <div className="p-3 sm:p-4 bg-white/5">
-                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5 sm:mb-1`}>Jml Tiket</span>
-                  <span className="text-base sm:text-lg font-bold uppercase">{data.transaction.totalTickets} Tiket</span>
+                <div className="p-2.5 sm:p-3.5 bg-white/5">
+                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5`}>Jml Tiket</span>
+                  <span className="text-sm sm:text-base lg:text-lg font-bold uppercase">{data.transaction.totalTickets} Tiket</span>
                 </div>
               </div>
               
               {/* Row 2: Date, Time, Location */}
               <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-white/20">
-                <div className="p-3 sm:p-4 border-r border-white/20 col-span-1">
-                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5 sm:mb-1`}>Tanggal</span>
-                  <span className="text-xs sm:text-sm font-bold">
+                <div className="p-2.5 sm:p-3.5 border-r border-white/20 col-span-1">
+                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5`}>Tanggal</span>
+                  <span className="text-xs sm:text-sm font-bold block">
                     {new Date(data.event.eventDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </span>
                 </div>
-                <div className="p-3 sm:p-4 border-r border-white/20 col-span-1 bg-white/5">
-                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5 sm:mb-1`}>Waktu</span>
-                  <span className="text-xs sm:text-sm font-black text-amber-300 drop-shadow-sm">
+                <div className="p-2.5 sm:p-3.5 border-r border-white/20 col-span-1 bg-white/5">
+                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5`}>Waktu</span>
+                  <span className="text-xs sm:text-sm font-black text-amber-300 drop-shadow-sm block">
                     {new Date(data.event.eventDate).toLocaleTimeString('id-ID', { timeZone: 'Asia/Makassar', hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <div className="p-3 sm:p-4 col-span-2 border-t sm:border-t-0 border-white/20">
-                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5 sm:mb-1`}>Lokasi</span>
+                <div className="p-2.5 sm:p-3.5 col-span-2 border-t sm:border-t-0 border-white/20">
+                  <span className={`text-[9px] sm:text-[10px] font-bold ${textMuted} uppercase tracking-widest block mb-0.5`}>Lokasi</span>
                   <span className="text-xs sm:text-sm font-bold truncate block">{data.event.location}</span>
                 </div>
               </div>
               
               {/* Row 3: Artists / Sponsors */}
-              <div className="p-3 sm:p-4 text-[10px] sm:text-xs bg-black/10 flex flex-col gap-1 sm:gap-2">
-                {data.event.artists.length > 0 && (
-                  <div>
-                    <span className={`font-bold ${subtextHighlight} uppercase tracking-wider mr-1.5`}>Penampil:</span>
-                    <span className="font-medium opacity-90">{data.event.artists.join(', ')}</span>
-                  </div>
-                )}
-                {data.event.sponsors.length > 0 && (
-                  <div>
-                    <span className={`font-bold ${subtextHighlight} uppercase tracking-wider mr-1.5`}>Didukung:</span>
-                    <span className="font-medium opacity-90">{data.event.sponsors.join(' • ')}</span>
-                  </div>
-                )}
-              </div>
+              {(data.event.artists.length > 0 || data.event.sponsors.length > 0) && (
+                <div className="p-2.5 sm:p-3 text-[10px] sm:text-xs bg-black/10 flex flex-col gap-1">
+                  {data.event.artists.length > 0 && (
+                    <div className="truncate">
+                      <span className={`font-bold ${subtextHighlight} uppercase tracking-wider mr-1.5`}>Penampil:</span>
+                      <span className="font-medium opacity-90">{data.event.artists.join(', ')}</span>
+                    </div>
+                  )}
+                  {data.event.sponsors.length > 0 && (
+                    <div className="truncate">
+                      <span className={`font-bold ${subtextHighlight} uppercase tracking-wider mr-1.5`}>Didukung:</span>
+                      <span className="font-medium opacity-90">{data.event.sponsors.join(' • ')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
             </div>
           </div>
 
+          {/* Physical Ticket Perforation Line & Notches (Desktop Only: Info | QR Stub) */}
+          {!forceMobile && (
+            <div className="hidden md:flex flex-col justify-between w-0 relative border-l-[3px] border-dashed border-white/30 z-20">
+              {/* Top Notch */}
+              <div className="w-8 h-8 rounded-full absolute -top-4 -left-4 shadow-inner" style={{ backgroundColor: '#f8fafc', boxShadow: 'inset 0 -3px 5px -1px rgba(0,0,0,0.1)' }}></div>
+              {/* Bottom Notch */}
+              <div className="w-8 h-8 rounded-full absolute -bottom-4 -left-4 shadow-inner" style={{ backgroundColor: '#f8fafc', boxShadow: 'inset 0 3px 5px -1px rgba(0,0,0,0.1)' }}></div>
+            </div>
+          )}
+
+          {/* Mobile Notches on Tear-off line */}
+          <div className="md:hidden flex justify-between w-full relative z-20 h-0 pointer-events-none">
+            <div className="w-7 h-7 rounded-full absolute -top-3.5 -left-3.5 shadow-inner" style={{ backgroundColor: '#f8fafc', boxShadow: 'inset -3px 0 5px -1px rgba(0,0,0,0.1)' }}></div>
+            <div className="w-7 h-7 rounded-full absolute -top-3.5 -right-3.5 shadow-inner" style={{ backgroundColor: '#f8fafc', boxShadow: 'inset 3px 0 5px -1px rgba(0,0,0,0.1)' }}></div>
+          </div>
+
           {/* RIGHT STUB (Tear-off Barcode Section) */}
-          <div className="w-full md:w-[240px] border-t-[3px] md:border-t-0 md:border-l-[3px] border-dashed border-white/30 flex flex-col p-4 sm:p-6 bg-white relative z-10 flex-shrink-0 text-slate-900 rounded-b-[2rem] md:rounded-bl-none md:rounded-r-[2rem]">
+          <div className={`w-full ${forceMobile ? '' : 'md:w-[220px] lg:w-[240px]'} border-t-[3px] md:border-t-0 border-dashed border-white/30 flex flex-col p-4 sm:p-5 bg-white relative z-10 flex-shrink-0 text-slate-900 rounded-b-[2rem] md:rounded-bl-none md:rounded-r-[2rem] justify-between`}>
             
             {/* Stub Header */}
-            <div className={`w-full py-2 sm:py-2.5 mb-4 sm:mb-6 rounded-lg sm:rounded-xl ${stubHeader} text-white text-center shadow-md`}>
+            <div className={`w-full py-1.5 sm:py-2 mb-3 sm:mb-4 rounded-lg sm:rounded-xl ${stubHeader} text-white text-center shadow-md`}>
               <span className="text-[10px] sm:text-[11px] font-black tracking-[0.25em] uppercase">Entry Pass</span>
             </div>
             
             <div className="flex-1 flex flex-col justify-center items-center">
-              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2 sm:mb-4 block text-center">
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-1.5 sm:mb-2 block text-center">
                 Pindai Disini
               </span>
               <div className="overflow-hidden flex justify-center w-full bg-white p-2 border border-slate-200 rounded-xl shadow-sm">
                 <QRCode 
                   value={data.barcodeString}
-                  size={180}
-                  className="w-full max-w-[200px] h-auto sm:max-w-[160px]"
+                  size={160}
+                  className="w-full max-w-[145px] sm:max-w-[155px] h-auto"
                   bgColor="#ffffff"
                   fgColor="#0f172a"
                   level="Q"
@@ -271,9 +298,9 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               </div>
             </div>
 
-            <div className="mt-4 sm:mt-6 pt-3 sm:pt-5 border-t border-slate-200 text-center">
-              <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase block tracking-wider mb-1.5 sm:mb-2">Kategori</span>
-              <div className={`inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-md sm:rounded-lg ${getCategoryBadgeClass(data.ticketCategoryName)} shadow-sm text-[10px] sm:text-xs font-black tracking-widest uppercase border border-slate-100`}>
+            <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-200 text-center">
+              <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase block tracking-wider mb-1">Kategori</span>
+              <div className={`inline-block px-3 py-1 rounded-md sm:rounded-lg ${getCategoryBadgeClass(data.ticketCategoryName)} shadow-sm text-[9px] sm:text-xs font-black tracking-widest uppercase border border-slate-100`}>
                 {data.ticketCategoryName}
               </div>
             </div>
@@ -283,7 +310,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
 
       {/* Download Buttons */}
       {!isPreview && (
-        <div className="flex flex-col sm:flex-row gap-4 w-full px-4 sm:px-0 mt-4 no-print">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-[1040px] px-2 sm:px-0 mt-2 no-print">
           <button 
             onClick={() => {
               const text = `Halo! Ini adalah E-Ticket saya untuk acara *${data.event.title}*.
