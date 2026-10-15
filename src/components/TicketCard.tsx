@@ -88,22 +88,35 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
     return 'bg-pink-100 text-pink-800 shadow-pink-100/20';
   };
 
-  const isKajian = data.event.title.toLowerCase().includes('mamah dedeh') || data.event.title.toLowerCase().includes('kajian');
+  // Model Desain Tiket:
+  // 1. Biru khusus untuk Kajian Mamah Dedeh (atau jika dipilih model 'blue' di ticketConfig)
+  // 2. Pink sebagai DEFAULT untuk SEMUA event lainnya (termasuk event kajian lain & konser)
+  const explicitModel = data.event.ticketConfig?.ticketModel || data.event.ticketConfig?.theme || data.event.ticketConfig?.themeName;
+
+  const isMamahDedeh = explicitModel === 'blue'
+    ? true
+    : explicitModel === 'pink'
+      ? false
+      : (
+          data.event.title.toLowerCase().includes('mamah dedeh') || 
+          data.event.title.toLowerCase().includes('mama dedeh')
+        );
 
   // Custom Variables for Background & Styling
-  const ticketBg = isKajian 
-    ? 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)' // Bright Blue to Deep Blue
-    : 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)'; // Pink
+  const ticketBg = isMamahDedeh 
+    ? 'linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%)' // Bright Blue to Deep Blue (Khusus Mamah Dedeh)
+    : 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)'; // Pink (Default untuk semua event)
     
-  const ticketShadow = isKajian
+  const ticketShadow = isMamahDedeh
     ? '0 20px 50px rgba(37,99,235,0.3)'
     : '0 20px 50px rgba(236,72,153,0.3)';
 
-  const blob1 = isKajian ? 'bg-pink-400/30' : 'bg-amber-400/20'; // Pink blobs for blue theme
-  const blob2 = isKajian ? 'bg-fuchsia-400/30' : 'bg-rose-400/30';
-  const imgOverlay = isKajian ? 'bg-blue-900/50' : 'bg-pink-900/50';
-  const textMuted = isKajian ? 'text-blue-200' : 'text-pink-200';
-  const stubHeader = isKajian ? 'bg-pink-500' : 'bg-pink-600';
+  const blob1 = isMamahDedeh ? 'bg-pink-400/30' : 'bg-amber-400/20'; // Pink blobs for blue theme
+  const blob2 = isMamahDedeh ? 'bg-fuchsia-400/30' : 'bg-rose-400/30';
+  const imgOverlay = isMamahDedeh ? 'bg-blue-900/50' : 'bg-pink-900/50';
+  const textMuted = isMamahDedeh ? 'text-blue-200' : 'text-pink-200';
+  const stubHeader = isMamahDedeh ? 'bg-pink-500' : 'bg-pink-600';
+  const subtextHighlight = isMamahDedeh ? 'text-blue-300' : 'text-pink-300';
 
   return (
     <div className="w-full flex flex-col items-center gap-6 font-sans">
@@ -120,7 +133,7 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
         {/* Decorative background blobs (Seni Memahami Cinta aesthetic) */}
         <div className={`absolute top-0 right-0 w-72 h-72 ${blob1} rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none`}></div>
         <div className={`absolute bottom-0 left-1/4 w-56 h-56 ${blob2} rounded-full blur-2xl translate-y-1/3 pointer-events-none`}></div>
-        {isKajian ? (
+        {isMamahDedeh ? (
           <>
             <Flower2 className="absolute top-[35%] md:top-12 -right-10 md:left-1/2 md:right-auto w-48 h-48 md:w-32 md:h-32 text-white/15 md:text-white/10 -rotate-12 pointer-events-none" />
             <Sparkles className="absolute bottom-[25%] md:bottom-12 -left-8 md:left-auto md:right-[250px] w-32 h-32 md:w-24 md:h-24 text-white/15 md:text-white/10 rotate-12 pointer-events-none" />
@@ -219,13 +232,13 @@ export default function TicketCard({ data, isPreview = false, forceMobile = fals
               <div className="p-3 sm:p-4 text-[10px] sm:text-xs bg-black/10 flex flex-col gap-1 sm:gap-2">
                 {data.event.artists.length > 0 && (
                   <div>
-                    <span className="font-bold text-pink-300 uppercase tracking-wider mr-1.5">Penampil:</span>
+                    <span className={`font-bold ${subtextHighlight} uppercase tracking-wider mr-1.5`}>Penampil:</span>
                     <span className="font-medium opacity-90">{data.event.artists.join(', ')}</span>
                   </div>
                 )}
                 {data.event.sponsors.length > 0 && (
                   <div>
-                    <span className="font-bold text-pink-300 uppercase tracking-wider mr-1.5">Didukung:</span>
+                    <span className={`font-bold ${subtextHighlight} uppercase tracking-wider mr-1.5`}>Didukung:</span>
                     <span className="font-medium opacity-90">{data.event.sponsors.join(' • ')}</span>
                   </div>
                 )}

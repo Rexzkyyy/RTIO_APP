@@ -77,7 +77,8 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
                 ticketDesignUrl: transaction.event.ticketDesignUrl,
                 description: transaction.event.description,
                 artists: transaction.event.artists,
-                sponsors: transaction.event.sponsors
+                sponsors: transaction.event.sponsors,
+                ticketConfig: config
               },
               ticketCategoryName: transaction.tickets[0]?.ticketCategory.name || 'Umum'
             }}

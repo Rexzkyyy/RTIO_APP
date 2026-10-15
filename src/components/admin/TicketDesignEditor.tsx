@@ -31,6 +31,7 @@ const MOCK_TRANSACTION = {
 
 export default function TicketDesignEditor({ event }: { event: EventWithConfig }) {
   const defaultConfig = event.ticketConfig || {
+    ticketModel: 'auto',
     primaryColor: '#10b981', // emerald-500
     accentColor: '#34d399',  // emerald-400
     bgColor: '#ffffff',
@@ -58,6 +59,7 @@ export default function TicketDesignEditor({ event }: { event: EventWithConfig }
 
   const handleReset = () => {
     setConfig({
+      ticketModel: 'auto',
       primaryColor: '#10b981',
       accentColor: '#34d399',
       bgColor: '#ffffff',
@@ -121,6 +123,24 @@ export default function TicketDesignEditor({ event }: { event: EventWithConfig }
         </div>
 
         <div className="space-y-5">
+          {/* Model Desain Tiket */}
+          <div className="p-3.5 bg-pink-50/60 rounded-xl border border-pink-200">
+            <label className="block text-sm font-bold text-slate-800 mb-1">Model Desain Tiket</label>
+            <select 
+              name="ticketModel" 
+              value={config.ticketModel || 'auto'} 
+              onChange={(e: any) => setConfig((prev: any) => ({ ...prev, ticketModel: e.target.value }))}
+              className="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-2 focus:ring-pink-500 outline-none text-sm"
+            >
+              <option value="auto">Otomatis (Default Pink / Biru untuk Mamah Dedeh)</option>
+              <option value="pink">Model 1: Pink (Default / Standar)</option>
+              <option value="blue">Model 2: Biru (Khusus Kajian Mamah Dedeh)</option>
+            </select>
+            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+              Default adalah <strong>Warna Pink</strong> untuk semua event. Warna <strong>Biru</strong> khusus untuk Kajian Mamah Dedeh. Anda juga bisa mengatur model warna event ini secara spesifik.
+            </p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Warna Latar Halaman (Page Bg)</label>
             <div className="flex items-center gap-3">
