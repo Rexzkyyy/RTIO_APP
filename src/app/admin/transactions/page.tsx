@@ -442,13 +442,23 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y-2 divide-slate-200">
-                {transactions.map((tx, index) => (
-                  <tr key={tx.id} className="hover:bg-bg-slate-50/50 transition-colors">
+                {transactions.map((tx, index) => {
+                  const isOffline = tx.senderAccountName?.startsWith('OFFLINE') || tx.paymentProofUrl === 'OFFLINE';
+                  const pjName = isOffline ? (tx.senderAccountName?.replace(/^OFFLINE:?\s*/i, '').trim() || 'Panitia') : null;
+                  return (
+                  <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 align-top text-sm font-bold text-slate-400">
                       {skip + index + 1}
                     </td>
                     <td className="px-6 py-4 align-top">
-                      <div className="font-bold text-slate-900 text-base">{tx.buyerName}</div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-slate-900 text-base">{tx.buyerName}</span>
+                        {isOffline && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-700 border border-purple-200">
+                            🏷️ Tiket Offline
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-slate-500 mb-2">{tx.buyerEmail}</div>
                       
                       {/* Info Tambahan */}
@@ -547,57 +557,70 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                       </div>
                     </td>
                     <td className="px-6 py-4 align-top">
-                      <div className="flex flex-col gap-2">
-                        {tx.paymentProofUrl ? (
-                          <div className="flex items-center gap-1">
+                      {isOffline ? (
+                        <div className="flex flex-col gap-1.5">
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-xs font-bold shadow-xs w-max">
+                            <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                            Pembayaran Tunai (Offline)
+                          </div>
+                          <div className="text-xs text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200 w-max min-w-[130px]">
+                            <span className="block text-[9px] uppercase font-extrabold text-slate-400 tracking-wider">PJ Penerima</span>
+                            <span className="font-bold text-slate-700">{pjName}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {tx.paymentProofUrl ? (
+                            <div className="flex items-center gap-1">
+                              <a 
+                                href={tx.paymentProofUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-sm font-bold bg-white border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 px-4 py-2 rounded-xl transition-all shadow-sm w-max"
+                              >
+                                <ImageIcon className="w-4 h-4 mr-2" />
+                                Bukti #1
+                              </a>
+                              <EditImageButton 
+                                transactionId={tx.id} 
+                                existingProofUrl={tx.paymentProofUrl}
+                                editImageAction={updatePaymentProof}
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm font-medium text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 inline-block w-max">Belum ada</span>
+                              <EditImageButton 
+                                transactionId={tx.id} 
+                                existingProofUrl={null}
+                                editImageAction={updatePaymentProof}
+                              />
+                            </div>
+                          )}
+                          
+                          {tx.paymentProofUrl2 && (
                             <a 
-                              href={tx.paymentProofUrl} 
+                              href={tx.paymentProofUrl2} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="inline-flex items-center text-sm font-bold bg-white border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 px-4 py-2 rounded-xl transition-all shadow-sm w-max"
+                              className="inline-flex items-center text-sm font-bold bg-white border-2 border-violet-100 text-violet-600 hover:bg-violet-50 hover:border-violet-200 px-4 py-2 rounded-xl transition-all shadow-sm w-max"
                             >
                               <ImageIcon className="w-4 h-4 mr-2" />
-                              Bukti #1
+                              Bukti #2 (Upgrade)
                             </a>
-                            <EditImageButton 
-                              transactionId={tx.id} 
-                              existingProofUrl={tx.paymentProofUrl}
-                              editImageAction={updatePaymentProof}
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm font-medium text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 inline-block w-max">Belum ada</span>
-                            <EditImageButton 
-                              transactionId={tx.id} 
-                              existingProofUrl={null}
-                              editImageAction={updatePaymentProof}
-                            />
-                          </div>
-                        )}
-                        
-                        {tx.paymentProofUrl2 && (
-                          <a 
-                            href={tx.paymentProofUrl2} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center text-sm font-bold bg-white border-2 border-violet-100 text-violet-600 hover:bg-violet-50 hover:border-violet-200 px-4 py-2 rounded-xl transition-all shadow-sm w-max"
-                          >
-                            <ImageIcon className="w-4 h-4 mr-2" />
-                            Bukti #2 (Upgrade)
-                          </a>
-                        )}
-                        
-                        {tx.senderAccountName && (
-                          <div className="text-xs text-slate-600 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200 shadow-sm w-max min-w-[120px] flex items-start gap-2">
-                            <Receipt className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                            <div>
-                              <span className="block text-[9px] uppercase font-extrabold text-slate-400 tracking-wider mb-0.5">Rekening Pengirim</span>
-                              <span className="font-bold text-slate-700">{tx.senderAccountName}</span>
+                          )}
+                          
+                          {tx.senderAccountName && (
+                            <div className="text-xs text-slate-600 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200 shadow-sm w-max min-w-[120px] flex items-start gap-2">
+                              <Receipt className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                              <div>
+                                <span className="block text-[9px] uppercase font-extrabold text-slate-400 tracking-wider mb-0.5">Rekening Pengirim</span>
+                                <span className="font-bold text-slate-700">{tx.senderAccountName}</span>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 align-top text-right">
                       <div className="flex flex-col gap-2 items-end">
@@ -709,20 +732,30 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                       </div>
                     </td>
                   </tr>
-                ))}
+                ); })}
               </tbody>
             </table>
           </div>
 
           {/* Mobile Card View */}
           <div className="md:hidden space-y-4">
-            {transactions.map((tx, index) => (
+            {transactions.map((tx, index) => {
+              const isOffline = tx.senderAccountName?.startsWith('OFFLINE') || tx.paymentProofUrl === 'OFFLINE';
+              const pjName = isOffline ? (tx.senderAccountName?.replace(/^OFFLINE:?\s*/i, '').trim() || 'Panitia') : null;
+              return (
               <div key={tx.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
                 <div className="p-4 border-b border-slate-100 flex justify-between items-start gap-3">
                   <div className="flex gap-3">
                     <span className="text-slate-400 font-bold text-sm shrink-0">#{skip + index + 1}</span>
                     <div>
-                      <h3 className="font-bold text-slate-900 text-base">{tx.buyerName}</h3>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h3 className="font-bold text-slate-900 text-base">{tx.buyerName}</h3>
+                        {isOffline && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-700 border border-purple-200">
+                            🏷️ Offline
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-slate-500">{tx.buyerEmail}</p>
                       <div className="mt-2 text-lg font-black text-slate-800">Rp {tx.totalPrice.toLocaleString('id-ID')}</div>
                       <div className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded inline-block mt-1">
@@ -731,7 +764,11 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    {tx.paymentProofUrl ? (
+                    {isOffline ? (
+                      <span className="px-2.5 py-1 bg-purple-50 text-purple-700 font-bold text-xs rounded-lg border border-purple-200">
+                        Tunai
+                      </span>
+                    ) : tx.paymentProofUrl ? (
                       <div className="flex items-center gap-1">
                         <a href={tx.paymentProofUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 shadow-sm border border-indigo-100" title="Bukti TF #1">
                           <ImageIcon className="w-5 h-5" />
@@ -760,7 +797,12 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                 </div>
 
                 <div className="p-4 bg-slate-50/50 flex flex-col gap-3">
-                  {tx.senderAccountName && (
+                  {isOffline ? (
+                    <div className="text-xs text-slate-600 bg-purple-50/60 p-2.5 rounded-xl border border-purple-200/60 shadow-xs flex items-center justify-between">
+                      <span className="text-[10px] uppercase font-extrabold text-purple-700 tracking-wider">Tiket Offline Tunai</span>
+                      <span className="font-bold text-slate-800">PJ: {pjName}</span>
+                    </div>
+                  ) : tx.senderAccountName && (
                     <div className="text-xs text-slate-600 bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
                         <Receipt className="w-4 h-4 text-emerald-600" />
@@ -957,7 +999,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                   )}
                 </div>
               </div>
-            ))}
+            ); })}
           </div>
         </>
       )}
