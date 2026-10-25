@@ -61,13 +61,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Cek apakah Admin/Validator punya akses ke Event tiket ini
-    // @ts-ignore
-    if (session.user.role === "VALIDATOR") {
+    const sessionUser = session?.user as { id?: string; adminRole?: string; adminId?: string } | undefined;
+    const role = sessionUser?.adminRole ?? (bypassCookie === "VALIDATOR" ? "VALIDATOR" : "SUPER_ADMIN");
+    const adminId = sessionUser?.adminId ?? sessionUser?.id;
+
+    if (role === "VALIDATOR" && adminId) {
       const hasAccess = await prisma.adminEventAccess.findUnique({
         where: {
           adminId_eventId: {
-            // @ts-ignore
-            adminId: session.user.id,
+            adminId,
             eventId: ticket.transaction.eventId
           }
         }
@@ -104,7 +106,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         success: false,
-        status: "ALREADY_SCANNED",
+        status: "ALREADY_CHECKED_IN",
         message: `Kuota habis! Semua tiket (${totalTickets}/${totalTickets}) sudah digunakan (Terakhir pada ${formattedDate}).`,
         ticket: {
           holderName: ticket.holderName || ticket.transaction.buyerName,

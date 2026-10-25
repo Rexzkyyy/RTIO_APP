@@ -26,8 +26,8 @@ export default async function ScannerPage() {
     redirect("/login");
   }
 
-  // @ts-ignore
-  const adminRole = (session?.user?.adminRole ?? (bypassRole === "VALIDATOR" ? "VALIDATOR" : "SUPER_ADMIN")) as string;
+  const user = session?.user as { adminRole?: string } | undefined;
+  const adminRole = user?.adminRole ?? (bypassRole === "VALIDATOR" ? "VALIDATOR" : "SUPER_ADMIN");
 
   return (
     <div className="-m-4 md:-m-8 min-h-[calc(100%+2rem)] md:min-h-[calc(100%+4rem)]">

@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { writeFile, mkdir } from "fs/promises";
@@ -24,7 +25,7 @@ export async function updateTicketConfigAction(eventId: string, formData: FormDa
       ticketDesignUrl = `/uploads/${filename}`;
     }
 
-    const updateData: any = { ticketConfig };
+    const updateData: { ticketConfig: Prisma.InputJsonValue; ticketDesignUrl?: string } = { ticketConfig };
     if (ticketDesignUrl) {
       updateData.ticketDesignUrl = ticketDesignUrl;
     }

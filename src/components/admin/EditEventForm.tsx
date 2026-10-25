@@ -530,7 +530,7 @@ export function EditEventForm({ event }: { event: any }) {
                         value={ticket.quota}
                         onChange={(e) => handleTicketChange(ticket.id, 'quota', e.target.value)}
                         required
-                        min="1"
+                        min="0"
                         className="w-full pl-8 px-3 py-2 rounded-md border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
                       />
                     </div>

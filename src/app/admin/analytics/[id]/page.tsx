@@ -25,6 +25,36 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
 
   const totalRevenue = approvedTx.reduce((sum, tx) => sum + tx.totalPrice, 0);
   const totalTicketsSold = approvedTx.reduce((sum, tx) => sum + tx.totalTickets, 0);
+
+  // Split Online vs Offline
+  const offlineTx = approvedTx.filter(t => t.paymentProofUrl === "OFFLINE");
+  const onlineTx = approvedTx.filter(t => t.paymentProofUrl !== "OFFLINE");
+
+  const offlineRevenue = offlineTx.reduce((sum, tx) => sum + tx.totalPrice, 0);
+  const offlineTicketsSold = offlineTx.reduce((sum, tx) => sum + tx.totalTickets, 0);
+
+  const onlineRevenue = onlineTx.reduce((sum, tx) => sum + tx.totalPrice, 0);
+  const onlineTicketsSold = onlineTx.reduce((sum, tx) => sum + tx.totalTickets, 0);
+
+  // Group by Panitia / PJ
+  const pjMap = new Map<string, { pjName: string; tickets: number; revenue: number }>();
+  offlineTx.forEach(tx => {
+    let pj = "Panitia";
+    if (tx.senderAccountName && tx.senderAccountName.startsWith("OFFLINE: ")) {
+      pj = tx.senderAccountName.replace("OFFLINE: ", "").trim();
+    } else if (tx.buyerAddress && tx.buyerAddress.includes("PJ: ")) {
+      const match = tx.buyerAddress.match(/PJ:\s*([^|)]+)/);
+      if (match) pj = match[1].trim();
+    }
+
+    if (!pjMap.has(pj)) {
+      pjMap.set(pj, { pjName: pj, tickets: 0, revenue: 0 });
+    }
+    const cur = pjMap.get(pj)!;
+    cur.tickets += tx.totalTickets;
+    cur.revenue += tx.totalPrice;
+  });
+  const offlineByPj = Array.from(pjMap.values()).sort((a, b) => b.revenue - a.revenue);
   
   const conversionRate = event.transactions.length > 0 
     ? Math.round((approvedTx.length / event.transactions.length) * 100) 
@@ -73,6 +103,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
       terjualNormal: 0,
       sisaPromo: activePromoQuota,
       sisaNormal: cat.quota - activePromoQuota,
+      revenue: 0,
     });
   });
 
@@ -122,14 +153,14 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
         ? ticket.transaction.totalPrice / ticket.transaction.totalTickets 
         : 0;
       
+      catData.revenue = (catData.revenue || 0) + activePrice;
+
       if (ticket.ticketCategory.hasDiscount && ticket.ticketCategory.discountPrice !== null && activePrice === ticket.ticketCategory.discountPrice) {
         catData.terjualPromo += 1;
         totalPromo += 1;
-        catData.revenue += ticket.ticketCategory.discountPrice;
       } else {
         catData.terjualNormal += 1;
         totalNormal += 1;
-        catData.revenue += ticket.ticketCategory.price;
       }
     }
     
@@ -179,8 +210,9 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
     { name: 'Harga Normal', value: totalNormal, color: '#3b82f6' }, // blue-500
   ].filter(p => p.value > 0);
 
-  // Recent Transactions (5 Latest Approved)
+  // Recent 5 general transactions
   const recentTransactions = approvedTx
+    .slice()
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0, 5)
     .map(tx => ({
@@ -189,12 +221,71 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
       buyerEmail: tx.buyerEmail,
       totalTickets: tx.totalTickets,
       totalPrice: tx.totalPrice,
-      updatedAt: tx.createdAt.toISOString(), // Fallback to createdAt
+      createdAt: tx.createdAt.toISOString(),
     }));
+
+  // Offline tickets list
+  const offlineTicketsList = tickets
+    .filter(t => t.transaction.paymentProofUrl === "OFFLINE")
+    .sort((a, b) => b.transaction.createdAt.getTime() - a.transaction.createdAt.getTime());
+
+  // Offline per category
+  const offlineCategoryMap = new Map<string, { name: string; tickets: number; revenue: number }>();
+  offlineTicketsList.forEach(t => {
+    const catName = t.ticketCategory?.name || "Kategori";
+    if (!offlineCategoryMap.has(catName)) {
+      offlineCategoryMap.set(catName, { name: catName, tickets: 0, revenue: 0 });
+    }
+    const cur = offlineCategoryMap.get(catName)!;
+    const pricePerTicket = t.transaction.totalTickets > 0
+      ? Math.round(t.transaction.totalPrice / t.transaction.totalTickets)
+      : 0;
+    cur.tickets += 1;
+    cur.revenue += pricePerTicket;
+  });
+  const offlineByCategory = Array.from(offlineCategoryMap.values()).sort((a, b) => b.tickets - a.tickets);
+
+  // Recent 5 offline tickets
+  const recentOfflineTickets = offlineTicketsList.slice(0, 5).map(t => {
+    let pj = "Panitia";
+    if (t.transaction.senderAccountName && t.transaction.senderAccountName.startsWith("OFFLINE: ")) {
+      pj = t.transaction.senderAccountName.replace("OFFLINE: ", "").trim();
+    } else if (t.transaction.buyerAddress && t.transaction.buyerAddress.includes("PJ: ")) {
+      const match = t.transaction.buyerAddress.match(/PJ:\s*([^|)]+)/);
+      if (match) pj = match[1].trim();
+    }
+    const pricePerTicket = t.transaction.totalTickets > 0
+      ? Math.round(t.transaction.totalPrice / t.transaction.totalTickets)
+      : 0;
+    return {
+      id: t.id,
+      ticketNumber: t.barcodeString,
+      buyerName: t.holderName || t.transaction.buyerName,
+      buyerPhone: t.holderPhone || t.transaction.buyerPhone,
+      categoryName: t.ticketCategory?.name || "-",
+      price: pricePerTicket,
+      pjName: pj,
+      isValidated: t.isValidated,
+      createdAt: t.transaction.createdAt.toISOString(),
+    };
+  });
+
+  const channelData = [
+    { name: 'Online', value: onlineTicketsSold, revenue: onlineRevenue, color: '#3b82f6' },
+    { name: 'Offline (Loket)', value: offlineTicketsSold, revenue: offlineRevenue, color: '#10b981' },
+  ].filter(c => c.value > 0);
+
+  const totalCapacity = event.ticketCategories.reduce((sum, c) => {
+    const sold = ticketsMap.get(c.id)?.terjual || 0;
+    const initial = c.initialQuota != null ? c.initialQuota : (c.quota + sold);
+    return sum + initial;
+  }, 0);
 
   const analyticsData = {
     totalRevenue,
     totalTicketsSold,
+    totalCapacity,
+    totalCheckedIn: checkedIn,
     totalTransactions: approvedTx.length,
     conversionRate,
     transactionStatus,
@@ -213,6 +304,18 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
       { name: 'Laki-laki', value: maleCount, color: '#3b82f6' }, // blue-500
       { name: 'Perempuan', value: femaleCount, color: '#ec4899' }, // pink-500
     ].filter(g => g.value > 0),
+    channelData,
+    offlineData: {
+      offlineRevenue,
+      offlineTicketsSold,
+      offlineTransactionsCount: offlineTx.length,
+      onlineRevenue,
+      onlineTicketsSold,
+      onlineTransactionsCount: onlineTx.length,
+      offlineByPj,
+      offlineByCategory,
+      recentOfflineTickets,
+    },
   };
 
   // Kita tidak perlu mengirim object rumit dari Prisma, jadi serialize seperlunya
@@ -220,6 +323,8 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
     id: event.id,
     title: event.title,
     slug: event.slug,
+    bannerUrl: event.bannerUrl,
+    location: event.location,
     eventDate: event.eventDate.toISOString(),
   };
 

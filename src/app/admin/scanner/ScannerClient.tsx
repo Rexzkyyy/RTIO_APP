@@ -54,7 +54,12 @@ export function ScannerClient({ adminRole }: { adminRole?: string }) {
   const animFrameRef = useRef<number>(0);
   const lastScanRef = useRef<string>("");
   const cooldownRef = useRef<boolean>(false);
-  const readerRef = useRef<any>(null);
+  const readerRef = useRef<import("@zxing/browser").BrowserQRCodeReader | null>(null);
+  const zxingLibRef = useRef<{
+    HTMLCanvasElementLuminanceSource: typeof import("@zxing/library").HTMLCanvasElementLuminanceSource;
+    BinaryBitmap: typeof import("@zxing/library").BinaryBitmap;
+    HybridBinarizer: typeof import("@zxing/library").HybridBinarizer;
+  } | null>(null);
 
   const [isActive, setIsActive] = useState(false);
   const [isFlashOn, setIsFlashOn] = useState(false);
@@ -67,70 +72,26 @@ export function ScannerClient({ adminRole }: { adminRole?: string }) {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [fps, setFps] = useState<number>(0);
-  const fpsCounterRef = useRef({ frames: 0, lastTime: Date.now() });
+  const fpsCounterRef = useRef({ frames: 0, lastTime: 0 });
 
   // ─── Init ZXing ────────────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
-    import("@zxing/browser").then(({ BrowserQRCodeReader }) => {
-      if (isMounted) readerRef.current = new BrowserQRCodeReader();
+    Promise.all([
+      import("@zxing/browser"),
+      import("@zxing/library"),
+    ]).then(([{ BrowserQRCodeReader }, lib]) => {
+      if (isMounted) {
+        readerRef.current = new BrowserQRCodeReader();
+        zxingLibRef.current = {
+          HTMLCanvasElementLuminanceSource: lib.HTMLCanvasElementLuminanceSource,
+          BinaryBitmap: lib.BinaryBitmap,
+          HybridBinarizer: lib.HybridBinarizer,
+        };
+      }
     });
     return () => { isMounted = false; };
   }, []);
-
-  // ─── Start Camera ──────────────────────────────────────────────────────────
-  const startCamera = useCallback(async () => {
-    setCameraError(null);
-    setScanResult(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-          frameRate: { ideal: 60, min: 30 },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-      const track = stream.getVideoTracks()[0];
-      const caps = track.getCapabilities?.() as any;
-      setHasFlash(!!(caps?.torch));
-      setIsActive(true);
-      startDecodeLoop();
-    } catch (err: any) {
-      if (err.name === "NotAllowedError") {
-        setCameraError("Izin kamera ditolak. Mohon izinkan akses kamera di pengaturan browser.");
-      } else if (err.name === "NotFoundError") {
-        setCameraError("Kamera tidak ditemukan di perangkat ini.");
-      } else {
-        setCameraError("Gagal mengakses kamera. Gunakan input manual.");
-      }
-    }
-  }, []);
-
-  // ─── Stop Camera ───────────────────────────────────────────────────────────
-  const stopCamera = useCallback(() => {
-    cancelAnimationFrame(animFrameRef.current);
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-    if (videoRef.current) videoRef.current.srcObject = null;
-    setIsActive(false);
-    setIsFlashOn(false);
-  }, []);
-
-  // ─── Toggle Flash ──────────────────────────────────────────────────────────
-  const toggleFlash = useCallback(async () => {
-    const track = streamRef.current?.getVideoTracks()[0];
-    if (!track) return;
-    try {
-      await track.applyConstraints({ advanced: [{ torch: !isFlashOn } as any] });
-      setIsFlashOn((v) => !v);
-    } catch {}
-  }, [isFlashOn]);
 
   // ─── Verify Ticket ─────────────────────────────────────────────────────────
   const verifyTicket = useCallback(async (barcodeString: string) => {
@@ -150,7 +111,7 @@ export function ScannerClient({ adminRole }: { adminRole?: string }) {
 
       let status: ScanStatus = "invalid";
       if (data.status === "VALID") status = "valid";
-      else if (data.status === "ALREADY_CHECKED_IN") status = "already";
+      else if (data.status === "ALREADY_CHECKED_IN" || data.status === "ALREADY_SCANNED") status = "already";
       else if (data.status === "ERROR") status = "error";
 
       setScanResult({ status, message: data.message, ticket: data.ticket });
@@ -198,6 +159,9 @@ export function ScannerClient({ adminRole }: { adminRole?: string }) {
     if (!readerRef.current) return;
     const decode = async () => {
       const now = Date.now();
+      if (fpsCounterRef.current.lastTime === 0) {
+        fpsCounterRef.current.lastTime = now;
+      }
       fpsCounterRef.current.frames++;
       if (now - fpsCounterRef.current.lastTime >= 1000) {
         setFps(fpsCounterRef.current.frames);
@@ -214,18 +178,21 @@ export function ScannerClient({ adminRole }: { adminRole?: string }) {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            try {
-              const { HTMLCanvasElementLuminanceSource, BinaryBitmap, HybridBinarizer } =
-                await import("@zxing/library");
-              const ls = new HTMLCanvasElementLuminanceSource(canvas);
-              const bb = new BinaryBitmap(new HybridBinarizer(ls));
-              const result = readerRef.current.decodeBitmap(bb);
-              const text = result.getText();
-              if (text && text !== lastScanRef.current) {
-                lastScanRef.current = text;
-                verifyTicket(text);
+            if (zxingLibRef.current && readerRef.current) {
+              try {
+                const { HTMLCanvasElementLuminanceSource, BinaryBitmap, HybridBinarizer } = zxingLibRef.current;
+                const ls = new HTMLCanvasElementLuminanceSource(canvas);
+                const bb = new BinaryBitmap(new HybridBinarizer(ls));
+                const result = readerRef.current.decodeBitmap(bb);
+                const text = result.getText();
+                if (text && text !== lastScanRef.current) {
+                  lastScanRef.current = text;
+                  verifyTicket(text);
+                }
+              } catch {
+                // Ignore no barcode in frame
               }
-            } catch {}
+            }
           }
         }
       }
@@ -233,6 +200,65 @@ export function ScannerClient({ adminRole }: { adminRole?: string }) {
     };
     animFrameRef.current = requestAnimationFrame(decode);
   }, [verifyTicket]);
+
+  // ─── Start Camera ──────────────────────────────────────────────────────────
+  const startCamera = useCallback(async () => {
+    setCameraError(null);
+    setScanResult(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" },
+          frameRate: { ideal: 60, min: 30 },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      const track = stream.getVideoTracks()[0];
+      const getCaps = (track as unknown as { getCapabilities?: () => { torch?: boolean } }).getCapabilities;
+      const caps = getCaps ? getCaps.call(track) : null;
+      setHasFlash(!!caps?.torch);
+      setIsActive(true);
+      startDecodeLoop();
+    } catch (err: unknown) {
+      const errorObj = err as { name?: string };
+      if (errorObj?.name === "NotAllowedError") {
+        setCameraError("Izin kamera ditolak. Mohon izinkan akses kamera di pengaturan browser.");
+      } else if (errorObj?.name === "NotFoundError") {
+        setCameraError("Kamera tidak ditemukan di perangkat ini.");
+      } else {
+        setCameraError("Gagal mengakses kamera. Gunakan input manual.");
+      }
+    }
+  }, [startDecodeLoop]);
+
+  // ─── Stop Camera ───────────────────────────────────────────────────────────
+  const stopCamera = useCallback(() => {
+    cancelAnimationFrame(animFrameRef.current);
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setIsActive(false);
+    setIsFlashOn(false);
+  }, []);
+
+  // ─── Toggle Flash ──────────────────────────────────────────────────────────
+  const toggleFlash = useCallback(async () => {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track) return;
+    try {
+      // @ts-expect-error Torch is a non-standard constraint supported on mobile browsers
+      await track.applyConstraints({ advanced: [{ torch: !isFlashOn }] });
+      setIsFlashOn((v) => !v);
+    } catch {
+      // Ignore if device does not support torch
+    }
+  }, [isFlashOn]);
 
   useEffect(() => () => stopCamera(), [stopCamera]);
 
@@ -276,11 +302,18 @@ export function ScannerClient({ adminRole }: { adminRole?: string }) {
         </Link>
 
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
                style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>
             <ScanLine className="w-4 h-4 text-white" />
           </div>
-          <h1 className="text-white font-bold text-base tracking-tight">Scanner Tiket</h1>
+          <div>
+            <h1 className="text-white font-bold text-base tracking-tight leading-none">Scanner Tiket</h1>
+            {adminRole && (
+              <span className="text-[10px] text-emerald-400 font-mono tracking-wider font-semibold">
+                {adminRole === "VALIDATOR" ? "VALIDATOR" : "SUPER ADMIN"}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -624,7 +657,7 @@ export function ScannerClient({ adminRole }: { adminRole?: string }) {
 
             {/* History list */}
             <div className="overflow-y-auto" style={{ maxHeight: "calc(70vh - 64px)" }}>
-              {history.map((item, i) => (
+              {history.map((item) => (
                 <div
                   key={item.id}
                   className="flex items-center gap-3.5 px-5 py-3.5 border-b border-white/5 hover:bg-white/3 transition-colors"

@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, ArrowLeft, Ticket, MessageCircle } from "lucide-react";
+import { CheckCircle2, ArrowLeft, MessageCircle } from "lucide-react";
 import TicketCard from "@/components/TicketCard";
 import InteractiveBackground from "@/components/InteractiveBackground";
 import PublicNavbar from "@/components/PublicNavbar";
@@ -35,8 +35,8 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
     }
   }
 
-  const config = (transaction.event.ticketConfig as any) || {};
-  const pageBgColor = config.pageBgColor || '#f8fafc';
+  const config = (transaction.event.ticketConfig as Record<string, string | boolean | undefined> | null) || {};
+  const pageBgColor = (config.pageBgColor as string) || '#f8fafc';
 
   return (
     <div 
@@ -55,34 +55,51 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900">Pendaftaran Berhasil!</h1>
+          {transaction.tickets.length > 1 && (
+            <p className="text-sm text-slate-500 mt-1 font-medium">
+              Kamu memiliki <span className="font-bold text-slate-800">{transaction.tickets.length} e-tiket</span> terdaftar dalam transaksi ini.
+            </p>
+          )}
         </div>
 
-        {/* Ticket Card */}
-        <div className="w-full">
-          <TicketCard 
-            data={{
-              barcodeString: transaction.tickets[0]?.barcodeString || 'UNKNOWN',
-              transaction: {
-                id: transaction.id,
-                buyerName: transaction.buyerName,
-                totalTickets: transaction.totalTickets,
-                status: transaction.status,
-                totalPrice: transaction.totalPrice
-              },
-              event: {
-                title: transaction.event.title,
-                eventDate: transaction.event.eventDate.toISOString(),
-                location: transaction.event.location,
-                bannerUrl: transaction.event.bannerUrl,
-                ticketDesignUrl: transaction.event.ticketDesignUrl,
-                description: transaction.event.description,
-                artists: transaction.event.artists,
-                sponsors: transaction.event.sponsors,
-                ticketConfig: config
-              },
-              ticketCategoryName: transaction.tickets[0]?.ticketCategory.name || 'Umum'
-            }}
-          />
+        {/* Ticket Cards */}
+        <div className="w-full space-y-8">
+          {transaction.tickets.map((ticket, index) => (
+            <div key={ticket.id} className="w-full flex flex-col items-center">
+              {transaction.tickets.length > 1 && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/10 text-slate-800 text-xs font-bold mb-3 no-print">
+                  <span>Tiket #{index + 1} dari {transaction.tickets.length}</span>
+                  {ticket.holderName && (
+                    <span className="text-slate-600 font-medium">({ticket.holderName})</span>
+                  )}
+                </div>
+              )}
+              <TicketCard 
+                data={{
+                  barcodeString: ticket.barcodeString || 'UNKNOWN',
+                  transaction: {
+                    id: transaction.id,
+                    buyerName: ticket.holderName || transaction.buyerName,
+                    totalTickets: transaction.totalTickets,
+                    status: transaction.status,
+                    totalPrice: transaction.totalPrice
+                  },
+                  event: {
+                    title: transaction.event.title,
+                    eventDate: transaction.event.eventDate.toISOString(),
+                    location: transaction.event.location,
+                    bannerUrl: transaction.event.bannerUrl,
+                    ticketDesignUrl: transaction.event.ticketDesignUrl,
+                    description: transaction.event.description,
+                    artists: transaction.event.artists,
+                    sponsors: transaction.event.sponsors,
+                    ticketConfig: config
+                  },
+                  ticketCategoryName: ticket.ticketCategory?.name || 'Umum'
+                }}
+              />
+            </div>
+          ))}
         </div>
 
         {transaction.event.waGroupLink && (

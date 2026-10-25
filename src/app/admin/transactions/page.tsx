@@ -80,7 +80,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
 
         await prismaTx.transaction.delete({ where: { id } });
 
-        if (tx.status !== "EXPIRED") {
+        if (tx.status !== "EXPIRED" && tx.paymentProofUrl !== "OFFLINE") {
           const quotaToReturn = new Map<string, number>();
           for (const ticket of tx.tickets) {
             const current = quotaToReturn.get(ticket.ticketCategoryId) ?? 0;

@@ -51,3 +51,5 @@ client_secret_*.json
 /playwright/.auth/
 screenshots/
 scanner_log.txt
+backup/
+*.sql

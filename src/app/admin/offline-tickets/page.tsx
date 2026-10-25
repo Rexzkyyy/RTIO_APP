@@ -13,7 +13,11 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminOfflineTicketsPage() {
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export default async function AdminOfflineTicketsPage({ searchParams }: Props) {
   const session = await getServerSession(authOptions);
   const cookieStore = await cookies();
   const bypassRole = process.env.NODE_ENV !== "production"
@@ -24,10 +28,9 @@ export default async function AdminOfflineTicketsPage() {
     redirect("/login");
   }
 
-  // @ts-ignore
-  const isValidator = session?.user?.adminRole === "VALIDATOR" || bypassRole === "VALIDATOR";
-  // @ts-ignore
-  const adminId = session?.user?.adminId;
+  const sessionUser = session?.user as { adminRole?: string; adminId?: string; name?: string | null; email?: string | null } | undefined;
+  const isValidator = sessionUser?.adminRole === "VALIDATOR" || bypassRole === "VALIDATOR";
+  const adminId = sessionUser?.adminId;
 
   // Validator access check
   let allowedEventIds: string[] = [];
@@ -39,7 +42,7 @@ export default async function AdminOfflineTicketsPage() {
     allowedEventIds = access.map((a) => a.eventId);
   }
 
-  const whereEvent: any = { isActive: true };
+  const whereEvent: { isActive: boolean; id?: { in: string[] } } = { isActive: true };
   if (isValidator) {
     whereEvent.id = { in: allowedEventIds };
   }
@@ -51,6 +54,11 @@ export default async function AdminOfflineTicketsPage() {
         orderBy: { price: "asc" }
       },
       fields: true,
+      _count: {
+        select: {
+          transactions: true,
+        }
+      }
     },
     orderBy: { eventDate: "desc" }
   });
@@ -61,7 +69,9 @@ export default async function AdminOfflineTicketsPage() {
     title: ev.title,
     location: ev.location,
     eventDate: ev.eventDate.toISOString(),
+    bannerUrl: ev.bannerUrl,
     waGroupLink: ev.waGroupLink,
+    totalIssuedTickets: ev._count.transactions,
     ticketCategories: ev.ticketCategories.map((c) => ({
       id: c.id,
       name: c.name,
@@ -84,9 +94,16 @@ export default async function AdminOfflineTicketsPage() {
 
   const defaultPjName = session?.user?.name || (session?.user?.email ? session.user.email.split("@")[0] : "Panitia");
 
+  const params = await searchParams;
+  const initialEventId = typeof params?.eventId === "string" ? params.eventId : undefined;
+
   return (
-    <div className="w-full py-2">
-      <OfflineTicketForm events={serializableEvents} defaultPjName={defaultPjName} />
+    <div className="w-full space-y-6">
+      <OfflineTicketForm 
+        events={serializableEvents} 
+        defaultPjName={defaultPjName} 
+        initialEventId={initialEventId}
+      />
     </div>
   );
 }

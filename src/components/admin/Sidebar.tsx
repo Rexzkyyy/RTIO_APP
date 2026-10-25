@@ -204,7 +204,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
       </div>
 
       {/* Spacer for desktop layout so content doesn't go under sidebar */}
-      <div className={`hidden md:block transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'} shrink-0`} />
+      <div className={`hidden md:block transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'} shrink-0`} />
 
       {/* Mobile Top Header */}
       <div className="md:hidden fixed top-0 left-0 w-full h-20 bg-white z-40 flex items-center justify-between px-3 border-b border-slate-200 shadow-sm">
