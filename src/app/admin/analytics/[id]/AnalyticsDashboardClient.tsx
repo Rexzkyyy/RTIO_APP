@@ -36,6 +36,7 @@ import {
   Activity,
   Receipt,
   FileSpreadsheet,
+  Printer,
 } from "lucide-react";
 import Link from "next/link";
 import { toPng } from "html-to-image";
@@ -189,7 +190,7 @@ export default function AnalyticsDashboardClient({
   const [isExporting, setIsExporting] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
 
-  // Export PDF with full view capture
+  // Export PDF with element-aware block pagination (No cut cards or charts)
   const exportPDF = async () => {
     if (!dashboardRef.current) return;
     setIsExporting(true);
@@ -197,22 +198,74 @@ export default function AnalyticsDashboardClient({
     setActiveTab("all");
 
     try {
-      // Small delay to allow react re-render of full view
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      // Delay agar React me-render semua 4 tab & Recharts SVG stabil
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
-      const dataUrl = await toPng(dashboardRef.current, {
-        quality: 0.95,
-        backgroundColor: "#f8fafc",
-        pixelRatio: 2,
-      });
+      const cardElements = dashboardRef.current.querySelectorAll<HTMLElement>(".pdf-card");
+      if (!cardElements || cardElements.length === 0) {
+        alert("Tidak ada bagian dashboard yang ditemukan untuk diekspor.");
+        return;
+      }
 
       const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight =
-        (dashboardRef.current.offsetHeight * pdfWidth) / dashboardRef.current.offsetWidth;
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const marginX = 10;
+      const marginTop = 12;
+      const marginBottom = 15;
+      const contentWidth = pageWidth - marginX * 2; // 190mm
+      const maxY = pageHeight - marginBottom; // 282mm
 
-      pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Laporan-Analisis-${event.slug || "event"}.pdf`);
+      let currentY = marginTop;
+      let isFirstPage = true;
+
+      for (let i = 0; i < cardElements.length; i++) {
+        const el = cardElements[i];
+
+        // Tentukan background agar elemen dark (seperti official header) tidak tertimpa putih
+        const isDark = el.classList.contains("bg-slate-900");
+        const dataUrl = await toPng(el, {
+          quality: 0.98,
+          backgroundColor: isDark ? "#0f172a" : "#ffffff",
+          pixelRatio: 2,
+        });
+
+        const img = new Image();
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = (e) => reject(e);
+          img.src = dataUrl;
+        });
+
+        // Hitung tinggi proporsional card dalam satuan mm di atas lembar A4
+        const cardHeightMm = (img.height * contentWidth) / img.width;
+
+        // Cek jika card ini melebihi sisa tinggi halaman, pindah ke halaman baru
+        if (!isFirstPage && currentY + cardHeightMm > maxY) {
+          pdf.addPage("a4", "p");
+          currentY = marginTop;
+        }
+
+        pdf.addImage(dataUrl, "PNG", marginX, currentY, contentWidth, cardHeightMm, undefined, "FAST");
+        currentY += cardHeightMm + 4; // Berikan jeda 4mm antar blok card
+        isFirstPage = false;
+      }
+
+      // Berikan penomoran halaman dan footer resmi di seluruh halaman PDF
+      const totalPages = pdf.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        pdf.setPage(p);
+        pdf.setFontSize(8);
+        pdf.setTextColor(148, 163, 184); // slate-400
+        pdf.text(
+          `Halaman ${p} dari ${totalPages}  •  RTIO TIX Sales Analytics  •  ${event.title}`,
+          pageWidth / 2,
+          291,
+          { align: "center" }
+        );
+      }
+
+      pdf.save(`Laporan-Analisis-Lengkap-${event.slug || "event"}.pdf`);
     } catch (error: unknown) {
       console.error("Gagal export PDF:", error);
       alert("Terjadi kesalahan saat mengekspor ke PDF.");
@@ -221,6 +274,17 @@ export default function AnalyticsDashboardClient({
       setIsExporting(false);
     }
   };
+
+  // Cetak / Simpan PDF langsung via mesin browser (Vektor SVG & Teks Murni)
+  const handleNativePrint = () => {
+    const previousTab = activeTab;
+    setActiveTab("all");
+    setTimeout(() => {
+      window.print();
+      setActiveTab(previousTab);
+    }, 600);
+  };
+
 
   // Calculations for KPI insights
   const avgOrderValue =
@@ -269,13 +333,13 @@ export default function AnalyticsDashboardClient({
           ? `${analyticsData.offlineData.offlineTicketsSold} Tiket`
           : undefined,
     },
-    { id: "all", label: "Semua Bagian (Print)", icon: <FileSpreadsheet className="w-4 h-4" /> },
+    { id: "all", label: "Semua Tab (Lengkap)", icon: <FileSpreadsheet className="w-4 h-4" /> },
   ];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* ── Event Header Banner ────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 p-6 sm:p-8 text-white shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 p-6 sm:p-8 text-white shadow-xl print:hidden no-print">
         {/* Ambient background glows */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-blue-500/10 rounded-full blur-2xl pointer-events-none translate-y-1/2" />
@@ -317,18 +381,27 @@ export default function AnalyticsDashboardClient({
           </div>
 
           {/* Quick Action Button */}
-          <div className="flex items-center gap-2.5 self-start md:self-auto shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto shrink-0">
             <button
               onClick={exportPDF}
               disabled={isExporting}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-slate-900 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all active:scale-95 shadow-md disabled:opacity-50"
+              title="Download langsung file PDF yang rapi tanpa potongan gambar"
             >
               {isExporting ? (
                 <div className="w-4 h-4 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin" />
               ) : (
                 <Download className="w-4 h-4 text-slate-900" />
               )}
-              {isExporting ? "Menyiapkan PDF..." : "Export Laporan PDF"}
+              {isExporting ? "Menyiapkan PDF..." : "Download PDF"}
+            </button>
+            <button
+              onClick={handleNativePrint}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-xs transition-all active:scale-95 shadow-md border border-slate-700"
+              title="Buka dialog cetak browser (Simpan sebagai PDF Vektor tajam)"
+            >
+              <Printer className="w-4 h-4 text-emerald-400" />
+              Cetak / Simpan PDF (Vektor)
             </button>
             <Link
               href={`/admin/offline-tickets?eventId=${event.id}`}
@@ -342,7 +415,7 @@ export default function AnalyticsDashboardClient({
       </div>
 
       {/* ── Segmented Navigation Tabs ──────────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 p-1.5 bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-1.5 p-1.5 bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-x-auto no-scrollbar print:hidden no-print">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -373,8 +446,35 @@ export default function AnalyticsDashboardClient({
 
       {/* ── Dashboard Printable Capture Container ──────────────────────────── */}
       <div ref={dashboardRef} className="space-y-6">
+        {/* ── Official PDF Header (Muncul saat Export atau di tab Semua) ─────── */}
+        {(isExporting || activeTab === "all") && (
+          <div className="pdf-card bg-slate-900 text-white p-6 sm:p-7 rounded-3xl shadow-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950 font-mono">
+                  LAPORAN LENGKAP SEMUA BAGIAN
+                </span>
+                <span className="text-xs text-slate-400 font-mono">RTIO TIX ANALYTICS</span>
+              </div>
+              <h2 className="text-2xl font-black tracking-tight text-white">{event.title}</h2>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300 font-medium pt-1">
+                <span>
+                  📅 {new Date(event.eventDate).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                </span>
+                {event.location && <span>📍 {event.location}</span>}
+              </div>
+            </div>
+            <div className="sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-800 shrink-0">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Waktu Ekspor Laporan</span>
+              <span className="text-xs font-mono font-bold text-emerald-400">
+                {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}, {new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* ── KPI HIGHLIGHT CARDS (Always visible) ─────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="pdf-card grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Total Pendapatan */}
           <div className="relative overflow-hidden bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-3">
@@ -513,7 +613,15 @@ export default function AnalyticsDashboardClient({
         {(activeTab === "overview" || activeTab === "all") && (
           <div className="space-y-6">
             {/* Tren Penjualan Harian */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="pdf-card bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+              {activeTab === "all" && (
+                <div className="pb-3 mb-5 border-b-2 border-slate-900 flex items-center justify-between">
+                  <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-emerald-600" /> Bagian 1: Ringkasan Eksekutif & Tren Penjualan
+                  </h3>
+                  <span className="text-xs font-mono font-bold text-slate-400">BAGIAN 1 / 4</span>
+                </div>
+              )}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -627,7 +735,7 @@ export default function AnalyticsDashboardClient({
             </div>
 
             {/* Split Row: Channel Penjualan & 5 Transaksi Terakhir */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="pdf-card grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Channel Penjualan (Donut Chart) */}
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
                 <div>
@@ -778,92 +886,102 @@ export default function AnalyticsDashboardClient({
         {/* ── TAB 2: TICKETS & CATEGORIES (Kategori & Kuota) ─────────────────── */}
         {(activeTab === "tickets" || activeTab === "all") && (
           <div className="space-y-6">
-            {/* Category Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {analyticsData.ticketsByCategory.map((cat, idx) => {
-                const totalCatQuota = (cat.terjual || 0) + (cat.sisaNormal || 0) + (cat.sisaPromo || 0);
-                const catPercent =
-                  totalCatQuota > 0
-                    ? Math.min(100, Math.round(((cat.terjual || 0) / totalCatQuota) * 100))
-                    : 0;
+            <div className="pdf-card space-y-4">
+              {activeTab === "all" && (
+                <div className="pt-2 pb-1 border-b-2 border-slate-900 flex items-center justify-between">
+                  <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-blue-600" /> Bagian 2: Analisis Kategori & Kuota Tiket
+                  </h3>
+                  <span className="text-xs font-mono font-bold text-slate-400">BAGIAN 2 / 4</span>
+                </div>
+              )}
+              {/* Category Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {analyticsData.ticketsByCategory.map((cat, idx) => {
+                  const totalCatQuota = (cat.terjual || 0) + (cat.sisaNormal || 0) + (cat.sisaPromo || 0);
+                  const catPercent =
+                    totalCatQuota > 0
+                      ? Math.min(100, Math.round(((cat.terjual || 0) / totalCatQuota) * 100))
+                      : 0;
 
-                const isNearFull = catPercent >= 80 && catPercent < 100;
-                const isFull = catPercent >= 100;
+                  const isNearFull = catPercent >= 80 && catPercent < 100;
+                  const isFull = catPercent >= 100;
 
-                return (
-                  <div
-                    key={idx}
-                    className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="w-8 h-8 rounded-xl bg-slate-100 text-slate-800 font-bold flex items-center justify-center text-xs">
-                            #{idx + 1}
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="w-8 h-8 rounded-xl bg-slate-100 text-slate-800 font-bold flex items-center justify-center text-xs">
+                              #{idx + 1}
+                            </span>
+                            <div>
+                              <h4 className="font-extrabold text-slate-900 text-sm line-clamp-1">
+                                {cat.name}
+                              </h4>
+                              <span className="text-[11px] font-semibold text-emerald-600">
+                                Revenue: {formatRupiah(cat.revenue || 0)}
+                              </span>
+                            </div>
+                          </div>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              isFull
+                                ? "bg-red-100 text-red-700"
+                                : isNearFull
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-emerald-100 text-emerald-700"
+                            }`}
+                          >
+                            {isFull ? "Habis" : `${catPercent}% Terjual`}
                           </span>
-                          <div>
-                            <h4 className="font-extrabold text-slate-900 text-sm line-clamp-1">
-                              {cat.name}
-                            </h4>
-                            <span className="text-[11px] font-semibold text-emerald-600">
-                              Revenue: {formatRupiah(cat.revenue || 0)}
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="mt-4 space-y-1.5">
+                          <div className="flex justify-between items-center text-xs font-semibold">
+                            <span className="text-slate-700">
+                              {cat.terjual} terjual
+                            </span>
+                            <span className="text-slate-400">
+                              Sisa: {cat.sisaNormal + cat.sisaPromo}
                             </span>
                           </div>
+                          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${
+                                isFull
+                                  ? "bg-red-500"
+                                  : isNearFull
+                                  ? "bg-amber-500"
+                                  : "bg-emerald-500"
+                              }`}
+                              style={{ width: `${catPercent}%` }}
+                            />
+                          </div>
                         </div>
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            isFull
-                              ? "bg-red-100 text-red-700"
-                              : isNearFull
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-emerald-100 text-emerald-700"
-                          }`}
-                        >
-                          {isFull ? "Habis" : `${catPercent}% Terjual`}
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-medium text-slate-500">
+                        <span>Promo: {cat.terjualPromo || 0}</span>
+                        <span>•</span>
+                        <span>Normal: {cat.terjualNormal || 0}</span>
+                        <span>•</span>
+                        <span className="font-bold text-slate-800">
+                          Total {totalCatQuota} Kuota
                         </span>
                       </div>
-
-                      {/* Progress Bar */}
-                      <div className="mt-4 space-y-1.5">
-                        <div className="flex justify-between items-center text-xs font-semibold">
-                          <span className="text-slate-700">
-                            {cat.terjual} terjual
-                          </span>
-                          <span className="text-slate-400">
-                            Sisa: {cat.sisaNormal + cat.sisaPromo}
-                          </span>
-                        </div>
-                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all ${
-                              isFull
-                                ? "bg-red-500"
-                                : isNearFull
-                                ? "bg-amber-500"
-                                : "bg-emerald-500"
-                            }`}
-                            style={{ width: `${catPercent}%` }}
-                          />
-                        </div>
-                      </div>
                     </div>
-
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-medium text-slate-500">
-                      <span>Promo: {cat.terjualPromo || 0}</span>
-                      <span>•</span>
-                      <span>Normal: {cat.terjualNormal || 0}</span>
-                      <span>•</span>
-                      <span className="font-bold text-slate-800">
-                        Total {totalCatQuota} Kuota
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
 
             {/* Visual Breakdown Charts (Pendapatan per Kategori & Komposisi Promo) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="pdf-card grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Pendapatan per Kategori */}
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
                 <h3 className="text-base font-bold text-slate-900 mb-1">
@@ -982,101 +1100,111 @@ export default function AnalyticsDashboardClient({
         {/* ── TAB 3: AUDIENCE & TIMING (Waktu & Demografi) ──────────────────── */}
         {(activeTab === "audience" || activeTab === "all") && (
           <div className="space-y-6">
-            {/* Waktu: Transaksi per Jam & Check-in per Jam */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Puncak Jam Transaksi */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
-                <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-amber-500" />
-                  Puncak Jam Transaksi (24 Jam)
-                </h3>
-                <p className="text-xs text-slate-500 mb-6">
-                  Waktu tersibuk ketika pembeli melakukan pemesanan tiket.
-                </p>
-
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={analyticsData.txByHour}
-                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis
-                        dataKey="hour"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fill: "#64748b" }}
-                        interval={3}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11, fill: "#64748b" }}
-                        allowDecimals={false}
-                      />
-                      <Tooltip
-                        cursor={{ fill: "#f8fafc" }}
-                        contentStyle={{
-                          borderRadius: "12px",
-                          border: "none",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                        }}
-                        formatter={(value: unknown) => [`${value} Transaksi`, "Pesanan"]}
-                      />
-                      <Bar dataKey="total" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+            <div className="pdf-card space-y-4">
+              {activeTab === "all" && (
+                <div className="pt-2 pb-1 border-b-2 border-slate-900 flex items-center justify-between">
+                  <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-purple-600" /> Bagian 3: Waktu Transaksi & Demografi Peserta
+                  </h3>
+                  <span className="text-xs font-mono font-bold text-slate-400">BAGIAN 3 / 4</span>
                 </div>
-              </div>
+              )}
+              {/* Waktu: Transaksi per Jam & Check-in per Jam */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Puncak Jam Transaksi */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                  <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-amber-500" />
+                    Puncak Jam Transaksi (24 Jam)
+                  </h3>
+                  <p className="text-xs text-slate-500 mb-6">
+                    Waktu tersibuk ketika pembeli melakukan pemesanan tiket.
+                  </p>
 
-              {/* Puncak Jam Check-in */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
-                <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-blue-500" />
-                  Puncak Waktu Check-in Gerbang
-                </h3>
-                <p className="text-xs text-slate-500 mb-6">
-                  Pola kedatangan peserta saat melakukan pemindaian tiket di gate.
-                </p>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={analyticsData.txByHour}
+                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis
+                          dataKey="hour"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 10, fill: "#64748b" }}
+                          interval={3}
+                        />
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 11, fill: "#64748b" }}
+                          allowDecimals={false}
+                        />
+                        <Tooltip
+                          cursor={{ fill: "#f8fafc" }}
+                          contentStyle={{
+                            borderRadius: "12px",
+                            border: "none",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                          }}
+                          formatter={(value: unknown) => [`${value} Transaksi`, "Pesanan"]}
+                        />
+                        <Bar dataKey="total" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
 
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={analyticsData.checkinByHour}
-                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis
-                        dataKey="hour"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 10, fill: "#64748b" }}
-                        interval={3}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11, fill: "#64748b" }}
-                        allowDecimals={false}
-                      />
-                      <Tooltip
-                        cursor={{ fill: "#f8fafc" }}
-                        contentStyle={{
-                          borderRadius: "12px",
-                          border: "none",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                        }}
-                        formatter={(value: unknown) => [`${value} Orang`, "Check-in"]}
-                      />
-                      <Bar dataKey="total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                {/* Puncak Jam Check-in */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                  <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-blue-500" />
+                    Puncak Waktu Check-in Gerbang
+                  </h3>
+                  <p className="text-xs text-slate-500 mb-6">
+                    Pola kedatangan peserta saat melakukan pemindaian tiket di gate.
+                  </p>
+
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={analyticsData.checkinByHour}
+                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis
+                          dataKey="hour"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 10, fill: "#64748b" }}
+                          interval={3}
+                        />
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 11, fill: "#64748b" }}
+                          allowDecimals={false}
+                        />
+                        <Tooltip
+                          cursor={{ fill: "#f8fafc" }}
+                          contentStyle={{
+                            borderRadius: "12px",
+                            border: "none",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                          }}
+                          formatter={(value: unknown) => [`${value} Orang`, "Check-in"]}
+                        />
+                        <Bar dataKey="total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Demografi: Usia & Gender */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="pdf-card grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Demografi Usia */}
               <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
                 <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
@@ -1207,8 +1335,19 @@ export default function AnalyticsDashboardClient({
 
         {/* ── TAB 4: OFFLINE TICKET AUDIT (Audit Loket Kasir) ───────────────── */}
         {(activeTab === "offline" || activeTab === "all") && (
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-            {/* Header Banner */}
+          <div className="space-y-6">
+            {/* Card 1: Bagian 4 Header + 4 Quick Stat Cards */}
+            <div className="pdf-card space-y-4">
+              {activeTab === "all" && (
+                <div className="pt-2 pb-1 border-b-2 border-slate-900 flex items-center justify-between">
+                  <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                    <Store className="w-4 h-4 text-emerald-600" /> Bagian 4: Audit Kasir & Penjualan Loket (Offline)
+                  </h3>
+                  <span className="text-xs font-mono font-bold text-slate-400">BAGIAN 4 / 4</span>
+                </div>
+              )}
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                {/* Header Banner */}
             <div className="p-6 bg-gradient-to-r from-emerald-50 via-teal-50/50 to-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20 shrink-0">
@@ -1290,11 +1429,13 @@ export default function AnalyticsDashboardClient({
                 <p className="text-[11px] text-slate-400 mt-1">Termasuk custom price</p>
               </div>
             </div>
+          </div>
+        </div>
 
             {/* Offline Content */}
             {!analyticsData.offlineData?.offlineTicketsSold ||
             analyticsData.offlineData.offlineTicketsSold === 0 ? (
-              <div className="p-12 text-center bg-white flex flex-col items-center justify-center">
+              <div className="pdf-card bg-white rounded-3xl border border-slate-200 shadow-sm p-12 text-center flex flex-col items-center justify-center">
                 <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
                   <Store className="w-7 h-7" />
                 </div>
@@ -1313,11 +1454,11 @@ export default function AnalyticsDashboardClient({
                 </Link>
               </div>
             ) : (
-              <div className="p-6 space-y-6">
+              <>
                 {/* Dual Audit Tables: Rekap Kas per PJ & Kategori */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="pdf-card grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Table 1: Rekap Setoran per Kasir / PJ */}
-                  <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
                     <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                       <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                         <UserCheck className="w-4 h-4 text-emerald-600" />
@@ -1363,7 +1504,7 @@ export default function AnalyticsDashboardClient({
                   </div>
 
                   {/* Table 2: Rincian Tiket Offline per Kategori */}
-                  <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
                     <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                       <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                         <Ticket className="w-4 h-4 text-blue-600" />
@@ -1403,7 +1544,7 @@ export default function AnalyticsDashboardClient({
                 </div>
 
                 {/* Table 3: 5 Tiket Offline Terakhir Diterbitkan */}
-                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <div className="pdf-card bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
                   <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                     <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-slate-500" />
@@ -1475,11 +1616,11 @@ export default function AnalyticsDashboardClient({
                     </table>
                   </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         )}
-      </div>
     </div>
+  </div>
   );
 }

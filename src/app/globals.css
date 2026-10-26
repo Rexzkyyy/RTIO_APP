@@ -118,3 +118,53 @@ html.hide-global-loader #global-loader {
 .animation-delay-200 {
   animation-delay: 200ms;
 }
+
+/* ─── PRINT & PDF OPTIMIZATION ──────────────────────────────────────────────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 10mm 12mm 10mm;
+  }
+
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  /* Reset layout constraints in admin dashboard */
+  .flex.h-\[100dvh\],
+  main {
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Hide navigation, sidebar, headers, and buttons */
+  aside,
+  header,
+  nav,
+  .no-print,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Prevent elements from being cut across pages */
+  .pdf-card,
+  .print-avoid-break,
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Force background colors and borders to print properly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
