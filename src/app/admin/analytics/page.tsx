@@ -48,7 +48,17 @@ export default async function AnalyticsPage({ searchParams }: Props) {
         where: { status: "APPROVED" },
       },
       ticketCategories: {
-        select: { quota: true, initialQuota: true },
+        select: {
+          quota: true,
+          initialQuota: true,
+          _count: {
+            select: {
+              tickets: {
+                where: { transaction: { status: "APPROVED" } },
+              },
+            },
+          },
+        },
       },
     },
   });
@@ -99,15 +109,16 @@ export default async function AnalyticsPage({ searchParams }: Props) {
             .filter((tx) => tx.paymentProofUrl === "OFFLINE")
             .reduce((sum, tx) => sum + tx.totalPrice, 0);
 
-          const rawCapacity = event.ticketCategories.reduce(
-            (sum, c) => sum + (c.initialQuota ?? c.quota),
-            0
-          );
-          const totalCapacity = event.ticketCategories.some((c) => c.initialQuota == null)
-            ? rawCapacity + totalTickets
-            : rawCapacity;
+          const totalCapacity = event.ticketCategories.reduce((sum, c) => {
+            const sold = c._count.tickets;
+            const initial = c.initialQuota != null ? c.initialQuota : c.quota + sold;
+            return sum + initial;
+          }, 0);
+          const effectiveCapacity = Math.max(totalCapacity, totalTickets);
           const soldPercentage =
-            totalCapacity > 0 ? Math.min(100, Math.round((totalTickets / totalCapacity) * 100)) : 0;
+            effectiveCapacity > 0
+              ? Math.min(100, Math.round((totalTickets / effectiveCapacity) * 100))
+              : 0;
 
           const nowCheck = new Date();
           const eventDateForCheck = new Date(event.eventDate);
@@ -209,7 +220,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                 </div>
 
                 {/* Quota Progress Bar */}
-                {totalCapacity > 0 && (
+                {effectiveCapacity > 0 && (
                   <div className="space-y-1.5 pt-2 border-t border-slate-100">
                     <div className="flex justify-between items-center text-xs font-semibold">
                       <span className="text-slate-600 flex items-center gap-1">
@@ -217,7 +228,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                         Terjual {soldPercentage}%
                       </span>
                       <span className="text-slate-400 font-normal text-[11px]">
-                        {totalTickets} / {totalCapacity} Kuota
+                        {totalTickets} / {effectiveCapacity} Kuota
                       </span>
                     </div>
                     <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
