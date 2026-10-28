@@ -208,8 +208,8 @@ export default async function EventsPage({ searchParams }: Props) {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${!event.isActive ? 'bg-red-100 text-red-800' : isFinished ? 'bg-slate-100 text-slate-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                          {!event.isActive ? 'Tutup' : isFinished ? 'Berakhir' : 'Aktif'}
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${!event.isActive ? 'bg-red-100 text-red-800' : isFinished ? 'bg-slate-100 text-slate-800' : event.isLocked ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                          {!event.isActive ? 'Tutup' : isFinished ? 'Berakhir' : event.isLocked ? 'Kuota Full (Kunci)' : 'Aktif'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -267,8 +267,8 @@ export default async function EventsPage({ searchParams }: Props) {
                       <div className="text-base font-bold text-slate-900 leading-tight">{event.title}</div>
                       <div className="text-xs text-slate-500 mt-0.5">/{event.slug}</div>
                     </div>
-                    <span className={`px-2 py-1 text-[9px] uppercase tracking-wider font-bold rounded-md shrink-0 ${!event.isActive ? 'bg-red-100 text-red-700' : isFinished ? 'bg-slate-100 text-slate-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                      {!event.isActive ? 'Tutup' : isFinished ? 'Berakhir' : 'Aktif'}
+                    <span className={`px-2 py-1 text-[9px] uppercase tracking-wider font-bold rounded-md shrink-0 ${!event.isActive ? 'bg-red-100 text-red-700' : isFinished ? 'bg-slate-100 text-slate-700' : event.isLocked ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                      {!event.isActive ? 'Tutup' : isFinished ? 'Berakhir' : event.isLocked ? 'Kuota Full' : 'Aktif'}
                     </span>
                   </div>
 

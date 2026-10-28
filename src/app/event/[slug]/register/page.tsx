@@ -32,6 +32,33 @@ export default async function RegisterPage({
     notFound();
   }
 
+  if (event.isLocked) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col relative z-0">
+        <PublicNavbar />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-xl max-w-md w-full p-8 text-center space-y-4">
+            <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold shadow-inner">
+              ✕
+            </div>
+            <h2 className="text-2xl font-black text-slate-800">Pendaftaran Ditutup</h2>
+            <p className="text-slate-500 text-sm leading-relaxed">
+              Mohon maaf, kuota tiket untuk event <strong className="text-slate-800">{event.title}</strong> sudah penuh dan pendaftaran telah ditutup.
+            </p>
+            <div className="pt-4">
+              <Link
+                href={`/event/${event.slug}`}
+                className="inline-flex items-center px-6 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors text-sm shadow-md"
+              >
+                Kembali ke Info Event
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col relative z-0">
       <PublicNavbar />

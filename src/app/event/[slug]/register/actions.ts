@@ -110,6 +110,16 @@ export async function submitRegistration(formData: FormData) {
 
         const category = locked[0];
 
+        // ── Step 1.5: Validate event lock and active status ───────────────────
+        const eventData = await tx.event.findUnique({
+          where: { id: eventId },
+          select: { isActive: true, isLocked: true }
+        });
+
+        if (!eventData || !eventData.isActive || eventData.isLocked) {
+          throw new Error("Pendaftaran event ini sudah ditutup (kuota sudah penuh).");
+        }
+
         // ── Step 2: Validate quota AFTER lock (guaranteed fresh data). ────────
         if (category.quota < ticketQuantity) {
           if (category.quota === 0) {

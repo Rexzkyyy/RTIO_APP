@@ -8,7 +8,7 @@ export function ToggleEventLockButton({ id, isLocked, className }: { id: string,
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleToggle = async () => {
-    const actionText = isLocked ? "membuka kunci" : "mengunci";
+    const actionText = isLocked ? "membuka pendaftaran kembali" : "mengunci event (tutup pendaftaran / kuota full)";
     if (confirm(`Apakah Anda yakin ingin ${actionText} event ini?`)) {
       setIsUpdating(true);
       const res = await toggleEventLock(id, !isLocked);
@@ -24,7 +24,7 @@ export function ToggleEventLockButton({ id, isLocked, className }: { id: string,
       onClick={handleToggle}
       disabled={isUpdating}
       className={`${className || "flex items-center text-orange-600 hover:text-orange-900 ml-4 font-medium"} ${isUpdating ? "opacity-50 cursor-wait pointer-events-none" : ""}`}
-      title={isLocked ? "Buka Kunci Event" : "Kunci Event"}
+      title={isLocked ? "Buka Pendaftaran Event" : "Kunci Event (Kuota Full)"}
     >
       {isLocked ? (
         <>
@@ -34,7 +34,7 @@ export function ToggleEventLockButton({ id, isLocked, className }: { id: string,
       ) : (
         <>
           <Lock className="w-4 h-4 mr-1 inline-block" />
-          <span>Kunci</span>
+          <span>Kunci (Full)</span>
         </>
       )}
     </button>

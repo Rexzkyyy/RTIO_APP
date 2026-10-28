@@ -158,7 +158,7 @@ export default async function Home({ searchParams }: Props) {
                 }
 
                 return (
-                  <Link key={event.id} href={event.isLocked ? '#' : `/event/${event.slug}`} prefetch={false} className={`group bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full ${event.isLocked ? 'opacity-90 cursor-not-allowed pointer-events-none' : 'hover:shadow-xl transition-all duration-300 transform sm:hover:-translate-y-1 active:scale-[0.98] sm:active:scale-100'}`}>
+                  <Link key={event.id} href={`/event/${event.slug}`} prefetch={false} className={`group bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-300 transform sm:hover:-translate-y-1 active:scale-[0.98] sm:active:scale-100 ${event.isLocked ? 'opacity-95' : ''}`}>
                     {/* Card Image */}
                     <div className="aspect-video w-full bg-slate-100 relative overflow-hidden flex items-center justify-center">
                       {event.bannerUrl ? (
@@ -168,9 +168,9 @@ export default async function Home({ searchParams }: Props) {
                       )}
                       
                       {event.isLocked ? (
-                        <div className="absolute inset-0 bg-slate-900/20 flex items-center justify-center">
-                           <span className="bg-slate-800/80 backdrop-blur-md text-white font-bold px-2 py-1 text-[10px] sm:px-4 sm:py-2 sm:text-sm rounded-md sm:rounded-lg border border-slate-600/50 shadow-lg tracking-wider uppercase">
-                              Coming Soon
+                        <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
+                           <span className="bg-red-600/90 backdrop-blur-md text-white font-bold px-2 py-1 text-[10px] sm:px-4 sm:py-2 sm:text-sm rounded-md sm:rounded-lg border border-red-500/50 shadow-lg tracking-wider uppercase">
+                              Kuota Sudah Full
                            </span>
                         </div>
                       ) : isFinished ? (
@@ -200,8 +200,8 @@ export default async function Home({ searchParams }: Props) {
                         
                         <div className="pt-2 sm:pt-4 mt-2 sm:mt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-0">
                           {event.isLocked ? (
-                            <div className="text-sm sm:text-base font-bold text-slate-400 w-full text-center py-1 bg-slate-100 rounded-md">
-                              Segera Hadir
+                            <div className="text-sm sm:text-base font-bold text-red-600 w-full text-center py-1 bg-red-50 rounded-md">
+                              Kuota Sudah Penuh
                             </div>
                           ) : isFinished ? (
                             <div className="text-sm sm:text-base font-bold text-red-500 w-full text-center py-1 bg-red-50 rounded-md">

@@ -404,6 +404,18 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
             <h2 className="text-3xl font-black text-slate-800 mb-3 drop-shadow-sm">Pilih Tiket Anda</h2>
             <div className="w-20 h-1.5 bg-gradient-to-r from-primary-400 to-secondary-400 mx-auto rounded-full shadow-sm"></div>
           </div>
+
+          {event.isLocked && (
+            <div className="max-w-xl mx-auto mb-8 bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
+              <span className="inline-block px-3 py-1 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-full mb-2">
+                Pendaftaran Ditutup
+              </span>
+              <p className="text-sm font-bold text-red-800">
+                Mohon maaf, kuota tiket untuk event ini sudah penuh.
+              </p>
+            </div>
+          )}
+
           <div className="flex flex-nowrap md:flex-wrap overflow-x-auto md:overflow-x-visible justify-start md:justify-center gap-5 pb-8 snap-x snap-mandatory scroll-smooth hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
 
             
@@ -412,6 +424,7 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
               
               const isSoldOut = ticket.quota <= 0;
               const isLowStock = ticket.quota > 0 && ticket.quota <= 50;
+              const isLocked = Boolean(event.isLocked);
               
               const now = new Date();
               const discountStart = ticket.discountStartDate ? new Date(ticket.discountStartDate) : null;
@@ -432,19 +445,19 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
                   const bActivePrice = b.hasDiscount && b.discountPrice != null && (!b.discountStartDate || now >= new Date(b.discountStartDate)) && (!b.discountEndDate || now <= new Date(b.discountEndDate)) && (b.discountQuota === null || b.discountQuota > 0) ? b.discountPrice : b.price;
                   return aActivePrice - bActivePrice;
                 })[0]?.id;
-              const isBestSeller = ticket.id === cheapestTicketId && !isSoldOut;
+              const isBestSeller = ticket.id === cheapestTicketId && !isSoldOut && !isLocked;
               
-              if (isSoldOut || isFinished) {
+              if (isSoldOut || isFinished || isLocked) {
                 return (
                   <div key={ticket.id} className="block shrink-0 w-[310px] sm:w-[340px] snap-center opacity-60 grayscale cursor-not-allowed">
                     <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 relative overflow-hidden flex flex-col h-full">
-                      <div className="absolute top-0 right-0 bg-slate-700 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-2xl z-10">
-                        {isFinished ? "EVENT SELESAI" : "HABIS TERJUAL"}
+                      <div className={`absolute top-0 right-0 text-white text-[10px] font-black px-3 py-1.5 rounded-bl-2xl z-10 ${isLocked ? 'bg-red-600' : 'bg-slate-700'}`}>
+                        {isLocked ? "KUOTA PENUH" : isFinished ? "EVENT SELESAI" : "HABIS TERJUAL"}
                       </div>
                       <div className="flex justify-between items-center mb-4">
                         <div className="p-2.5 rounded-xl bg-slate-200">{style.icon}</div>
-                        <span className="text-sm font-bold px-2.5 py-1 rounded-md border border-slate-300 bg-slate-200 text-slate-500">
-                          {isFinished ? "Selesai" : "Habis"}
+                        <span className={`text-sm font-bold px-2.5 py-1 rounded-md border ${isLocked ? 'border-red-200 bg-red-50 text-red-600' : 'border-slate-300 bg-slate-200 text-slate-500'}`}>
+                          {isLocked ? "Penuh" : isFinished ? "Selesai" : "Habis"}
                         </span>
                       </div>
                       <h3 className="text-xl font-bold text-slate-500 mb-1">{ticket.name}</h3>
@@ -452,8 +465,8 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
                         {activePrice === 0 ? "Gratis" : `Rp ${activePrice.toLocaleString('id-ID')}`}
                       </div>
                       <div className="mt-auto pt-4 border-t border-slate-200">
-                        <div className="w-full py-3 bg-slate-300 text-slate-500 font-bold rounded-xl flex items-center justify-center text-base">
-                          {isFinished ? "Event Berakhir" : "Tiket Habis"}
+                        <div className={`w-full py-3 font-bold rounded-xl flex items-center justify-center text-base ${isLocked ? 'bg-red-100 text-red-600' : 'bg-slate-300 text-slate-500'}`}>
+                          {isLocked ? "Kuota Sudah Full" : isFinished ? "Event Berakhir" : "Tiket Habis"}
                         </div>
                       </div>
                     </div>
@@ -547,30 +560,39 @@ export default function EventDetailClient({ event, lowestPrice, originalPrice, n
       {!isFinished && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-slate-200 p-4 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-50 flex justify-between items-center">
           <div>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Harga mulai</p>
-            {originalPrice && originalPrice > lowestPrice && (
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">
+              {event.isLocked ? "Status" : "Harga mulai"}
+            </p>
+            {originalPrice && originalPrice > lowestPrice && !event.isLocked && (
               <p className="text-[10px] text-slate-400 line-through leading-none mb-0.5">
                 Rp {originalPrice.toLocaleString('id-ID')}
               </p>
             )}
-            <p className="text-lg font-black text-primary-600 leading-none">
-              {lowestPrice === 0 ? "Gratis" : `Rp ${lowestPrice.toLocaleString('id-ID')}`}
+            <p className={`text-lg font-black leading-none ${event.isLocked ? 'text-red-600' : 'text-primary-600'}`}>
+              {event.isLocked ? "Kuota Penuh" : lowestPrice === 0 ? "Gratis" : `Rp ${lowestPrice.toLocaleString('id-ID')}`}
             </p>
           </div>
-          <Link 
-            href={`/event/${event.slug}/register`}
-            onClick={(e) => {
-              if (!isLoggedIn) {
-                e.preventDefault();
-                setPendingUrl(`/event/${event.slug}/register`);
-                setShowLoginModal(true);
-              }
-            }}
-            className="px-6 py-3.5 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md flex items-center"
-          >
-            <Ticket className="w-4 h-4 mr-2" />
-            Pilih Tiket
-          </Link>
+          {event.isLocked ? (
+            <div className="px-6 py-3.5 bg-red-100 text-red-600 font-bold rounded-xl shadow-sm flex items-center cursor-not-allowed">
+              <Ticket className="w-4 h-4 mr-2" />
+              Kuota Full
+            </div>
+          ) : (
+            <Link 
+              href={`/event/${event.slug}/register`}
+              onClick={(e) => {
+                if (!isLoggedIn) {
+                  e.preventDefault();
+                  setPendingUrl(`/event/${event.slug}/register`);
+                  setShowLoginModal(true);
+                }
+              }}
+              className="px-6 py-3.5 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold rounded-xl active:scale-95 transition-all shadow-md flex items-center"
+            >
+              <Ticket className="w-4 h-4 mr-2" />
+              Pilih Tiket
+            </Link>
+          )}
         </div>
       )}
 
