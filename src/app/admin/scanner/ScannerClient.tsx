@@ -1029,7 +1029,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
               Math.max(
                 0,
                 (ticket.totalTickets || 1) -
-                  (checkRes.ticket?.checkedInCount ?? ((ticket.checkedInCount || 0) + 1))
+                (checkRes.ticket?.checkedInCount ?? ((ticket.checkedInCount || 0) + 1))
               ));
           const finalCheckedCountOffline = checkInAll
             ? (ticket.totalTickets || 1)
@@ -1100,9 +1100,9 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
         if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
         setValidationSuccessMessage(
           data.message ||
-            (checkInAll
-              ? `Check-in berhasil untuk SEMUA tiket (${ticket.totalTickets || 1} tiket)!`
-              : `Check-in berhasil untuk ${ticket.holderName || ticket.transaction.buyerName}!`)
+          (checkInAll
+            ? `Check-in berhasil untuk SEMUA tiket (${ticket.totalTickets || 1} tiket)!`
+            : `Check-in berhasil untuk ${ticket.holderName || ticket.transaction.buyerName}!`)
         );
 
         setSearchResults((prev) =>
@@ -1167,7 +1167,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
             Math.max(
               0,
               (ticket.totalTickets || 1) -
-                (data.ticket?.checkedInCount ?? ((ticket.checkedInCount || 0) + 1))
+              (data.ticket?.checkedInCount ?? ((ticket.checkedInCount || 0) + 1))
             ));
         const finalCheckedCountOnline = checkInAll
           ? (ticket.totalTickets || 1)
@@ -1215,10 +1215,9 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
         if (localCheckRes.status === "VALID") {
           playBeep("success");
           setValidationSuccessMessage(
-            `Koneksi lemot: Check-in berhasil disimpan di memori lokal (${
-              checkInAll
-                ? "Semua tiket rombongan"
-                : ticket.holderName || ticket.transaction.buyerName
+            `Koneksi lemot: Check-in berhasil disimpan di memori lokal (${checkInAll
+              ? "Semua tiket rombongan"
+              : ticket.holderName || ticket.transaction.buyerName
             }). Akan otomatis tersinkron saat internet lancar.`
           );
 
@@ -1283,7 +1282,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
               Math.max(
                 0,
                 (ticket.totalTickets || 1) -
-                  (localCheckRes.ticket?.checkedInCount ?? ((ticket.checkedInCount || 0) + 1))
+                (localCheckRes.ticket?.checkedInCount ?? ((ticket.checkedInCount || 0) + 1))
               ));
           const finalCheckedCountFallback = checkInAll
             ? (ticket.totalTickets || 1)
@@ -1502,23 +1501,23 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
         background: "radial-gradient(ellipse at 50% 0%, #0d1b2a 0%, #070d18 60%, #040810 100%)",
       }}
     >
-      {/* ── Top Bar ────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
+      {/* ── Top Bar & Offline Status (Single Sticky Container) ──────────────── */}
+      <div className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20">
+        <header className="flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3.5">
           <div className="flex items-center gap-2.5">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20"
               style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
             >
-              <ScanLine className="w-5 h-5 text-white" />
+              <ScanLine className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-white font-bold text-base sm:text-lg tracking-tight leading-none">
-                  Check-In & Scanner Tiket
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="text-white font-bold text-sm sm:text-lg tracking-tight leading-none">
+                  Check-In & Scanner
                 </h1>
                 {adminRole && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono font-bold">
+                  <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono font-bold">
                     {adminRole === "VALIDATOR" ? "VALIDATOR" : "SUPER ADMIN"}
                   </span>
                 )}
@@ -1528,111 +1527,110 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
               </p>
             </div>
           </div>
-        </div>
 
-        {/* Right Actions: Network Status, Offline Cache, History */}
-        <div className="flex items-center gap-2">
-          {/* Network Connection Indicator */}
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold ${
-              isOnline
+          {/* Right Actions: Network Status, Pending Sync, History */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Network Connection Indicator */}
+            <div
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border text-[11px] sm:text-xs font-semibold ${isOnline
                 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                 : "bg-red-500/15 border-red-500/30 text-red-400 animate-pulse"
-            }`}
-            title={isOnline ? "Terhubung ke Internet" : "Mode Offline: Bekerja dengan Cache Lokal"}
-          >
-            {isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">{isOnline ? "Online" : "Mode Offline"}</span>
+                }`}
+              title={isOnline ? "Terhubung ke Internet" : "Mode Offline: Bekerja dengan Cache Lokal"}
+            >
+              {isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">{isOnline ? "Online" : "Mode Offline"}</span>
+            </div>
+
+            {/* Pending Sync Button/Badge */}
+            {offlineStats.pendingSyncCount > 0 && (
+              <button
+                onClick={syncPendingQueue}
+                disabled={isSyncingQueue || !isOnline}
+                className="flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[11px] sm:text-xs font-bold hover:brightness-110 active:scale-95 transition-all animate-bounce"
+                title="Ada data check-in lokal yang belum terkirim ke server. Klik untuk sinkronkan!"
+              >
+                <RefreshCw
+                  className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isSyncingQueue ? "animate-spin text-amber-200" : ""}`}
+                />
+                <span>{offlineStats.pendingSyncCount} Sync</span>
+              </button>
+            )}
+
+            {/* History modal trigger */}
+            <button
+              onClick={() => setShowHistory(true)}
+              className="relative flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-slate-300 text-[11px] sm:text-xs font-medium"
+              title="Riwayat Check-in"
+            >
+              <History className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">Riwayat</span>
+              {history.length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-emerald-500 text-[10px] font-bold text-white">
+                  {history.length}
+                </span>
+              )}
+            </button>
+
+            {/* FPS Indicator when camera active */}
+            {isActive && (
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30">
+                <Zap className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
+                <span className="text-xs font-mono text-yellow-300 tabular-nums">
+                  {fps} <span className="text-yellow-500/60 text-[10px]">FPS</span>
+                </span>
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* ── Offline Cache & Sync Banner (Sub Header Bar) ──────────────────────── */}
+        <div className="px-3 sm:px-6 py-1.5 border-t border-white/5 bg-slate-900/60 flex items-center justify-between gap-2 text-[11px] sm:text-xs">
+          <div className="flex items-center gap-1.5 text-slate-300 min-w-0">
+            <Database className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="truncate">
+              DB Lokal:{" "}
+              <strong className="text-emerald-300 font-mono">
+                {offlineStats.totalTickets} tiket
+              </strong>{" "}
+              <span className="hidden sm:inline">tersimpan di HP/Laptop</span>
+            </span>
+            {offlineStats.lastSyncedAt && (
+              <span className="text-slate-500 hidden md:inline">
+                (Diunduh:{" "}
+                {new Date(offlineStats.lastSyncedAt).toLocaleTimeString("id-ID", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                )
+              </span>
+            )}
           </div>
 
-          {/* Pending Sync Button/Badge */}
-          {offlineStats.pendingSyncCount > 0 && (
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Download offline data button */}
             <button
-              onClick={syncPendingQueue}
-              disabled={isSyncingQueue || !isOnline}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold hover:brightness-110 active:scale-95 transition-all animate-bounce"
-              title="Ada data check-in lokal yang belum terkirim ke server. Klik untuk sinkronkan!"
+              onClick={() => downloadOfflineCache(true)}
+              disabled={isDownloadingOffline || !isOnline}
+              className="flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-300 hover:text-white transition-all disabled:opacity-40 text-[10px] sm:text-xs font-medium"
+              title="Perbarui daftar tiket lokal agar tetap bisa check-in saat sinyal ngelag"
             >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${isSyncingQueue ? "animate-spin text-amber-200" : ""}`}
-              />
-              <span>{offlineStats.pendingSyncCount} Pending Sync</span>
+              {isDownloadingOffline ? (
+                <Loader2 className="w-3 h-3 animate-spin text-emerald-400" />
+              ) : (
+                <CloudDownload className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" />
+              )}
+              <span>
+                {isDownloadingOffline ? "Mengunduh..." : "Perbarui Data"}
+              </span>
             </button>
-          )}
-
-          {/* History modal trigger */}
-          <button
-            onClick={() => setShowHistory(true)}
-            className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-slate-300 text-xs font-medium"
-            title="Riwayat Check-in"
-          >
-            <History className="w-4 h-4 text-emerald-400" />
-            <span className="hidden sm:inline">Riwayat</span>
-            {history.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-emerald-500 text-[10px] font-bold text-white">
-                {history.length}
-              </span>
-            )}
-          </button>
-
-          {/* FPS Indicator when camera active */}
-          {isActive && (
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30">
-              <Zap className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
-              <span className="text-xs font-mono text-yellow-300 tabular-nums">
-                {fps} <span className="text-yellow-500/60 text-[10px]">FPS</span>
-              </span>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* ── Offline Cache & Sync Banner (Sub Header Bar) ──────────────────────── */}
-      <div className="px-4 sm:px-6 py-2 border-b border-white/5 bg-slate-900/40 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2 text-slate-300">
-          <Database className="w-3.5 h-3.5 text-emerald-400" />
-          <span>
-            Database Lokal:{" "}
-            <strong className="text-emerald-300 font-mono">
-              {offlineStats.totalTickets} tiket
-            </strong>{" "}
-            tersimpan di HP/Laptop
-          </span>
-          {offlineStats.lastSyncedAt && (
-            <span className="text-slate-500 hidden md:inline">
-              (Terakhir diunduh:{" "}
-              {new Date(offlineStats.lastSyncedAt).toLocaleTimeString("id-ID", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-              )
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Download offline data button */}
-          <button
-            onClick={() => downloadOfflineCache(true)}
-            disabled={isDownloadingOffline || !isOnline}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-all disabled:opacity-40"
-            title="Perbarui daftar tiket lokal agar tetap bisa check-in saat sinyal ngelag"
-          >
-            {isDownloadingOffline ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
-            ) : (
-              <CloudDownload className="w-3.5 h-3.5 text-emerald-400" />
-            )}
-            <span>
-              {isDownloadingOffline ? "Mengunduh..." : "Perbarui Data Offline"}
-            </span>
-          </button>
+          </div>
         </div>
       </div>
 
       {/* Toast Notification for Sync / Network info */}
       {syncStatusToast && (
-        <div className="px-4 py-2 bg-emerald-500/20 border-b border-emerald-500/40 text-emerald-200 text-xs font-semibold flex items-center justify-between">
+        <div className="px-3 sm:px-4 py-2 bg-emerald-500/20 border-b border-emerald-500/40 text-emerald-200 text-xs font-semibold flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{syncStatusToast}</span>
@@ -1647,37 +1645,34 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
       )}
 
       {/* ── Mobile Tab Navigation (Only screens < lg) ───────────────────────── */}
-      <div className="lg:hidden px-4 pt-3 pb-1 border-b border-white/5 bg-slate-900/50">
-        <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-white/5 border border-white/10 text-xs font-semibold">
+      <div className="lg:hidden px-3 pt-2 pb-1 border-b border-white/5 bg-slate-900/50">
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold">
           <button
             onClick={() => setMobileTab("search")}
-            className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all ${
-              mobileTab === "search"
-                ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25 font-bold"
-                : "text-slate-400 hover:text-white"
-            }`}
+            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg transition-all ${mobileTab === "search"
+              ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25 font-bold"
+              : "text-slate-400 hover:text-white"
+              }`}
           >
             <Search className="w-3.5 h-3.5" />
             <span>Cari / Input</span>
           </button>
           <button
             onClick={() => setMobileTab("camera")}
-            className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all ${
-              mobileTab === "camera"
-                ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25 font-bold"
-                : "text-slate-400 hover:text-white"
-            }`}
+            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg transition-all ${mobileTab === "camera"
+              ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25 font-bold"
+              : "text-slate-400 hover:text-white"
+              }`}
           >
             <Camera className="w-3.5 h-3.5" />
             <span>Kamera QR</span>
           </button>
           <button
             onClick={() => setMobileTab("history")}
-            className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all ${
-              mobileTab === "history"
-                ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25 font-bold"
-                : "text-slate-400 hover:text-white"
-            }`}
+            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg transition-all ${mobileTab === "history"
+              ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25 font-bold"
+              : "text-slate-400 hover:text-white"
+              }`}
           >
             <History className="w-3.5 h-3.5" />
             <span>Riwayat ({history.length})</span>
@@ -1686,32 +1681,31 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
       </div>
 
       {/* ── Main Layout ────────────────────────────────────────────────────── */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
+      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 pb-24 sm:py-5 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
+
           {/* ═══════════════════════════════════════════════════════════════════
               KOLOM KIRI: 1 INPUT MASTER (BARCODE / NAMA / TELPON) & HASIL
              ═══════════════════════════════════════════════════════════════════ */}
           <div
-            className={`lg:col-span-7 flex flex-col gap-4 ${
-              mobileTab !== "search" ? "hidden lg:flex" : "flex"
-            }`}
+            className={`lg:col-span-7 flex flex-col gap-3 sm:gap-4 ${mobileTab !== "search" ? "hidden lg:flex" : "flex"
+              }`}
           >
             {/* 1 Master Unified Input Card */}
             <div
-              className="p-4 sm:p-5 rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl relative overflow-hidden"
+              className="p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl relative overflow-hidden"
               style={{
                 boxShadow: "0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)",
               }}
             >
-              <form onSubmit={handleMasterInputSubmit} className="flex flex-col gap-3">
+              <form onSubmit={handleMasterInputSubmit} className="flex flex-col gap-2.5 sm:gap-3">
                 {/* Master Input Field */}
                 <div className="relative flex items-center">
-                  <div className="absolute left-4 flex items-center pointer-events-none text-emerald-400">
+                  <div className="absolute left-3 sm:left-4 flex items-center pointer-events-none text-emerald-400">
                     {isSearching ? (
-                      <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-emerald-400" />
                     ) : (
-                      <Search className="w-5 h-5" />
+                      <Search className="w-4 h-4 sm:w-5 sm:h-5" />
                     )}
                   </div>
 
@@ -1720,9 +1714,9 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Scan barcode tiket atau ketik nama / nomor telepon..."
+                    placeholder="Scan barcode tiket atau ketik nama / no HP..."
                     autoFocus
-                    className="w-full pl-12 pr-24 py-3.5 rounded-2xl text-sm sm:text-base text-white placeholder:text-slate-500 focus:outline-none transition-all font-medium"
+                    className="w-full pl-9 sm:pl-12 pr-20 sm:pr-24 py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl text-xs sm:text-base text-white placeholder:text-slate-500 focus:outline-none transition-all font-medium"
                     style={{
                       background: "rgba(255, 255, 255, 0.06)",
                       border: "1px solid rgba(16, 185, 129, 0.35)",
@@ -1740,7 +1734,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                   />
 
                   {/* Clear / Enter Buttons inside input */}
-                  <div className="absolute right-2.5 flex items-center gap-1.5">
+                  <div className="absolute right-2 sm:right-2.5 flex items-center gap-1 sm:gap-1.5">
                     {searchQuery && (
                       <button
                         type="button"
@@ -1749,16 +1743,16 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                           setSearchResults([]);
                           searchInputRef.current?.focus();
                         }}
-                        className="w-7 h-7 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors"
+                        className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors"
                         title="Hapus pencarian"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </button>
                     )}
                     <button
                       type="submit"
                       disabled={!searchQuery.trim()}
-                      className="px-3 py-1.5 rounded-xl font-bold text-xs text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-md shadow-emerald-500/20"
+                      className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl font-bold text-xs text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-md shadow-emerald-500/20"
                       style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
                     >
                       <span>Cek</span>
@@ -1770,10 +1764,10 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                 </div>
 
                 {/* ── HINTS (Petunjuk Input) ────────────────────────────────── */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-[11px] text-slate-400">
-                  <span className="text-slate-400 font-medium flex items-center gap-1 mr-1">
+                <div className="flex items-center gap-1.5 pt-0.5 text-[10px] sm:text-[11px] text-slate-400 overflow-x-auto no-scrollbar flex-nowrap shrink-0">
+                  <span className="text-slate-400 font-medium flex items-center gap-1 shrink-0">
                     <Sparkles className="w-3 h-3 text-emerald-400" />
-                    Bisa cari dengan:
+                    <span>Cari:</span>
                   </span>
 
                   <button
@@ -1782,32 +1776,32 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                       setSearchQuery("TX-");
                       searchInputRef.current?.focus();
                     }}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 transition-colors"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 transition-colors shrink-0 whitespace-nowrap"
                   >
                     <Barcode className="w-3 h-3 text-emerald-400" />
-                    <span>Kode Tiket / Barcode (cth: TX-...)</span>
+                    <span>Kode (TX-...)</span>
                   </button>
 
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 shrink-0 whitespace-nowrap">
                     <User className="w-3 h-3 text-blue-400" />
                     <span>Nama Peserta</span>
                   </span>
 
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300 shrink-0 whitespace-nowrap">
                     <Phone className="w-3 h-3 text-purple-400" />
-                    <span>No. WhatsApp / HP</span>
+                    <span>No. WA / HP</span>
                   </span>
                 </div>
 
                 {/* Event Selector if multiple */}
                 {initialEvents.length > 1 && (
-                  <div className="flex items-center gap-2 pt-2 border-t border-white/5 text-xs text-slate-400">
-                    <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <div className="flex items-center gap-1.5 pt-1.5 border-t border-white/5 text-[11px] sm:text-xs text-slate-400">
+                    <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 shrink-0" />
                     <span className="shrink-0">Event:</span>
                     <select
                       value={selectedEventId}
                       onChange={(e) => setSelectedEventId(e.target.value)}
-                      className="bg-slate-800/90 border border-white/10 rounded-xl px-2.5 py-1.5 text-slate-200 text-xs focus:outline-none focus:border-emerald-500 flex-1 truncate font-medium"
+                      className="bg-slate-800/90 border border-white/10 rounded-lg sm:rounded-xl px-2 py-1 sm:px-2.5 sm:py-1.5 text-slate-200 text-[11px] sm:text-xs focus:outline-none focus:border-emerald-500 flex-1 truncate font-medium"
                     >
                       {initialEvents.map((evt) => (
                         <option key={evt.id} value={evt.id}>
@@ -1823,29 +1817,29 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
             {/* ── STATE 1: JIKA BELUM MENGETIK (JANGAN TAMPILKAN SEMUA DATA) ─── */}
             {!searchQuery.trim() && (
               <div
-                className="p-10 sm:p-14 rounded-3xl border border-white/10 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center text-center gap-4"
+                className="p-6 sm:p-14 rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center text-center gap-3 sm:gap-4"
                 style={{
                   boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
                 }}
               >
                 <div className="relative">
-                  <div className="absolute inset-0 w-20 h-20 rounded-full bg-emerald-500/10 blur-xl" />
+                  <div className="absolute inset-0 w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-emerald-500/10 blur-xl" />
                   <div
-                    className="relative w-20 h-20 rounded-3xl flex items-center justify-center border border-white/10"
+                    className="relative w-14 h-14 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center border border-white/10"
                     style={{
                       background:
                         "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.08))",
                     }}
                   >
-                    <Search className="w-9 h-9 text-emerald-400" />
+                    <Search className="w-6 h-6 sm:w-9 sm:h-9 text-emerald-400" />
                   </div>
                 </div>
 
                 <div className="max-w-md">
-                  <h3 className="text-white font-bold text-base sm:text-lg">
+                  <h3 className="text-white font-bold text-sm sm:text-lg">
                     Siap untuk Validasi & Check-In
                   </h3>
-                  <p className="text-slate-400 text-xs sm:text-sm mt-1.5 leading-relaxed">
+                  <p className="text-slate-400 text-[11px] sm:text-sm mt-1 sm:mt-1.5 leading-relaxed">
                     Ketik <strong>Kode Barcode</strong>, <strong>Nama Peserta</strong>, atau{" "}
                     <strong>Nomor Telepon</strong> di kolom pencarian di atas untuk memunculkan
                     data peserta.
@@ -1856,43 +1850,43 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
 
             {/* ── STATE 2: JIKA SUDAH MENGETIK (HASIL PENCARIAN REALTIME) ───── */}
             {searchQuery.trim() && (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2.5 sm:gap-3">
                 {/* Result header & count */}
                 <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-emerald-400" />
-                    <h2 className="text-sm font-bold text-slate-200">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                    <h2 className="text-xs sm:text-sm font-bold text-slate-200">
                       Hasil Pencarian untuk &ldquo;{searchQuery}&rdquo;
                     </h2>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
                     {!isOnline && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                      <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
                         Mode Offline
                       </span>
                     )}
-                    <span className="text-xs text-slate-400 font-mono">
+                    <span className="text-[11px] sm:text-xs text-slate-400 font-mono">
                       {searchResults.length} ditemukan
                     </span>
                   </div>
                 </div>
 
                 {/* List of matching tickets */}
-                <div className="flex flex-col gap-2.5">
+                <div className="flex flex-col gap-2 sm:gap-2.5">
                   {isSearching && searchResults.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-12 rounded-3xl bg-slate-900/40 border border-white/5 text-center">
-                      <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mb-3" />
-                      <p className="text-slate-300 font-medium text-sm">Mencari data peserta...</p>
+                    <div className="flex flex-col items-center justify-center p-8 sm:p-12 rounded-2xl sm:rounded-3xl bg-slate-900/40 border border-white/5 text-center">
+                      <Loader2 className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400 animate-spin mb-2 sm:mb-3" />
+                      <p className="text-slate-300 font-medium text-xs sm:text-sm">Mencari data peserta...</p>
                     </div>
                   ) : searchResults.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-12 rounded-3xl bg-slate-900/40 border border-white/5 text-center">
-                      <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-3 text-slate-500">
-                        <Search className="w-6 h-6" />
+                    <div className="flex flex-col items-center justify-center p-8 sm:p-12 rounded-2xl sm:rounded-3xl bg-slate-900/40 border border-white/5 text-center">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-3 text-slate-500">
+                        <Search className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
-                      <h3 className="text-slate-300 font-bold text-sm">
+                      <h3 className="text-slate-300 font-bold text-xs sm:text-sm">
                         Tidak ada data yang cocok
                       </h3>
-                      <p className="text-slate-500 text-xs mt-1 max-w-sm">
+                      <p className="text-slate-500 text-[11px] sm:text-xs mt-1 max-w-sm">
                         Tidak ditemukan tiket dengan kata kunci &ldquo;{searchQuery}&rdquo;. Periksa kembali
                         ejaan nama, nomor tiket, atau nomor telepon.
                       </p>
@@ -1907,7 +1901,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                         <div
                           key={ticket.id}
                           onClick={() => setTicketToValidate(ticket)}
-                          className="group p-4 rounded-2xl border transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden"
+                          className="group p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 relative overflow-hidden active:scale-[0.99]"
                           style={{
                             background: isCheckedIn
                               ? "linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(15, 23, 42, 0.8))"
@@ -1918,35 +1912,34 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                           }}
                         >
                           {/* Left: Attendee details */}
-                          <div className="flex items-start gap-3.5 min-w-0">
+                          <div className="flex items-start gap-2.5 sm:gap-3.5 min-w-0">
                             {/* Avatar */}
                             <div
-                              className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 mt-0.5 border ${
-                                isCheckedIn
-                                  ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
-                                  : !isApproved
+                              className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 mt-0.5 border ${isCheckedIn
+                                ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
+                                : !isApproved
                                   ? "bg-red-500/15 border-red-500/30 text-red-400"
                                   : "bg-emerald-500/15 border-emerald-500/30 text-emerald-400 group-hover:scale-105 transition-transform"
-                              }`}
+                                }`}
                             >
                               {isCheckedIn ? (
-                                <CheckCircle2 className="w-5 h-5 text-amber-400" />
+                                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
                               ) : !isApproved ? (
-                                <AlertTriangle className="w-5 h-5 text-red-400" />
+                                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
                               ) : (
-                                <User className="w-5 h-5 text-emerald-400" />
+                                <User className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
                               )}
                             </div>
 
                             {/* Info */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="font-bold text-white text-base group-hover:text-emerald-300 transition-colors truncate">
+                              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                <span className="font-bold text-white text-sm sm:text-base group-hover:text-emerald-300 transition-colors truncate">
                                   {attendeeName}
                                 </span>
                                 {ticket.holderName &&
                                   ticket.holderName !== ticket.transaction.buyerName && (
-                                    <span className="text-[11px] text-slate-400 font-normal">
+                                    <span className="text-[10px] sm:text-[11px] text-slate-400 font-normal truncate max-w-[120px] sm:max-w-none">
                                       (Pemesan: {ticket.transaction.buyerName})
                                     </span>
                                   )}
@@ -1954,15 +1947,14 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                                 {/* Multi-Ticket / Rombongan Badge */}
                                 {ticket.totalTickets && ticket.totalTickets > 1 && (
                                   <span
-                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold border ${
-                                      (ticket.checkedInCount ?? 0) >= ticket.totalTickets
-                                        ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                                        : (ticket.checkedInCount ?? 0) > 0
+                                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold border ${(ticket.checkedInCount ?? 0) >= ticket.totalTickets
+                                      ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                                      : (ticket.checkedInCount ?? 0) > 0
                                         ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
                                         : "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                                    }`}
+                                      }`}
                                   >
-                                    <Users className="w-3 h-3" />
+                                    <Users className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                     <span>
                                       Rombongan: {ticket.checkedInCount ?? (ticket.isValidated ? 1 : 0)}/{ticket.totalTickets} Hadir
                                     </span>
@@ -1970,21 +1962,21 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                                 )}
                               </div>
 
-                              <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-slate-400">
+                              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1 text-[11px] sm:text-xs text-slate-400">
                                 {/* Barcode Tag */}
-                                <span className="font-mono text-emerald-300 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                                <span className="font-mono text-emerald-300 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 text-[10px] sm:text-xs">
                                   {ticket.barcodeString}
                                 </span>
 
                                 {/* Category */}
-                                <span className="bg-white/10 px-2 py-0.5 rounded-lg text-slate-300 font-medium">
+                                <span className="bg-white/10 px-1.5 py-0.5 rounded text-slate-300 font-medium text-[10px] sm:text-xs">
                                   {ticket.ticketCategory.name}
                                 </span>
 
                                 {/* Phone */}
                                 {(ticket.holderPhone || ticket.transaction.buyerPhone) && (
-                                  <span className="hidden sm:inline-flex items-center gap-1 text-slate-400">
-                                    <Phone className="w-3 h-3 text-slate-500" />
+                                  <span className="inline-flex items-center gap-1 text-slate-400 text-[10px] sm:text-xs">
+                                    <Phone className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-500" />
                                     {ticket.holderPhone || ticket.transaction.buyerPhone}
                                   </span>
                                 )}
@@ -1998,17 +1990,17 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                           </div>
 
                           {/* Right: Status badge & Action */}
-                          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
                             {isCheckedIn ? (
-                              <div className="text-right">
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold">
+                              <div className="w-full sm:w-auto flex items-center justify-between sm:block text-right">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg sm:rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold">
                                   <CheckCircle2 className="w-3.5 h-3.5" />
                                   {ticket.totalTickets && ticket.totalTickets > 1
                                     ? `HADIR (${ticket.checkedInCount ?? 1}/${ticket.totalTickets})`
                                     : "SUDAH CHECK-IN"}
                                 </span>
                                 {ticket.checkedInAt && (
-                                  <p className="text-[10px] text-slate-400 mt-1 font-mono">
+                                  <p className="text-[10px] text-slate-400 sm:mt-1 font-mono">
                                     {new Date(ticket.checkedInAt).toLocaleString("id-ID", {
                                       dateStyle: "short",
                                       timeStyle: "short",
@@ -2017,7 +2009,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                                 )}
                               </div>
                             ) : !isApproved ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs font-bold">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg sm:rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs font-bold">
                                 <AlertTriangle className="w-3.5 h-3.5" />
                                 {ticket.transaction.status}
                               </span>
@@ -2049,9 +2041,8 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
               KOLOM KANAN: KAMERA SCANNER & RIWAYAT (Desktop: 5 Cols, Mobile: Tab "camera")
              ═══════════════════════════════════════════════════════════════════ */}
           <div
-            className={`lg:col-span-5 flex flex-col gap-4 ${
-              mobileTab !== "camera" ? "hidden lg:flex" : "flex"
-            }`}
+            className={`lg:col-span-5 flex flex-col gap-4 ${mobileTab !== "camera" ? "hidden lg:flex" : "flex"
+              }`}
           >
             {/* Viewfinder Card */}
             <div
@@ -2428,13 +2419,12 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div
-                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                            item.status === "valid"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : item.status === "already"
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${item.status === "valid"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : item.status === "already"
                               ? "bg-amber-500/20 text-amber-400"
                               : "bg-red-500/20 text-red-400"
-                          }`}
+                            }`}
                         >
                           {item.status === "valid" ? (
                             <CheckCircle2 className="w-4 h-4" />
@@ -2477,7 +2467,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
          ═══════════════════════════════════════════════════════════════════════ */}
       {ticketToValidate && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
           style={{ background: "rgba(3, 7, 18, 0.82)", backdropFilter: "blur(12px)" }}
           onClick={() => {
             if (!isValidatingTicket) {
@@ -2488,7 +2478,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
           }}
         >
           <div
-            className="w-full max-w-lg rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative"
+            className="w-full max-w-lg max-h-[92vh] flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative"
             style={{
               background: "linear-gradient(160deg, #0f172a 0%, #090e17 100%)",
               animation: "resultFadeIn 0.25s ease-out forwards",
@@ -2496,16 +2486,16 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-900/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-slate-900/60 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
                   <User className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-white font-bold text-sm sm:text-base">
+                  <h3 className="text-white font-bold text-xs sm:text-base">
                     Validasi Data & Konfirmasi Check-In
                   </h3>
-                  <p className="text-[11px] text-slate-400">Pastikan identitas peserta sudah sesuai</p>
+                  <p className="text-[10px] sm:text-[11px] text-slate-400">Pastikan identitas peserta sudah sesuai</p>
                 </div>
               </div>
               {!isValidatingTicket && (
@@ -2515,7 +2505,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                     setValidationSuccessMessage(null);
                     setValidationErrorMessage(null);
                   }}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -2523,10 +2513,10 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 flex flex-col gap-5">
+            <div className="p-4 sm:p-6 flex flex-col gap-3.5 sm:gap-5 overflow-y-auto">
               {/* Peserta Info Card */}
               <div
-                className="p-4 rounded-2xl border flex flex-col gap-3"
+                className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border flex flex-col gap-2.5 sm:gap-3"
                 style={{
                   background: ticketToValidate.isValidated
                     ? "rgba(245, 158, 11, 0.08)"
@@ -2537,30 +2527,30 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                 }}
               >
                 <div>
-                  <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                  <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                     Nama Peserta / Pemegang Tiket
                   </span>
-                  <h2 className="text-xl font-black text-white mt-0.5 tracking-tight">
+                  <h2 className="text-lg sm:text-xl font-black text-white mt-0.5 tracking-tight">
                     {ticketToValidate.holderName || ticketToValidate.transaction.buyerName}
                   </h2>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/10 text-xs">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-2 border-t border-white/10 text-xs">
                   <div>
                     <span className="text-slate-400 text-[10px] block">Nomor / Kode Tiket</span>
-                    <span className="font-mono text-emerald-300 font-bold text-sm">
+                    <span className="font-mono text-emerald-300 font-bold text-xs sm:text-sm">
                       {ticketToValidate.barcodeString}
                     </span>
                   </div>
                   <div>
                     <span className="text-slate-400 text-[10px] block">Kategori Tiket</span>
-                    <span className="text-white font-bold">
+                    <span className="text-white font-bold text-xs sm:text-sm">
                       {ticketToValidate.ticketCategory.name}
                     </span>
                   </div>
                   <div>
                     <span className="text-slate-400 text-[10px] block">No. WhatsApp / HP</span>
-                    <span className="text-slate-200 font-medium">
+                    <span className="text-slate-200 font-medium text-xs">
                       {ticketToValidate.holderPhone ||
                         ticketToValidate.transaction.buyerPhone ||
                         "-"}
@@ -2568,7 +2558,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                   </div>
                   <div>
                     <span className="text-slate-400 text-[10px] block">Event</span>
-                    <span className="text-slate-200 font-medium truncate block">
+                    <span className="text-slate-200 font-medium truncate block text-xs">
                       {ticketToValidate.transaction.event.title}
                     </span>
                   </div>
@@ -2576,7 +2566,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
 
                 {ticketToValidate.holderName &&
                   ticketToValidate.holderName !== ticketToValidate.transaction.buyerName && (
-                    <div className="pt-2 border-t border-white/10 text-[11px] text-slate-400">
+                    <div className="pt-2 border-t border-white/10 text-[10px] sm:text-[11px] text-slate-400">
                       Pemesan Transaksi:{" "}
                       <strong className="text-slate-300">
                         {ticketToValidate.transaction.buyerName}
@@ -2586,23 +2576,23 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
 
                 {/* Info Rombongan / Multi-tiket */}
                 {ticketToValidate.totalTickets && ticketToValidate.totalTickets > 1 && (
-                  <div className="pt-2.5 pb-1 border-t border-white/10 flex items-center justify-between">
+                  <div className="pt-2 pb-0.5 border-t border-white/10 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                        <Users className="w-4 h-4" />
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
+                        <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </div>
                       <div>
-                        <span className="text-purple-300 text-xs font-bold block">
+                        <span className="text-purple-300 text-[11px] sm:text-xs font-bold block">
                           Tiket Rombongan ({ticketToValidate.checkedInCount ?? (ticketToValidate.isValidated ? 1 : 0)}/{ticketToValidate.totalTickets} Hadir)
                         </span>
-                        <span className="text-slate-400 text-[11px]">
+                        <span className="text-slate-400 text-[10px] sm:text-[11px]">
                           {(ticketToValidate.remainingCount ?? Math.max(0, ticketToValidate.totalTickets - (ticketToValidate.checkedInCount ?? 0))) > 0
-                            ? `Sisa ${ticketToValidate.remainingCount ?? Math.max(0, ticketToValidate.totalTickets - (ticketToValidate.checkedInCount ?? 0))} tiket belum check-in di transaksi ini`
-                            : "Semua kuota tiket dalam rombongan ini sudah hadir"}
+                            ? `Sisa ${ticketToValidate.remainingCount ?? Math.max(0, ticketToValidate.totalTickets - (ticketToValidate.checkedInCount ?? 0))} tiket belum hadir`
+                            : "Semua kuota tiket rombongan sudah hadir"}
                         </span>
                       </div>
                     </div>
-                    <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300">
+                    <span className="font-mono text-[11px] sm:text-xs font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 shrink-0">
                       {ticketToValidate.checkedInCount ?? (ticketToValidate.isValidated ? 1 : 0)} / {ticketToValidate.totalTickets}
                     </span>
                   </div>
@@ -2614,31 +2604,31 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                 <div className="flex flex-col gap-2.5">
                   {/* Jika rombongan masih punya sisa tiket yang belum check-in */}
                   {(ticketToValidate.remainingCount ?? 0) > 0 ? (
-                    <div className="p-3.5 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-start gap-3">
-                      <Users className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
+                    <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-start gap-2.5 sm:gap-3">
+                      <Users className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 shrink-0 mt-0.5" />
                       <div>
                         <p className="text-purple-300 font-bold text-xs sm:text-sm">
                           Progress Rombongan: {ticketToValidate.checkedInCount ?? 1} dari {ticketToValidate.totalTickets} tiket sudah check-in
                         </p>
-                        <p className="text-purple-200/80 text-xs mt-0.5">
+                        <p className="text-purple-200/80 text-[11px] sm:text-xs mt-0.5">
                           Masih ada <strong>{ticketToValidate.remainingCount} tiket</strong> belum hadir. Anda dapat langsung melanjutkan check-in tiket berikutnya menggunakan tombol di bawah.
                         </p>
                       </div>
                     </div>
                   ) : (
-                    <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-start gap-3">
-                      <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-start gap-2.5 sm:gap-3">
+                      <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 shrink-0 mt-0.5" />
                       <div>
                         <p className="text-amber-300 font-bold text-xs sm:text-sm">
                           Semua tiket rombongan ({ticketToValidate.totalTickets}/{ticketToValidate.totalTickets}) sudah digunakan!
                         </p>
-                        <p className="text-amber-200/70 text-xs mt-0.5">
+                        <p className="text-amber-200/70 text-[11px] sm:text-xs mt-0.5">
                           Check-in terakhir tercatat pada{" "}
                           {ticketToValidate.checkedInAt
                             ? new Date(ticketToValidate.checkedInAt).toLocaleString("id-ID", {
-                                dateStyle: "medium",
-                                timeStyle: "short",
-                              })
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            })
                             : "Sebelumnya"}
                           .
                         </p>
@@ -2647,13 +2637,13 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                   )}
                 </div>
               ) : ticketToValidate.transaction.status !== "APPROVED" ? (
-                <div className="p-3.5 rounded-2xl bg-red-500/15 border border-red-500/30 flex items-start gap-3">
-                  <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-red-500/15 border border-red-500/30 flex items-start gap-2.5 sm:gap-3">
+                  <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-red-300 font-bold text-xs sm:text-sm">
                       Pembayaran Belum Disetujui
                     </p>
-                    <p className="text-red-200/70 text-xs mt-0.5">
+                    <p className="text-red-200/70 text-[11px] sm:text-xs mt-0.5">
                       Status pembayaran tiket ini adalah{" "}
                       <strong>{ticketToValidate.transaction.status}</strong>. Tiket tidak dapat
                       di-check in sebelum diverifikasi.
@@ -2661,8 +2651,8 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                   </div>
                 </div>
               ) : (
-                <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-3">
-                  <Sparkles className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-2.5 sm:gap-3">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0 mt-0.5" />
                   <p className="text-emerald-200 text-xs sm:text-sm leading-relaxed">
                     Apakah Anda yakin informasi atas nama{" "}
                     <strong className="text-white">
@@ -2675,22 +2665,22 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
 
               {/* Feedback messages */}
               {validationSuccessMessage && (
-                <div className="p-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0" />
                   <span>{validationSuccessMessage}</span>
                 </div>
               )}
 
               {validationErrorMessage && (
-                <div className="p-3.5 rounded-2xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs sm:text-sm font-bold flex items-center gap-2.5">
-                  <XCircle className="w-5 h-5 text-red-400 shrink-0" />
+                <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs sm:text-sm font-bold flex items-center gap-2">
+                  <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 shrink-0" />
                   <span>{validationErrorMessage}</span>
                 </div>
               )}
             </div>
 
             {/* Modal Actions */}
-            <div className="px-6 py-4 border-t border-white/10 bg-slate-900/60 flex flex-wrap items-center justify-end gap-2.5">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-white/10 bg-slate-900/60 flex flex-wrap items-center justify-end gap-2 shrink-0">
               <button
                 type="button"
                 disabled={isValidatingTicket}
@@ -2699,13 +2689,13 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                   setValidationSuccessMessage(null);
                   setValidationErrorMessage(null);
                 }}
-                className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all disabled:opacity-50"
+                className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all disabled:opacity-50"
               >
                 {ticketToValidate.isValidated
                   ? "Selesai / Tutup"
                   : ticketToValidate.transaction.status !== "APPROVED"
-                  ? "Tutup"
-                  : "Batal"}
+                    ? "Tutup"
+                    : "Batal"}
               </button>
 
               {ticketToValidate.transaction.status === "APPROVED" && (
@@ -2718,12 +2708,12 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                         type="button"
                         disabled={isValidatingTicket}
                         onClick={() => handleConfirmCheckIn(ticketToValidate, false)}
-                        className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed border border-emerald-500/30 bg-emerald-600/30 hover:bg-emerald-600/50 shadow-md shadow-emerald-500/10"
+                        className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed border border-emerald-500/30 bg-emerald-600/30 hover:bg-emerald-600/50 shadow-md shadow-emerald-500/10"
                       >
                         {isValidatingTicket ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                         ) : (
-                          <Check className="w-4 h-4 text-emerald-400" />
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
                         )}
                         <span>
                           {ticketToValidate.totalTickets && ticketToValidate.totalTickets > 1
@@ -2740,17 +2730,17 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                             type="button"
                             disabled={isValidatingTicket}
                             onClick={() => handleConfirmCheckIn(ticketToValidate, true)}
-                            className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-2 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-purple-500/25 hover:brightness-110"
+                            className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 sm:gap-2 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-purple-500/25 hover:brightness-110"
                             style={{ background: "linear-gradient(135deg, #8b5cf6, #6d28d9)" }}
                           >
                             {isValidatingTicket ? (
                               <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                <span>Memproses Semua...</span>
+                                <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
+                                <span>Memproses...</span>
                               </>
                             ) : (
                               <>
-                                <Users className="w-4 h-4 text-purple-200" />
+                                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-200" />
                                 <span>
                                   Check-In Semua ({ticketToValidate.remainingCount ?? ticketToValidate.totalTickets} Tiket)
                                 </span>
@@ -2769,12 +2759,12 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                         type="button"
                         disabled={isValidatingTicket}
                         onClick={() => handleConfirmCheckIn(ticketToValidate, false)}
-                        className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed border border-emerald-500/30 bg-emerald-600/30 hover:bg-emerald-600/50 shadow-md shadow-emerald-500/10"
+                        className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed border border-emerald-500/30 bg-emerald-600/30 hover:bg-emerald-600/50 shadow-md shadow-emerald-500/10"
                       >
                         {isValidatingTicket ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                         ) : (
-                          <Check className="w-4 h-4 text-emerald-400" />
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
                         )}
                         <span>
                           Check-In Tiket Ke-{(ticketToValidate.checkedInCount || 0) + 1}
@@ -2786,17 +2776,17 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                         type="button"
                         disabled={isValidatingTicket}
                         onClick={() => handleConfirmCheckIn(ticketToValidate, true)}
-                        className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-2 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-purple-500/25 hover:brightness-110"
+                        className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 sm:gap-2 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-purple-500/25 hover:brightness-110"
                         style={{ background: "linear-gradient(135deg, #8b5cf6, #6d28d9)" }}
                       >
                         {isValidatingTicket ? (
                           <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Memproses Sisa...</span>
+                            <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
+                            <span>Memproses...</span>
                           </>
                         ) : (
                           <>
-                            <Users className="w-4 h-4 text-purple-200" />
+                            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-200" />
                             <span>
                               Check-In Sisa {ticketToValidate.remainingCount} Tiket Sekaligus
                             </span>
@@ -2815,55 +2805,50 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
       {/* ── Standalone History Modal ────────────────────────────────────────── */}
       {showHistory && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
           style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(10px)" }}
           onClick={() => setShowHistory(false)}
         >
           <div
-            className="w-full max-w-lg rounded-3xl overflow-hidden border border-white/10 shadow-2xl"
+            className="w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 shadow-2xl"
             style={{
               background: "linear-gradient(160deg, #111827 0%, #0d1520 100%)",
-              maxHeight: "80vh",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-              <div className="flex items-center gap-2.5">
-                <History className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-white font-bold text-sm sm:text-base">Riwayat Scan Sesi Ini</h3>
-                <span className="text-xs text-slate-400 font-mono">({history.length})</span>
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <History className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
+                <h3 className="text-white font-bold text-xs sm:text-base">Riwayat Scan Sesi Ini</h3>
+                <span className="text-[11px] sm:text-xs text-slate-400 font-mono">({history.length})</span>
               </div>
               <button
                 onClick={() => setShowHistory(false)}
-                className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div
-              className="overflow-y-auto p-4 space-y-2"
-              style={{ maxHeight: "calc(80vh - 70px)" }}
-            >
+            <div className="overflow-y-auto p-3 sm:p-4 space-y-2 flex-1">
               {history.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 text-xs">
+                <div className="text-center py-10 sm:py-12 text-slate-500 text-xs">
                   Belum ada aktivitas scan pada sesi ini.
                 </div>
               ) : (
                 history.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-3.5 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors"
+                    className="flex items-center justify-between p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                       <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                          item.status === "valid"
-                            ? "bg-emerald-500/20 text-emerald-400"
-                            : item.status === "already"
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 ${item.status === "valid"
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : item.status === "already"
                             ? "bg-amber-500/20 text-amber-400"
                             : "bg-red-500/20 text-red-400"
-                        }`}
+                          }`}
                       >
                         {item.status === "valid" ? (
                           <CheckCircle2 className="w-4 h-4" />
@@ -2877,7 +2862,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                         <p className="text-white font-bold text-xs sm:text-sm truncate">
                           {item.holderName}
                         </p>
-                        <p className="text-[11px] text-slate-400 font-mono">
+                        <p className="text-[10px] sm:text-[11px] text-slate-400 font-mono">
                           {item.barcodeString}
                         </p>
                         {item.eventTitle && (
@@ -2885,8 +2870,8 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                         )}
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-[11px] text-slate-400 font-mono">
+                    <div className="text-right shrink-0 ml-2">
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 font-mono">
                         {item.time.toLocaleTimeString("id-ID", {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -2900,19 +2885,18 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                           </span>
                         )}
                         <span
-                          className={`text-[9px] font-black uppercase tracking-wider ${
-                            item.status === "valid"
-                              ? "text-emerald-400"
-                              : item.status === "already"
+                          className={`text-[9px] font-black uppercase tracking-wider ${item.status === "valid"
+                            ? "text-emerald-400"
+                            : item.status === "already"
                               ? "text-amber-400"
                               : "text-red-400"
-                          }`}
+                            }`}
                         >
                           {item.status === "valid"
                             ? "CHECK-IN"
                             : item.status === "already"
-                            ? "SUDAH"
-                            : "INVALID"}
+                              ? "SUDAH"
+                              : "INVALID"}
                         </span>
                       </div>
                     </div>

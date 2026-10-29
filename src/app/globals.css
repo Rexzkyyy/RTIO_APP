@@ -119,6 +119,15 @@ html.hide-global-loader #global-loader {
   animation-delay: 200ms;
 }
 
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ─── PRINT & PDF OPTIMIZATION ──────────────────────────────────────────────── */
 @media print {
   @page {
