@@ -41,19 +41,21 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
         </div>
         
         <nav className="mt-6 flex-1 flex flex-col gap-2 overflow-y-auto overflow-x-hidden px-3">
-          <Link 
-            prefetch={false}
-            href="/admin" 
-            className={`flex items-center p-3 transition-colors rounded-xl ${
-              pathname === '/admin' 
-                ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
-                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-            }`}
-            title="Dashboard"
-          >
-            <LayoutDashboard className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
-            {!isCollapsed && <span>Dashboard</span>}
-          </Link>
+          {!isValidator && (
+            <Link 
+              prefetch={false}
+              href="/admin" 
+              className={`flex items-center p-3 transition-colors rounded-xl ${
+                pathname === '/admin' 
+                  ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+              }`}
+              title="Dashboard"
+            >
+              <LayoutDashboard className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
+              {!isCollapsed && <span>Dashboard</span>}
+            </Link>
+          )}
 
           {!isValidator && (
             <Link 
@@ -227,22 +229,24 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 w-full h-16 bg-white border-t border-slate-200 z-50 flex items-center justify-around pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <Link 
-          prefetch={false}
-          href="/admin" 
-          className={`flex flex-col items-center justify-center w-1/4 h-full ${
-            pathname === '/admin' ? 'text-emerald-600' : 'text-slate-400'
-          }`}
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          <LayoutDashboard className="w-5 h-5 mb-1" />
-          <span className="text-[10px] font-medium">Dasbor</span>
-        </Link>
+        {!isValidator && (
+          <Link 
+            prefetch={false}
+            href="/admin" 
+            className={`flex flex-col items-center justify-center flex-1 h-full ${
+              pathname === '/admin' ? 'text-emerald-600' : 'text-slate-400'
+            }`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <LayoutDashboard className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-medium">Dasbor</span>
+          </Link>
+        )}
         {!isValidator && (
           <Link 
             prefetch={false}
             href="/admin/events" 
-            className={`flex flex-col items-center justify-center w-1/4 h-full ${
+            className={`flex flex-col items-center justify-center flex-1 h-full ${
               pathname.includes('/admin/events') && !isMobileMenuOpen ? 'text-emerald-600' : 'text-slate-400'
             }`}
             onClick={() => setIsMobileMenuOpen(false)}
@@ -254,7 +258,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
         <Link 
           prefetch={false}
           href="/admin/transactions" 
-          className={`flex flex-col items-center justify-center w-1/4 h-full ${
+          className={`flex flex-col items-center justify-center flex-1 h-full ${
             pathname.includes('/admin/transactions') && !isMobileMenuOpen ? 'text-emerald-600' : 'text-slate-400'
           }`}
           onClick={() => setIsMobileMenuOpen(false)}
@@ -265,7 +269,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
         <Link 
           prefetch={false}
           href="/admin/scanner" 
-          className={`flex flex-col items-center justify-center w-1/4 h-full ${
+          className={`flex flex-col items-center justify-center flex-1 h-full ${
             pathname.includes('/admin/scanner') && !isMobileMenuOpen ? 'text-emerald-600' : 'text-slate-400'
           }`}
           onClick={() => setIsMobileMenuOpen(false)}
@@ -276,7 +280,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
         {!isValidator && (
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`flex flex-col items-center justify-center w-1/4 h-full ${
+            className={`flex flex-col items-center justify-center flex-1 h-full ${
               isMobileMenuOpen ? 'text-emerald-600' : 'text-slate-400'
             }`}
           >
@@ -287,7 +291,7 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
         {isValidator && (
           <button 
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className={`flex flex-col items-center justify-center w-1/4 h-full text-slate-400 hover:text-red-500`}
+            className={`flex flex-col items-center justify-center flex-1 h-full text-slate-400 hover:text-red-500`}
           >
             <LogOut className="w-5 h-5 mb-1" />
             <span className="text-[10px] font-medium">Keluar</span>

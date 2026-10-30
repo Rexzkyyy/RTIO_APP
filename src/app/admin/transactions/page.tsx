@@ -51,6 +51,9 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
     const s = await getServerSession(authOptions);
     const c = await cookies();
     const bypass = process.env.NODE_ENV !== "production" ? c.get("dev-admin-bypass")?.value : null;
+    if (!s?.user && !bypass) {
+      throw new Error("Akses tidak sah: Silakan login terlebih dahulu.");
+    }
     // @ts-ignore
     const role = s?.user?.adminRole || bypass;
     if (role === "VALIDATOR") {
