@@ -50,6 +50,11 @@ export async function createOfflineTicket(
 
   const sessionUser = session?.user as { adminRole?: string; adminId?: string; name?: string | null } | undefined;
   const isValidator = sessionUser?.adminRole === "VALIDATOR" || bypassRole === "VALIDATOR";
+
+  if (isValidator) {
+    return { success: false, message: "Akses ditolak: Verifikator tidak diizinkan membuat tiket offline." };
+  }
+
   const adminId = sessionUser?.adminId;
 
   const eventId = (formData.get("eventId") as string)?.trim();

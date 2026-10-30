@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
     if (bypassCookie) {
       if (bypassCookie === 'VALIDATOR') {
         // If they go to restricted pages, redirect to /admin/transactions
-        if (request.nextUrl.pathname === '/admin' || request.nextUrl.pathname.startsWith('/admin/events') || request.nextUrl.pathname.startsWith('/admin/users') || request.nextUrl.pathname.startsWith('/admin/tickets')) {
+        if (request.nextUrl.pathname === '/admin' || request.nextUrl.pathname.startsWith('/admin/events') || request.nextUrl.pathname.startsWith('/admin/users') || request.nextUrl.pathname.startsWith('/admin/tickets') || request.nextUrl.pathname.startsWith('/admin/offline-tickets')) {
           return NextResponse.redirect(new URL('/admin/transactions', request.url));
         }
         // Validators can access scanner

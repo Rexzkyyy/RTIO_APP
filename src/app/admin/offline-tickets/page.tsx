@@ -30,6 +30,12 @@ export default async function AdminOfflineTicketsPage({ searchParams }: Props) {
 
   const sessionUser = session?.user as { adminRole?: string; adminId?: string; name?: string | null; email?: string | null } | undefined;
   const isValidator = sessionUser?.adminRole === "VALIDATOR" || bypassRole === "VALIDATOR";
+
+  // Verifikator tidak diizinkan mengakses pembuatan tiket offline
+  if (isValidator) {
+    redirect("/admin/transactions");
+  }
+
   const adminId = sessionUser?.adminId;
 
   // Validator access check

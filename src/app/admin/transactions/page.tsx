@@ -1,8 +1,9 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
-import { ChevronLeft, CheckCircle2, XCircle, Search, ImageIcon, Clock, ChevronRight, Receipt, Timer, ArrowUpCircle, RefreshCw } from "lucide-react";
+import { ChevronLeft, CheckCircle2, XCircle, Search, ImageIcon, Clock, ChevronRight, Receipt, Timer, ArrowUpCircle, RefreshCw, ShieldAlert } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { DeleteButton } from "./DeleteButton";
 import { UpgradeButton, ReactivateButton, ExpiredApproveButton, EditImageButton } from "./TransactionActionsClient";
@@ -15,8 +16,13 @@ type Props = {
 
 export default async function AdminTransactionsPage({ searchParams }: Props) {
   const session = await getServerSession(authOptions);
+  const cookieStore = await cookies();
+  const bypassRole = process.env.NODE_ENV !== "production"
+    ? cookieStore.get("dev-admin-bypass")?.value
+    : null;
+
   // @ts-ignore
-  const isValidator = session?.user?.adminRole === 'VALIDATOR';
+  const isValidator = session?.user?.adminRole === 'VALIDATOR' || bypassRole === 'VALIDATOR';
   // @ts-ignore
   const adminId = session?.user?.adminId;
 
@@ -40,8 +46,22 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
     allowedEventIds = access.map(a => a.eventId);
   }
 
+  // Helper untuk memastikan role bukan VALIDATOR (View Only)
+  async function assertNotValidator() {
+    const s = await getServerSession(authOptions);
+    const c = await cookies();
+    const bypass = process.env.NODE_ENV !== "production" ? c.get("dev-admin-bypass")?.value : null;
+    // @ts-ignore
+    const role = s?.user?.adminRole || bypass;
+    if (role === "VALIDATOR") {
+      throw new Error("Akses ditolak: Verifikator hanya memiliki hak akses Lihat Data (View Only).");
+    }
+  }
+
   async function updateTransactionStatus(formData: FormData) {
     "use server";
+    await assertNotValidator();
+
     const id = formData.get("id") as string;
     const status = formData.get("status") as "APPROVED" | "REJECTED";
     
@@ -68,6 +88,8 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
 
   async function deleteTransaction(formData: FormData) {
     "use server";
+    await assertNotValidator();
+
     const id = formData.get("id") as string;
     
     if (id) {
@@ -114,6 +136,8 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
   // -------- Server Action: Reaktivasi EXPIRED → PENDING --------
   async function reactivateTransaction(formData: FormData) {
     "use server";
+    await assertNotValidator();
+
     const id = formData.get("id") as string;
     if (!id) return;
 
@@ -155,6 +179,8 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
   // -------- Server Action: Approve langsung transaksi EXPIRED (admin input bukti TF) --------
   async function approveExpiredTransaction(formData: FormData) {
     "use server";
+    await assertNotValidator();
+
     const id = formData.get("id") as string;
     const paymentProofUrl = formData.get("paymentProofUrl") as string;
     const senderAccountName = formData.get("senderAccountName") as string;
@@ -199,6 +225,8 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
   // -------- Server Action: Upgrade Kategori Tiket --------
   async function upgradeTicketCategory(formData: FormData) {
     "use server";
+    await assertNotValidator();
+
     const transactionId = formData.get("transactionId") as string;
     const newCategoryId = formData.get("newCategoryId") as string;
     const paymentProofUrl2 = formData.get("paymentProofUrl2") as string;
@@ -252,6 +280,8 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
   // -------- Server Action: Edit Payment Proof --------
   async function updatePaymentProof(formData: FormData) {
     "use server";
+    await assertNotValidator();
+
     const id = formData.get("id") as string;
     const paymentProofUrl = formData.get("paymentProofUrl") as string;
 
@@ -368,8 +398,8 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
     <div className="w-full space-y-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
         <div>
-          <Link prefetch={false} href="/admin/events" className="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-2">
-            <ChevronLeft className="w-4 h-4 mr-1" /> Kembali ke Event
+          <Link prefetch={false} href={isValidator ? "/admin/transactions" : "/admin/events"} className="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-2">
+            <ChevronLeft className="w-4 h-4 mr-1" /> {isValidator ? "Pilih Event Lain" : "Kembali ke Event"}
           </Link>
           <h1 className="text-2xl font-bold text-slate-800">Validasi Pembayaran</h1>
           <p className="text-slate-500 mt-1">Event: <span className="font-semibold text-emerald-700">{selectedEvent?.title}</span></p>
@@ -393,6 +423,15 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
           <button type="submit" className="px-4 py-2 bg-slate-800 text-white font-medium rounded-lg text-sm hover:bg-slate-900 transition-colors whitespace-nowrap">Cari</button>
         </form>
       </div>
+
+      {isValidator && (
+        <div className="p-3.5 bg-blue-50 border border-blue-200/80 rounded-xl flex items-center gap-2.5 text-xs text-blue-800 font-medium shadow-xs">
+          <ShieldAlert className="w-4 h-4 text-blue-600 shrink-0" />
+          <span>
+            <strong>Akses Verifikator (Lihat Saja):</strong> Anda memiliki izin untuk memeriksa rincian data transaksi serta bukti pembayaran. Hak akses untuk menyetujui, menolak, mengedit, atau menghapus data hanya dimiliki oleh Super Admin.
+          </span>
+        </div>
+      )}
 
       {/* Tabs Filter */}
       <div className="flex space-x-1 bg-slate-200/50 p-1 rounded-xl overflow-x-auto">
@@ -581,20 +620,24 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                                 <ImageIcon className="w-4 h-4 mr-2" />
                                 Bukti #1
                               </a>
-                              <EditImageButton 
-                                transactionId={tx.id} 
-                                existingProofUrl={tx.paymentProofUrl}
-                                editImageAction={updatePaymentProof}
-                              />
+                              {!isValidator && (
+                                <EditImageButton 
+                                  transactionId={tx.id} 
+                                  existingProofUrl={tx.paymentProofUrl}
+                                  editImageAction={updatePaymentProof}
+                                />
+                              )}
                             </div>
                           ) : (
                             <div className="flex items-center gap-1">
                               <span className="text-sm font-medium text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 inline-block w-max">Belum ada</span>
-                              <EditImageButton 
-                                transactionId={tx.id} 
-                                existingProofUrl={null}
-                                editImageAction={updatePaymentProof}
-                              />
+                              {!isValidator && (
+                                <EditImageButton 
+                                  transactionId={tx.id} 
+                                  existingProofUrl={null}
+                                  editImageAction={updatePaymentProof}
+                                />
+                              )}
                             </div>
                           )}
                           
@@ -625,27 +668,33 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                     <td className="px-6 py-4 align-top text-right">
                       <div className="flex flex-col gap-2 items-end">
                         {tx.status === "PENDING" && (
-                          <div className="flex gap-2">
-                            <form action={updateTransactionStatus}>
-                              <input type="hidden" name="id" value={tx.id} />
-                              <input type="hidden" name="status" value="REJECTED" />
-                              <button type="submit" className="px-4 py-2 bg-white border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 hover:border-red-200 rounded-xl transition-all shadow-sm" title="Tolak">
-                                Tolak
-                              </button>
-                            </form>
-                            <form action={updateTransactionStatus}>
-                              <input type="hidden" name="id" value={tx.id} />
-                              <input type="hidden" name="status" value="APPROVED" />
-                              <button type="submit" className="flex items-center px-5 py-2 bg-emerald-500 text-white font-bold hover:bg-emerald-600 rounded-xl transition-all shadow-sm">
-                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                Setujui
-                              </button>
-                            </form>
-                            <form action={deleteTransaction}>
-                              <input type="hidden" name="id" value={tx.id} />
-                              <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
-                            </form>
-                          </div>
+                          isValidator ? (
+                            <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl font-medium inline-block">
+                              Menunggu Verifikasi Admin
+                            </span>
+                          ) : (
+                            <div className="flex gap-2">
+                              <form action={updateTransactionStatus}>
+                                <input type="hidden" name="id" value={tx.id} />
+                                <input type="hidden" name="status" value="REJECTED" />
+                                <button type="submit" className="px-4 py-2 bg-white border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 hover:border-red-200 rounded-xl transition-all shadow-sm" title="Tolak">
+                                  Tolak
+                                </button>
+                              </form>
+                              <form action={updateTransactionStatus}>
+                                <input type="hidden" name="id" value={tx.id} />
+                                <input type="hidden" name="status" value="APPROVED" />
+                                <button type="submit" className="flex items-center px-5 py-2 bg-emerald-500 text-white font-bold hover:bg-emerald-600 rounded-xl transition-all shadow-sm">
+                                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                                  Setujui
+                                </button>
+                              </form>
+                              <form action={deleteTransaction}>
+                                <input type="hidden" name="id" value={tx.id} />
+                                <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
+                              </form>
+                            </div>
+                          )
                         )}
                         {tx.status === "APPROVED" && (
                           <div className="flex gap-2">
@@ -657,16 +706,18 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                             >
                               Lihat Tiket
                             </a>
-                            <UpgradeButton
-                              transactionId={tx.id}
-                              currentCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
-                              currentCategoryName={tx.tickets[0]?.ticketCategory?.name || ''}
-                              currentPrice={tx.totalPrice}
-                              totalTickets={tx.totalTickets}
-                              categories={eventTicketCategories}
-                              upgradeAction={upgradeTicketCategory}
-                              className="px-4 py-2"
-                            />
+                            {!isValidator && (
+                              <UpgradeButton
+                                transactionId={tx.id}
+                                currentCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
+                                currentCategoryName={tx.tickets[0]?.ticketCategory?.name || ''}
+                                currentPrice={tx.totalPrice}
+                                totalTickets={tx.totalTickets}
+                                categories={eventTicketCategories}
+                                upgradeAction={upgradeTicketCategory}
+                                className="px-4 py-2"
+                              />
+                            )}
                             <a
                               href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nPembayaran Anda untuk acara *${tx.event.title}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${tx.buyerName}\n- Acara: *${tx.event.title}*\n- Jenis Kelamin: ${tx.buyerGender || '-'}\n- Jenis Tiket: ${tx.tickets[0]?.ticketCategory?.name || '-'}\n- Jumlah: ${tx.tickets.length} Tiket\n- Tanggal: ${new Date(tx.event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n- Lokasi: ${tx.event.location}${tx.tickets.length > 0 ? `\n\n*Daftar Peserta:*\n${tx.tickets.map((t: any, i: number) => `${i + 1}. ${t.holderName || '-'} (${t.holderGender || '-'})`).join('\n')}` : ''}${tx.event.waGroupLink ? `\n\n*Grup WhatsApp Event:*\nSilakan bergabung melalui link berikut:\n${tx.event.waGroupLink}` : ''}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${process.env.NEXT_PUBLIC_APP_URL || 'https://rtio-tix.vercel.app'}/public/${tx.id}/verify\n\nTerima kasih.`)}`}
                               target="_blank"
@@ -675,10 +726,12 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                             >
                               Kirim WA
                             </a>
-                            <form action={deleteTransaction}>
-                              <input type="hidden" name="id" value={tx.id} />
-                              <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
-                            </form>
+                            {!isValidator && (
+                              <form action={deleteTransaction}>
+                                <input type="hidden" name="id" value={tx.id} />
+                                <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
+                              </form>
+                            )}
                           </div>
                         )}
                         {tx.status === "REJECTED" && (
@@ -691,30 +744,36 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                             >
                               Kirim WA
                             </a>
-                            <form action={deleteTransaction}>
-                              <input type="hidden" name="id" value={tx.id} />
-                              <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
-                            </form>
+                            {!isValidator && (
+                              <form action={deleteTransaction}>
+                                <input type="hidden" name="id" value={tx.id} />
+                                <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
+                              </form>
+                            )}
                           </div>
                         )}
                         {tx.status === "EXPIRED" && (
                           <div className="flex gap-2 items-center flex-wrap">
-                            <ExpiredApproveButton
-                              transactionId={tx.id}
-                              buyerName={tx.buyerName}
-                              categoryName={tx.tickets[0]?.ticketCategory?.name || 'Tiket'}
-                              ticketCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
-                              totalTickets={tx.totalTickets}
-                              existingProofUrl={tx.paymentProofUrl}
-                              existingSenderName={tx.senderAccountName}
-                              approveExpiredAction={approveExpiredTransaction}
-                              className="px-4 py-2"
-                            />
-                            <ReactivateButton
-                              transactionId={tx.id}
-                              reactivateAction={reactivateTransaction}
-                              className="px-4 py-2"
-                            />
+                            {!isValidator && (
+                              <>
+                                <ExpiredApproveButton
+                                  transactionId={tx.id}
+                                  buyerName={tx.buyerName}
+                                  categoryName={tx.tickets[0]?.ticketCategory?.name || 'Tiket'}
+                                  ticketCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
+                                  totalTickets={tx.totalTickets}
+                                  existingProofUrl={tx.paymentProofUrl}
+                                  existingSenderName={tx.senderAccountName}
+                                  approveExpiredAction={approveExpiredTransaction}
+                                  className="px-4 py-2"
+                                />
+                                <ReactivateButton
+                                  transactionId={tx.id}
+                                  reactivateAction={reactivateTransaction}
+                                  className="px-4 py-2"
+                                />
+                              </>
+                            )}
                             <a
                               href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Halo ${tx.buyerName},\n\nMohon maaf, pesanan tiket Anda untuk acara *${tx.event.title}* telah dibatalkan secara otomatis karena melewati batas waktu pembayaran.\n\nJika Anda masih berminat, silakan melakukan pemesanan ulang melalui website kami. Terima kasih.`)}`}
                               target="_blank"
@@ -723,10 +782,12 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                             >
                               Kirim WA
                             </a>
-                            <form action={deleteTransaction}>
-                              <input type="hidden" name="id" value={tx.id} />
-                              <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
-                            </form>
+                            {!isValidator && (
+                              <form action={deleteTransaction}>
+                                <input type="hidden" name="id" value={tx.id} />
+                                <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
+                              </form>
+                            )}
                           </div>
                         )}
                       </div>
@@ -773,19 +834,23 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                         <a href={tx.paymentProofUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 shadow-sm border border-indigo-100" title="Bukti TF #1">
                           <ImageIcon className="w-5 h-5" />
                         </a>
-                        <EditImageButton 
-                          transactionId={tx.id} 
-                          existingProofUrl={tx.paymentProofUrl}
-                          editImageAction={updatePaymentProof}
-                        />
+                        {!isValidator && (
+                          <EditImageButton 
+                            transactionId={tx.id} 
+                            existingProofUrl={tx.paymentProofUrl}
+                            editImageAction={updatePaymentProof}
+                          />
+                        )}
                       </div>
                     ) : (
                       <div className="flex items-center gap-1">
-                        <EditImageButton 
-                          transactionId={tx.id} 
-                          existingProofUrl={null}
-                          editImageAction={updatePaymentProof}
-                        />
+                        {!isValidator && (
+                          <EditImageButton 
+                            transactionId={tx.id} 
+                            existingProofUrl={null}
+                            editImageAction={updatePaymentProof}
+                          />
+                        )}
                       </div>
                     )}
                     {tx.paymentProofUrl2 && (
@@ -896,22 +961,30 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                   </details>
 
                   {tx.status === "PENDING" && (
-                    <div className="flex gap-2 w-full pt-2">
-                      <form action={updateTransactionStatus} className="flex-1">
-                        <input type="hidden" name="id" value={tx.id} />
-                        <input type="hidden" name="status" value="REJECTED" />
-                        <button type="submit" className="w-full py-2.5 bg-white border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 rounded-xl transition-all">Tolak</button>
-                      </form>
-                      <form action={updateTransactionStatus} className="flex-1">
-                        <input type="hidden" name="id" value={tx.id} />
-                        <input type="hidden" name="status" value="APPROVED" />
-                        <button type="submit" className="w-full py-2.5 bg-emerald-500 text-white font-bold hover:bg-emerald-600 rounded-xl transition-all">Setujui</button>
-                      </form>
-                      <form action={deleteTransaction}>
-                        <input type="hidden" name="id" value={tx.id} />
-                        <DeleteButton className="p-3 rounded-xl h-full" />
-                      </form>
-                    </div>
+                    isValidator ? (
+                      <div className="w-full pt-2">
+                        <span className="block text-center text-xs text-amber-700 bg-amber-50 border border-amber-200 py-2 rounded-xl font-medium">
+                          Menunggu Verifikasi Admin
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 w-full pt-2">
+                        <form action={updateTransactionStatus} className="flex-1">
+                          <input type="hidden" name="id" value={tx.id} />
+                          <input type="hidden" name="status" value="REJECTED" />
+                          <button type="submit" className="w-full py-2.5 bg-white border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 rounded-xl transition-all">Tolak</button>
+                        </form>
+                        <form action={updateTransactionStatus} className="flex-1">
+                          <input type="hidden" name="id" value={tx.id} />
+                          <input type="hidden" name="status" value="APPROVED" />
+                          <button type="submit" className="w-full py-2.5 bg-emerald-500 text-white font-bold hover:bg-emerald-600 rounded-xl transition-all">Setujui</button>
+                        </form>
+                        <form action={deleteTransaction}>
+                          <input type="hidden" name="id" value={tx.id} />
+                          <DeleteButton className="p-3 rounded-xl h-full" />
+                        </form>
+                      </div>
+                    )
                   )}
                   {tx.status === "APPROVED" && (
                     <div className="flex gap-2 w-full pt-2 flex-wrap">
@@ -923,16 +996,18 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                       >
                         Lihat Tiket
                       </a>
-                      <UpgradeButton
-                        transactionId={tx.id}
-                        currentCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
-                        currentCategoryName={tx.tickets[0]?.ticketCategory?.name || ''}
-                        currentPrice={tx.totalPrice}
-                        totalTickets={tx.totalTickets}
-                        categories={eventTicketCategories}
-                        upgradeAction={upgradeTicketCategory}
-                        className="px-4 py-2.5"
-                      />
+                      {!isValidator && (
+                        <UpgradeButton
+                          transactionId={tx.id}
+                          currentCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
+                          currentCategoryName={tx.tickets[0]?.ticketCategory?.name || ''}
+                          currentPrice={tx.totalPrice}
+                          totalTickets={tx.totalTickets}
+                          categories={eventTicketCategories}
+                          upgradeAction={upgradeTicketCategory}
+                          className="px-4 py-2.5"
+                        />
+                      )}
                       <a 
                         href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Assalamualaikum,\n\nPembayaran Anda untuk acara *${tx.event.title}* telah divalidasi! E-Ticket Anda sudah terbit.\n\n*Detail Pendaftaran:*\n- Nama: ${tx.buyerName}\n- Acara: *${tx.event.title}*\n- Jenis Kelamin: ${tx.buyerGender || '-'}\n- Jenis Tiket: ${tx.tickets[0]?.ticketCategory?.name || '-'}\n- Jumlah: ${tx.tickets.length} Tiket\n- Tanggal: ${new Date(tx.event.eventDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n- Lokasi: ${tx.event.location}${tx.tickets.length > 0 ? `\n\n*Daftar Peserta:*\n${tx.tickets.map((t: any, i: number) => `${i + 1}. ${t.holderName || '-'} (${t.holderGender || '-'})`).join('\n')}` : ''}${tx.event.waGroupLink ? `\n\n*Grup WhatsApp Event:*\nSilakan bergabung melalui link berikut:\n${tx.event.waGroupLink}` : ''}\n\nBuka dan unduh tiket Anda melalui tautan resmi berikut:\n${process.env.NEXT_PUBLIC_APP_URL || 'https://rtio-tix.vercel.app'}/public/${tx.id}/verify\n\nTerima kasih.`)}`}
                         target="_blank" 
@@ -941,10 +1016,12 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                       >
                         Kirim WA
                       </a>
-                      <form action={deleteTransaction}>
-                        <input type="hidden" name="id" value={tx.id} />
-                        <DeleteButton className="p-3 rounded-xl h-full" />
-                      </form>
+                      {!isValidator && (
+                        <form action={deleteTransaction}>
+                          <input type="hidden" name="id" value={tx.id} />
+                          <DeleteButton className="p-3 rounded-xl h-full" />
+                        </form>
+                      )}
                     </div>
                   )}
                   {tx.status === "REJECTED" && (
@@ -957,31 +1034,37 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                       >
                         Kirim WA
                       </a>
-                      <form action={deleteTransaction}>
-                        <input type="hidden" name="id" value={tx.id} />
-                        <DeleteButton className="p-2.5 rounded-xl h-full" />
-                      </form>
+                      {!isValidator && (
+                        <form action={deleteTransaction}>
+                          <input type="hidden" name="id" value={tx.id} />
+                          <DeleteButton className="p-2.5 rounded-xl h-full" />
+                        </form>
+                      )}
                     </div>
                   )}
                   {tx.status === "EXPIRED" && (
                     <div className="flex flex-col gap-2 w-full pt-2">
-                      <ExpiredApproveButton
-                        transactionId={tx.id}
-                        buyerName={tx.buyerName}
-                        categoryName={tx.tickets[0]?.ticketCategory?.name || 'Tiket'}
-                        ticketCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
-                        totalTickets={tx.totalTickets}
-                        existingProofUrl={tx.paymentProofUrl}
-                        existingSenderName={tx.senderAccountName}
-                        approveExpiredAction={approveExpiredTransaction}
-                        className="w-full py-2.5 justify-center"
-                      />
-                      <div className="flex gap-2">
-                        <ReactivateButton
+                      {!isValidator && (
+                        <ExpiredApproveButton
                           transactionId={tx.id}
-                          reactivateAction={reactivateTransaction}
-                          className="flex-1 py-2.5 justify-center"
+                          buyerName={tx.buyerName}
+                          categoryName={tx.tickets[0]?.ticketCategory?.name || 'Tiket'}
+                          ticketCategoryId={tx.tickets[0]?.ticketCategoryId || ''}
+                          totalTickets={tx.totalTickets}
+                          existingProofUrl={tx.paymentProofUrl}
+                          existingSenderName={tx.senderAccountName}
+                          approveExpiredAction={approveExpiredTransaction}
+                          className="w-full py-2.5 justify-center"
                         />
+                      )}
+                      <div className="flex gap-2">
+                        {!isValidator && (
+                          <ReactivateButton
+                            transactionId={tx.id}
+                            reactivateAction={reactivateTransaction}
+                            className="flex-1 py-2.5 justify-center"
+                          />
+                        )}
                         <a
                           href={`https://wa.me/${tx.buyerPhone.replace(/^0/, '62')}?text=${encodeURIComponent(`Halo ${tx.buyerName},\n\nMohon maaf, pesanan tiket Anda untuk acara *${tx.event.title}* telah dibatalkan secara otomatis karena melewati batas waktu pembayaran.\n\nJika Anda masih berminat, silakan melakukan pemesanan ulang melalui website kami. Terima kasih.`)}`}
                           target="_blank" 
@@ -990,10 +1073,12 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                         >
                           Kirim WA
                         </a>
-                        <form action={deleteTransaction}>
-                          <input type="hidden" name="id" value={tx.id} />
-                          <DeleteButton className="p-2.5 rounded-xl h-full" />
-                        </form>
+                        {!isValidator && (
+                          <form action={deleteTransaction}>
+                            <input type="hidden" name="id" value={tx.id} />
+                            <DeleteButton className="p-2.5 rounded-xl h-full" />
+                          </form>
+                        )}
                       </div>
                     </div>
                   )}

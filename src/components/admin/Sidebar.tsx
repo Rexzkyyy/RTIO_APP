@@ -87,19 +87,21 @@ export function Sidebar({ isValidatorServer }: { isValidatorServer?: boolean }) 
             </Link>
           )}
 
-          <Link 
-            prefetch={false}
-            href="/admin/offline-tickets" 
-            className={`flex items-center p-3 transition-colors rounded-xl ${
-              pathname.includes('/admin/offline-tickets') 
-                ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
-                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-            }`}
-            title="Tiket Offline"
-          >
-            <TicketPlus className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
-            {!isCollapsed && <span>Tiket Offline</span>}
-          </Link>
+          {!isValidator && (
+            <Link 
+              prefetch={false}
+              href="/admin/offline-tickets" 
+              className={`flex items-center p-3 transition-colors rounded-xl ${
+                pathname.includes('/admin/offline-tickets') 
+                  ? "bg-emerald-500/10 text-emerald-400 font-semibold" 
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+              }`}
+              title="Tiket Offline"
+            >
+              <TicketPlus className={`w-5 h-5 shrink-0 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
+              {!isCollapsed && <span>Tiket Offline</span>}
+            </Link>
+          )}
 
           <Link 
             prefetch={false}
