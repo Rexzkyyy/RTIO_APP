@@ -134,8 +134,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Transaksi belum diapprove
+    // Transaksi belum diapprove / Expired
     if (ticket.transaction.status !== "APPROVED") {
+      if (ticket.transaction.status === "EXPIRED") {
+        return NextResponse.json({
+          success: false,
+          status: "EXPIRED",
+          message: "Tiket kedaluwarsa (Expired). Transaksi tidak berlaku.",
+        });
+      }
+
       return NextResponse.json({
         success: false,
         status: "NOT_APPROVED",

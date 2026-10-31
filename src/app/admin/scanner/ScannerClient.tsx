@@ -392,11 +392,12 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
       // JIKA OFFLINE: Cari langsung di IndexedDB lokal
       if (!navigator.onLine) {
         try {
-          const offlineResults = await searchOfflineTickets(
+          const rawOfflineResults = await searchOfflineTickets(
             qClean,
             eventId,
             status as "ALL" | "UNCHECKED" | "CHECKED"
           );
+          const offlineResults = rawOfflineResults.filter((t) => t.txStatus !== "EXPIRED");
           const mapped: SearchedTicket[] = offlineResults.map((t) => {
             const total = t.totalTickets || 1;
             const checked = t.checkedInCount || (t.isValidated ? 1 : 0);
@@ -454,18 +455,20 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
         const data = await res.json();
 
         if (data.success && Array.isArray(data.tickets)) {
-          setSearchResults(data.tickets);
+          const validTickets = data.tickets.filter((t: SearchedTicket) => t.transaction.status !== "EXPIRED");
+          setSearchResults(validTickets);
         } else {
           setSearchResults([]);
         }
       } catch {
         // Jaringan lemot atau putus: Ambil dari cache IndexedDB lokal!
         try {
-          const offlineResults = await searchOfflineTickets(
+          const rawOfflineResults = await searchOfflineTickets(
             qClean,
             eventId,
             status as "ALL" | "UNCHECKED" | "CHECKED"
           );
+          const offlineResults = rawOfflineResults.filter((t) => t.txStatus !== "EXPIRED");
           const mapped: SearchedTicket[] = offlineResults.map((t) => {
             const total = t.totalTickets || 1;
             const checked = t.checkedInCount || (t.isValidated ? 1 : 0);

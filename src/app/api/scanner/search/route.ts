@@ -71,11 +71,15 @@ export async function GET(req: NextRequest) {
       statusWhere.isValidated = true;
     }
 
-    // Build conditions
+    // Build conditions (Jangan pernah munculkan tiket dari transaksi EXPIRED)
     const andConditions: any[] = [];
-    if (Object.keys(eventWhere).length > 0) {
-      andConditions.push({ transaction: eventWhere });
-    }
+    andConditions.push({
+      transaction: {
+        ...eventWhere,
+        status: { not: "EXPIRED" },
+      },
+    });
+
     if (Object.keys(statusWhere).length > 0) {
       andConditions.push(statusWhere);
     }
