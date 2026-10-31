@@ -1504,8 +1504,8 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
         background: "radial-gradient(ellipse at 50% 0%, #0d1b2a 0%, #070d18 60%, #040810 100%)",
       }}
     >
-      {/* ── Top Bar & Offline Status (Single Sticky Container) ──────────────── */}
-      <div className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20">
+      {/* ── Top Bar & Offline Status (Normal on Mobile, Sticky on Desktop) ──── */}
+      <div className="relative lg:sticky lg:top-0 z-30 bg-slate-950/95 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20">
         <header className="flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3.5">
           <div className="flex items-center gap-2.5">
             <div
