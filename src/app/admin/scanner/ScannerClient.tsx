@@ -214,6 +214,20 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
   const [validationSuccessMessage, setValidationSuccessMessage] = useState<string | null>(null);
   const [validationErrorMessage, setValidationErrorMessage] = useState<string | null>(null);
 
+  const ticketToValidateRef = useRef<SearchedTicket | null>(null);
+  useEffect(() => {
+    ticketToValidateRef.current = ticketToValidate;
+  }, [ticketToValidate]);
+
+  const closeValidationModal = useCallback(() => {
+    setTicketToValidate(null);
+    setValidationSuccessMessage(null);
+    setValidationErrorMessage(null);
+    lastScanRef.current = "";
+    cooldownRef.current = false;
+    setIsLoading(false);
+  }, []);
+
   // Mobile Tabs ("search" | "camera" | "history")
   const [mobileTab, setMobileTab] = useState<"search" | "camera" | "history">("search");
 
@@ -438,9 +452,9 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
         return;
       }
 
-      // JIKA ONLINE: Coba server dengan timeout 2 detik (fallback otomatis ke IndexedDB jika lemot)
+      // JIKA ONLINE: Coba server dengan timeout 8 detik (fallback otomatis ke IndexedDB jika lemot/putus)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       try {
         const params = new URLSearchParams();
@@ -588,222 +602,123 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
       // Ignore
     }
 
-    // 4. Jika online, verify langsung
+    // 4. Cari tiket dan buka modal konfirmasi
     verifyTicket(qClean);
   };
 
-  // ─── Verify Ticket by Barcode (Camera QR or Barcode Gun) ───────────────────
+  // ─── Lookup Ticket by Barcode & Open Confirmation Modal (Camera QR / Barcode Gun) ──
+  // Sesuai kebutuhan: TIDAK langsung auto check-in, melainkan memunculkan dialog konfirmasi
+  // dengan info nama peserta, no HP, kategori tiket, jumlah rombongan, serta tombol pilihan
+  // check-in 1 tiket atau check-in semua tiket rombongan sekaligus.
   const verifyTicket = useCallback(
     async (barcodeString: string) => {
+      const qClean = barcodeString.trim();
+      if (!qClean) return;
       if (cooldownRef.current) return;
       cooldownRef.current = true;
       setIsLoading(true);
-      setScanResult({ status: "loading", message: "Memverifikasi tiket..." });
+      setScanResult({ status: "loading", message: "Memeriksa data tiket..." });
       if (navigator.vibrate) navigator.vibrate(50);
 
-      // Cek apakah offline atau jaringan putus
-      if (!navigator.onLine) {
-        try {
-          const localTicket = await findOfflineTicketByBarcode(barcodeString);
-          if (!localTicket) {
-            playBeep("error");
-            setScanResult({
-              status: "invalid",
-              message: `Tiket tidak ditemukan di database offline (Barcode: "${barcodeString}").`,
-            });
-          } else {
-            const checkRes = await checkInTicketOffline(localTicket.id, false);
-            if (checkRes.status === "VALID") {
-              playBeep("success");
-              setScanResult({
-                status: "valid",
-                message: checkRes.message,
-                ticket: {
-                  id: localTicket.id,
-                  barcodeString: localTicket.barcodeString,
-                  transactionId: localTicket.transactionId,
-                  holderName: localTicket.holderName || localTicket.buyerName,
-                  eventTitle: localTicket.eventTitle,
-                  category: localTicket.categoryName,
-                  totalTickets: localTicket.totalTickets,
-                  checkedInCount: checkRes.ticket?.checkedInCount,
-                  remainingCount: checkRes.ticket?.remainingCount,
-                },
-              });
-              setHistory((prev) => [
-                {
-                  id: Date.now().toString(),
-                  barcodeString,
-                  status: "valid",
-                  holderName: localTicket.holderName || localTicket.buyerName,
-                  eventTitle: localTicket.eventTitle,
-                  time: new Date(),
-                  isOfflineSync: true,
-                },
-                ...prev.slice(0, 19),
-              ]);
-              refreshOfflineStats();
-            } else if (checkRes.status === "ALREADY_CHECKED_IN") {
-              playBeep("already");
-              setScanResult({
-                status: "already",
-                message: checkRes.message,
-                ticket: {
-                  id: localTicket.id,
-                  barcodeString: localTicket.barcodeString,
-                  transactionId: localTicket.transactionId,
-                  holderName: localTicket.holderName || localTicket.buyerName,
-                  eventTitle: localTicket.eventTitle,
-                  category: localTicket.categoryName,
-                  totalTickets: localTicket.totalTickets,
-                  checkedInCount: localTicket.totalTickets,
-                  remainingCount: 0,
-                },
-              });
-            } else {
-              playBeep("error");
-              setScanResult({ status: "invalid", message: checkRes.message });
-            }
-          }
-        } catch {
-          playBeep("error");
-          setScanResult({ status: "error", message: "Gagal memverifikasi tiket secara offline." });
-        } finally {
-          setTimeout(() => {
-            lastScanRef.current = "";
-            cooldownRef.current = false;
-            setIsLoading(false);
-          }, 2200);
+      let foundTicket: SearchedTicket | null = null;
 
-          setTimeout(() => {
-            setScanResult(null);
-          }, 3500);
+      // 1. Coba cari di IndexedDB lokal terlebih dahulu (respons super cepat < 2ms)
+      try {
+        const localMatch = await findOfflineTicketByBarcode(qClean);
+        if (localMatch) {
+          const total = localMatch.totalTickets || 1;
+          const checked = localMatch.checkedInCount || (localMatch.isValidated ? 1 : 0);
+          const remaining = localMatch.remainingCount ?? Math.max(0, total - checked);
+
+          foundTicket = {
+            id: localMatch.id,
+            transactionId: localMatch.transactionId,
+            barcodeString: localMatch.barcodeString,
+            holderName: localMatch.holderName,
+            holderPhone: localMatch.holderPhone,
+            holderGender: localMatch.holderGender,
+            isValidated: localMatch.isValidated,
+            checkedInAt: localMatch.checkedInAt,
+            totalTickets: total,
+            checkedInCount: checked,
+            remainingCount: remaining,
+            ticketCategory: {
+              name: localMatch.categoryName,
+              price: localMatch.categoryPrice,
+            },
+            transaction: {
+              id: localMatch.transactionId,
+              buyerName: localMatch.buyerName,
+              buyerPhone: localMatch.buyerPhone,
+              status: localMatch.txStatus,
+              totalTickets: total,
+              checkedInCount: checked,
+              remainingCount: remaining,
+              event: { title: localMatch.eventTitle },
+            },
+          };
         }
-        return;
+      } catch (err) {
+        console.warn("Lookup offline error:", err);
       }
 
-      // Online Verify
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2500);
-
-        const res = await fetch("/api/scanner", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ barcodeString }),
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        const data = await res.json();
-
-        let status: ScanStatus = "invalid";
-        if (data.status === "VALID") {
-          status = "valid";
-          playBeep("success");
-        } else if (data.status === "ALREADY_CHECKED_IN" || data.status === "ALREADY_SCANNED") {
-          status = "already";
-          playBeep("already");
-        } else {
-          status = "invalid";
-          playBeep("error");
-        }
-
-        setScanResult({ status, message: data.message, ticket: data.ticket });
-
-        const newHistItem: HistoryItem = {
-          id: Date.now().toString(),
-          barcodeString,
-          status,
-          holderName: data.ticket?.holderName || barcodeString,
-          eventTitle: data.ticket?.eventTitle,
-          time: new Date(),
-        };
-        setHistory((prev) => [newHistItem, ...prev.slice(0, 19)]);
-
-        if (searchQuery.trim()) {
-          fetchSearchResults(searchQuery, selectedEventId, statusFilter);
-        }
-
-        if (navigator.vibrate) {
-          if (status === "valid") navigator.vibrate([80, 40, 80]);
-          else if (status === "already") navigator.vibrate([200, 100, 200]);
-          else navigator.vibrate(400);
-        }
-
-        // Reset cooldown kamera lebih cepat (2.2 detik) agar bisa langsung scan tiket berikutnya/tiket yang sama
-        setTimeout(() => {
-          lastScanRef.current = "";
-          cooldownRef.current = false;
-          setIsLoading(false);
-        }, 2200);
-
-        // Jika ada sisa tiket rombongan, beri waktu popup lebih lama (6.5s) agar admin sempat klik tombol Check-In Semua
-        const autoClearDelay =
-          data.ticket?.remainingCount && data.ticket.remainingCount > 0 ? 6500 : 3200;
-        setTimeout(() => {
-          setScanResult((curr) => (curr?.status === status ? null : curr));
-        }, autoClearDelay);
-      } catch {
-        // Fallback ke check-in offline lokal saat online timeout/gagal
+      // 2. Jika online, cek data terbaru dari server dengan timeout 8 detik (bukan 2.5s)
+      if (navigator.onLine) {
         try {
-          const localTicket = await findOfflineTicketByBarcode(barcodeString);
-          if (localTicket) {
-            const checkRes = await checkInTicketOffline(localTicket.id);
-            if (checkRes.status === "VALID") {
-              playBeep("success");
-              setScanResult({
-                status: "valid",
-                message: `${checkRes.message} (Disimpan Lokal)`,
-                ticket: {
-                  id: localTicket.id,
-                  barcodeString: localTicket.barcodeString,
-                  transactionId: localTicket.transactionId,
-                  holderName: localTicket.holderName || localTicket.buyerName,
-                  eventTitle: localTicket.eventTitle,
-                  category: localTicket.categoryName,
-                  totalTickets: localTicket.totalTickets,
-                  checkedInCount: checkRes.ticket?.checkedInCount,
-                  remainingCount: checkRes.ticket?.remainingCount,
-                },
-              });
-              setHistory((prev) => [
-                {
-                  id: Date.now().toString(),
-                  barcodeString,
-                  status: "valid",
-                  holderName: localTicket.holderName || localTicket.buyerName,
-                  eventTitle: localTicket.eventTitle,
-                  time: new Date(),
-                  isOfflineSync: true,
-                },
-                ...prev.slice(0, 19),
-              ]);
-              refreshOfflineStats();
-            } else {
-              setScanResult({
-                status: "already",
-                message: checkRes.message,
-                ticket: {
-                  id: localTicket.id,
-                  barcodeString: localTicket.barcodeString,
-                  transactionId: localTicket.transactionId,
-                  holderName: localTicket.holderName || localTicket.buyerName,
-                  eventTitle: localTicket.eventTitle,
-                  category: localTicket.categoryName,
-                  totalTickets: localTicket.totalTickets,
-                  checkedInCount: localTicket.totalTickets,
-                  remainingCount: 0,
-                },
-              });
-            }
-          } else {
-            playBeep("error");
-            setScanResult({ status: "error", message: "Koneksi terputus & tiket tidak ada di cache lokal." });
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+          const params = new URLSearchParams();
+          params.append("q", qClean);
+          if (selectedEventId && selectedEventId !== "ALL") {
+            params.append("eventId", selectedEventId);
           }
-        } catch {
-          playBeep("error");
-          setScanResult({ status: "error", message: "Gagal terhubung ke server." });
+
+          const res = await fetch(`/api/scanner/search?${params.toString()}`, {
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          const data = await res.json();
+
+          if (data.success && Array.isArray(data.tickets) && data.tickets.length > 0) {
+            const exact =
+              data.tickets.find(
+                (t: SearchedTicket) =>
+                  t.barcodeString.toLowerCase() === qClean.toLowerCase()
+              ) || data.tickets[0];
+
+            if (exact) {
+              foundTicket = exact;
+            }
+          }
+        } catch (err) {
+          console.warn("Online search fetch error, fallback to local if available:", err);
         }
+      }
+
+      setIsLoading(false);
+      setScanResult(null);
+
+      // 3. Tampilkan hasil: Jika tiket ditemukan, buka modal konfirmasi!
+      if (foundTicket) {
+        if (foundTicket.isValidated && (foundTicket.remainingCount ?? 0) === 0) {
+          playBeep("already");
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        } else {
+          playBeep("success");
+          if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+        }
+        setTicketToValidate(foundTicket);
+        // decode loop otomatis pause karena ticketToValidateRef.current aktif
+        cooldownRef.current = false;
+      } else {
+        // Tiket tidak ditemukan
+        playBeep("error");
+        if (navigator.vibrate) navigator.vibrate(400);
+        setScanResult({
+          status: "invalid",
+          message: `Tiket tidak ditemukan (Barcode: "${qClean}"). Pastikan kode sesuai atau perbarui cache offline.`,
+        });
 
         setTimeout(() => {
           lastScanRef.current = "";
@@ -816,7 +731,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
         }, 3500);
       }
     },
-    [fetchSearchResults, refreshOfflineStats, searchQuery, selectedEventId, statusFilter]
+    [selectedEventId]
   );
 
   // ─── Batch Check-In Sisa Tiket Rombongan dari Popup Scan Kamera ──────────────
@@ -1055,8 +970,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
           // JIKA BELUM HABIS: JANGAN TUTUP POP-UP MODAL! Biarkan admin bisa lanjut check-in tiket berikutnya
           if (finalRemainingOffline === 0) {
             setTimeout(() => {
-              setTicketToValidate(null);
-              setValidationSuccessMessage(null);
+              closeValidationModal();
               searchInputRef.current?.focus();
             }, 1800);
           } else {
@@ -1082,7 +996,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
     // Jika ONLINE: Kirim ke server dengan fallback lokal jika timeout
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       const res = await fetch("/api/scanner", {
         method: "POST",
@@ -1193,8 +1107,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
         // JIKA BELUM HABIS: JANGAN TUTUP POP-UP MODAL! Biarkan admin bisa lanjut check-in tiket berikutnya
         if (finalRemainingOnline === 0) {
           setTimeout(() => {
-            setTicketToValidate(null);
-            setValidationSuccessMessage(null);
+            closeValidationModal();
             searchInputRef.current?.focus();
           }, 1800);
         } else {
@@ -1308,8 +1221,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
           // JIKA BELUM HABIS: JANGAN TUTUP POP-UP MODAL! Biarkan admin bisa lanjut check-in tiket berikutnya
           if (finalRemainingFallback === 0) {
             setTimeout(() => {
-              setTicketToValidate(null);
-              setValidationSuccessMessage(null);
+              closeValidationModal();
               searchInputRef.current?.focus();
             }, 1800);
           } else {
@@ -1333,6 +1245,12 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
   const startDecodeLoop = useCallback(() => {
     if (!readerRef.current) return;
     const decode = async () => {
+      // Jika modal konfirmasi sedang terbuka, pause pemindaian agar tidak ter-trigger berulang
+      if (ticketToValidateRef.current) {
+        animFrameRef.current = requestAnimationFrame(decode);
+        return;
+      }
+
       const now = Date.now();
       if (fpsCounterRef.current.lastTime === 0) {
         fpsCounterRef.current.lastTime = now;
@@ -2474,9 +2392,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
           style={{ background: "rgba(3, 7, 18, 0.82)", backdropFilter: "blur(12px)" }}
           onClick={() => {
             if (!isValidatingTicket) {
-              setTicketToValidate(null);
-              setValidationSuccessMessage(null);
-              setValidationErrorMessage(null);
+              closeValidationModal();
             }
           }}
         >
@@ -2503,11 +2419,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
               </div>
               {!isValidatingTicket && (
                 <button
-                  onClick={() => {
-                    setTicketToValidate(null);
-                    setValidationSuccessMessage(null);
-                    setValidationErrorMessage(null);
-                  }}
+                  onClick={closeValidationModal}
                   className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors shrink-0"
                 >
                   <X className="w-4 h-4" />
@@ -2554,9 +2466,9 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
                   <div>
                     <span className="text-slate-400 text-[10px] block">No. WhatsApp / HP</span>
                     <span className="text-slate-200 font-medium text-xs">
-                      {ticketToValidate.holderPhone ||
-                        ticketToValidate.transaction.buyerPhone ||
-                        "-"}
+                      {ticketToValidate.holderPhone && ticketToValidate.holderPhone !== "-"
+                        ? ticketToValidate.holderPhone
+                        : ticketToValidate.transaction.buyerPhone || "-"}
                     </span>
                   </div>
                   <div>
@@ -2687,11 +2599,7 @@ export function ScannerClient({ adminRole, initialEvents = [] }: ScannerClientPr
               <button
                 type="button"
                 disabled={isValidatingTicket}
-                onClick={() => {
-                  setTicketToValidate(null);
-                  setValidationSuccessMessage(null);
-                  setValidationErrorMessage(null);
-                }}
+                onClick={closeValidationModal}
                 className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-all disabled:opacity-50"
               >
                 {ticketToValidate.isValidated
