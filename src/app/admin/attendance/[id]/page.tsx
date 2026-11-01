@@ -59,6 +59,31 @@ export default async function AttendanceDetailPage({ params }: { params: Promise
     }
   });
 
+  // Fetch total tickets approved per category for comparison
+  const categories = await prisma.ticketCategory.findMany({
+    where: { eventId },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      _count: {
+        select: {
+          tickets: {
+            where: {
+              transaction: { status: 'APPROVED' }
+            }
+          }
+        }
+      }
+    },
+    orderBy: { price: 'desc' }
+  });
+
+  const categoryTotals = categories.map(c => ({
+    name: c.name,
+    totalSold: c._count.tickets
+  }));
+
   const serializableTickets = checkedInTickets.map(t => ({
     id: t.id,
     barcodeString: t.barcodeString,
@@ -100,7 +125,7 @@ export default async function AttendanceDetailPage({ params }: { params: Promise
         </div>
       </div>
 
-      <AttendanceClient tickets={serializableTickets} eventTitle={event.title} />
+      <AttendanceClient tickets={serializableTickets} eventTitle={event.title} categoryTotals={categoryTotals} />
     </div>
   );
 }
