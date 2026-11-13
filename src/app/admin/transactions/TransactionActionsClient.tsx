@@ -245,6 +245,7 @@ export function ApproveRejectButtons({
       const res = await fetch("/api/admin/transactions/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ id: transactionId, status }),
       });
 

@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
     } else {
       await prisma.transaction.update({
         where: { id },
-        data: { status, expiresAt: null },
+        data: { status },
       });
     }
 

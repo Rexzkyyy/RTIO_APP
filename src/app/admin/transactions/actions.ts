@@ -50,9 +50,31 @@ export async function assertAdminAccess() {
   }
 
   // 3. Fallback: Read and decode JWT session token directly from cookies
-  const sessionToken =
+  let sessionToken =
     cookieStore.get("__Secure-next-auth.session-token")?.value ||
     cookieStore.get("next-auth.session-token")?.value;
+
+  // Fallback support for chunked cookies (.0, .1, etc.)
+  if (!sessionToken) {
+    const securePrefix = "__Secure-next-auth.session-token.";
+    const plainPrefix = "next-auth.session-token.";
+    const chunks: string[] = [];
+    let i = 0;
+    while (cookieStore.get(`${securePrefix}${i}`)) {
+      chunks.push(cookieStore.get(`${securePrefix}${i}`)!.value);
+      i++;
+    }
+    if (chunks.length === 0) {
+      i = 0;
+      while (cookieStore.get(`${plainPrefix}${i}`)) {
+        chunks.push(cookieStore.get(`${plainPrefix}${i}`)!.value);
+        i++;
+      }
+    }
+    if (chunks.length > 0) {
+      sessionToken = chunks.join("");
+    }
+  }
 
   if (sessionToken) {
     try {
@@ -121,7 +143,7 @@ export async function updateTransactionStatus(formData: FormData): Promise<void>
     } else {
       await prisma.transaction.update({
         where: { id },
-        data: { status, expiresAt: null },
+        data: { status },
       });
     }
 
