@@ -4,9 +4,9 @@ import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { ChevronLeft, CheckCircle2, XCircle, Search, ImageIcon, Clock, ChevronRight, Receipt, Timer, ArrowUpCircle, RefreshCw, ShieldAlert } from "lucide-react";
-import { revalidatePath } from "next/cache";
 import { DeleteButton } from "./DeleteButton";
-import { UpgradeButton, ReactivateButton, ExpiredApproveButton, EditImageButton } from "./TransactionActionsClient";
+import { UpgradeButton, ReactivateButton, ExpiredApproveButton, EditImageButton, ApproveRejectButtons } from "./TransactionActionsClient";
+import { deleteTransaction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -44,257 +44,6 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
       select: { eventId: true }
     });
     allowedEventIds = access.map(a => a.eventId);
-  }
-
-  // Helper untuk memastikan role bukan VALIDATOR (View Only)
-  async function assertNotValidator() {
-    const s = await getServerSession(authOptions);
-    const c = await cookies();
-    const bypass = process.env.NODE_ENV !== "production" ? c.get("dev-admin-bypass")?.value : null;
-    if (!s?.user && !bypass) {
-      throw new Error("Akses tidak sah: Silakan login terlebih dahulu.");
-    }
-    // @ts-ignore
-    const role = s?.user?.adminRole || bypass;
-    if (role === "VALIDATOR") {
-      throw new Error("Akses ditolak: Verifikator hanya memiliki hak akses Lihat Data (View Only).");
-    }
-  }
-
-  async function updateTransactionStatus(formData: FormData) {
-    "use server";
-    await assertNotValidator();
-
-    const id = formData.get("id") as string;
-    const status = formData.get("status") as "APPROVED" | "REJECTED";
-    
-    if (id && status) {
-      if (status === "REJECTED") {
-        const tx = await prisma.transaction.findUnique({ where: { id } });
-        if (tx) {
-          const newExpiresAt = new Date();
-          newExpiresAt.setMinutes(newExpiresAt.getMinutes() + 60);
-          await prisma.transaction.update({
-            where: { id },
-            data: { status, expiresAt: newExpiresAt }
-          });
-        }
-      } else {
-        await prisma.transaction.update({
-          where: { id },
-          data: { status }
-        });
-      }
-      revalidatePath("/admin/transactions");
-    }
-  }
-
-  async function deleteTransaction(formData: FormData) {
-    "use server";
-    await assertNotValidator();
-
-    const id = formData.get("id") as string;
-    
-    if (id) {
-      await prisma.$transaction(async (prismaTx) => {
-        const tx = await prismaTx.transaction.findUnique({
-          where: { id },
-          include: { tickets: true }
-        });
-        if (!tx) return;
-
-        await prismaTx.transaction.delete({ where: { id } });
-
-        if (tx.status !== "EXPIRED" && tx.paymentProofUrl !== "OFFLINE") {
-          const quotaToReturn = new Map<string, number>();
-          for (const ticket of tx.tickets) {
-            const current = quotaToReturn.get(ticket.ticketCategoryId) ?? 0;
-            quotaToReturn.set(ticket.ticketCategoryId, current + 1);
-          }
-          for (const [categoryId, count] of quotaToReturn.entries()) {
-            const category = await prismaTx.ticketCategory.findUnique({ where: { id: categoryId } });
-            
-            if (category) {
-              const activePrice = tx.totalTickets > 0 ? tx.totalPrice / tx.totalTickets : 0;
-              const usedDiscount = category.hasDiscount && category.discountPrice !== null && activePrice === category.discountPrice;
-              
-              const updateData: any = { quota: { increment: count } };
-              
-              if (usedDiscount && category.discountQuota !== null) {
-                updateData.discountQuota = { increment: count };
-              }
-              
-              await prismaTx.ticketCategory.update({
-                where: { id: categoryId },
-                data: updateData
-              });
-            }
-          }
-        }
-      });
-      revalidatePath("/admin/transactions");
-    }
-  }
-
-  // -------- Server Action: Reaktivasi EXPIRED → PENDING --------
-  async function reactivateTransaction(formData: FormData) {
-    "use server";
-    await assertNotValidator();
-
-    const id = formData.get("id") as string;
-    if (!id) return;
-
-    await prisma.$transaction(async (prismaTx) => {
-      const tx = await prismaTx.transaction.findUnique({
-        where: { id },
-        include: { tickets: true }
-      });
-      if (!tx || tx.status !== "EXPIRED") return;
-
-      // Kurangi kuota kembali (karena saat EXPIRED kuota sudah dikembalikan)
-      const quotaMap = new Map<string, number>();
-      for (const ticket of tx.tickets) {
-        const current = quotaMap.get(ticket.ticketCategoryId) ?? 0;
-        quotaMap.set(ticket.ticketCategoryId, current + 1);
-      }
-      for (const [categoryId, count] of quotaMap.entries()) {
-        await prismaTx.ticketCategory.update({
-          where: { id: categoryId },
-          data: { quota: { decrement: count } }
-        });
-      }
-
-      // Set status PENDING, reset bukti TF agar peserta upload ulang
-      await prismaTx.transaction.update({
-        where: { id },
-        data: {
-          status: "PENDING",
-          expiresAt: null,
-          paymentProofUrl: null,
-          senderAccountName: null,
-        }
-      });
-    });
-
-    revalidatePath("/admin/transactions");
-  }
-
-  // -------- Server Action: Approve langsung transaksi EXPIRED (admin input bukti TF) --------
-  async function approveExpiredTransaction(formData: FormData) {
-    "use server";
-    await assertNotValidator();
-
-    const id = formData.get("id") as string;
-    const paymentProofUrl = formData.get("paymentProofUrl") as string;
-    const senderAccountName = formData.get("senderAccountName") as string;
-
-    if (!id || !paymentProofUrl || !senderAccountName) return;
-
-    await prisma.$transaction(async (prismaTx) => {
-      const tx = await prismaTx.transaction.findUnique({
-        where: { id },
-        include: { tickets: true }
-      });
-      if (!tx || tx.status !== "EXPIRED") return;
-
-      // Kurangi kembali kuota (kuota sudah dikembalikan saat EXPIRED, sekarang approve → pakai kuota)
-      const quotaMap = new Map<string, number>();
-      for (const ticket of tx.tickets) {
-        const current = quotaMap.get(ticket.ticketCategoryId) ?? 0;
-        quotaMap.set(ticket.ticketCategoryId, current + 1);
-      }
-      for (const [categoryId, count] of quotaMap.entries()) {
-        await prismaTx.ticketCategory.update({
-          where: { id: categoryId },
-          data: { quota: { decrement: count } }
-        });
-      }
-
-      // Set data pembayaran + langsung APPROVED
-      await prismaTx.transaction.update({
-        where: { id },
-        data: {
-          status: "APPROVED",
-          paymentProofUrl,
-          senderAccountName,
-          expiresAt: null,
-        }
-      });
-    });
-
-    revalidatePath("/admin/transactions");
-  }
-
-  // -------- Server Action: Upgrade Kategori Tiket --------
-  async function upgradeTicketCategory(formData: FormData) {
-    "use server";
-    await assertNotValidator();
-
-    const transactionId = formData.get("transactionId") as string;
-    const newCategoryId = formData.get("newCategoryId") as string;
-    const paymentProofUrl2 = formData.get("paymentProofUrl2") as string;
-    const priceDiff = parseInt(formData.get("priceDiff") as string, 10) || 0;
-    const oldCategoryId = formData.get("oldCategoryId") as string;
-
-    if (!transactionId || !newCategoryId || !paymentProofUrl2) return;
-
-    await prisma.$transaction(async (prismaTx) => {
-      const tx = await prismaTx.transaction.findUnique({
-        where: { id: transactionId },
-        include: { tickets: true }
-      });
-      if (!tx || tx.status !== "APPROVED") return;
-
-      const newCat = await prismaTx.ticketCategory.findUnique({ where: { id: newCategoryId } });
-      if (!newCat) return;
-
-      // Kurangi kuota kategori baru
-      await prismaTx.ticketCategory.update({
-        where: { id: newCategoryId },
-        data: { quota: { decrement: tx.tickets.length } }
-      });
-
-      // Kembalikan kuota kategori lama
-      await prismaTx.ticketCategory.update({
-        where: { id: oldCategoryId },
-        data: { quota: { increment: tx.tickets.length } }
-      });
-
-      // Update semua tiket ke kategori baru
-      await prismaTx.ticket.updateMany({
-        where: { transactionId },
-        data: { ticketCategoryId: newCategoryId }
-      });
-
-      // Update transaksi: harga, bukti TF kedua, track kategori lama
-      await prismaTx.transaction.update({
-        where: { id: transactionId },
-        data: {
-          totalPrice: tx.totalPrice + priceDiff,
-          paymentProofUrl2,
-          upgradedFromCatId: oldCategoryId,
-        }
-      });
-    });
-
-    revalidatePath("/admin/transactions");
-  }
-
-  // -------- Server Action: Edit Payment Proof --------
-  async function updatePaymentProof(formData: FormData) {
-    "use server";
-    await assertNotValidator();
-
-    const id = formData.get("id") as string;
-    const paymentProofUrl = formData.get("paymentProofUrl") as string;
-
-    if (id && paymentProofUrl) {
-      await prisma.transaction.update({
-        where: { id },
-        data: { paymentProofUrl }
-      });
-      revalidatePath("/admin/transactions");
-    }
   }
 
   if (!eventId) {
@@ -627,7 +376,6 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                                 <EditImageButton 
                                   transactionId={tx.id} 
                                   existingProofUrl={tx.paymentProofUrl}
-                                  editImageAction={updatePaymentProof}
                                 />
                               )}
                             </div>
@@ -638,7 +386,6 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                                 <EditImageButton 
                                   transactionId={tx.id} 
                                   existingProofUrl={null}
-                                  editImageAction={updatePaymentProof}
                                 />
                               )}
                             </div>
@@ -677,21 +424,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                             </span>
                           ) : (
                             <div className="flex gap-2">
-                              <form action={updateTransactionStatus}>
-                                <input type="hidden" name="id" value={tx.id} />
-                                <input type="hidden" name="status" value="REJECTED" />
-                                <button type="submit" className="px-4 py-2 bg-white border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 hover:border-red-200 rounded-xl transition-all shadow-sm" title="Tolak">
-                                  Tolak
-                                </button>
-                              </form>
-                              <form action={updateTransactionStatus}>
-                                <input type="hidden" name="id" value={tx.id} />
-                                <input type="hidden" name="status" value="APPROVED" />
-                                <button type="submit" className="flex items-center px-5 py-2 bg-emerald-500 text-white font-bold hover:bg-emerald-600 rounded-xl transition-all shadow-sm">
-                                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                                  Setujui
-                                </button>
-                              </form>
+                              <ApproveRejectButtons transactionId={tx.id} />
                               <form action={deleteTransaction}>
                                 <input type="hidden" name="id" value={tx.id} />
                                 <DeleteButton className="px-4 py-2 rounded-xl shadow-sm h-full" />
@@ -717,7 +450,6 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                                 currentPrice={tx.totalPrice}
                                 totalTickets={tx.totalTickets}
                                 categories={eventTicketCategories}
-                                upgradeAction={upgradeTicketCategory}
                                 className="px-4 py-2"
                               />
                             )}
@@ -767,12 +499,10 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                                   totalTickets={tx.totalTickets}
                                   existingProofUrl={tx.paymentProofUrl}
                                   existingSenderName={tx.senderAccountName}
-                                  approveExpiredAction={approveExpiredTransaction}
                                   className="px-4 py-2"
                                 />
                                 <ReactivateButton
                                   transactionId={tx.id}
-                                  reactivateAction={reactivateTransaction}
                                   className="px-4 py-2"
                                 />
                               </>
@@ -841,7 +571,6 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                           <EditImageButton 
                             transactionId={tx.id} 
                             existingProofUrl={tx.paymentProofUrl}
-                            editImageAction={updatePaymentProof}
                           />
                         )}
                       </div>
@@ -851,7 +580,6 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                           <EditImageButton 
                             transactionId={tx.id} 
                             existingProofUrl={null}
-                            editImageAction={updatePaymentProof}
                           />
                         )}
                       </div>
@@ -972,16 +700,7 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                       </div>
                     ) : (
                       <div className="flex gap-2 w-full pt-2">
-                        <form action={updateTransactionStatus} className="flex-1">
-                          <input type="hidden" name="id" value={tx.id} />
-                          <input type="hidden" name="status" value="REJECTED" />
-                          <button type="submit" className="w-full py-2.5 bg-white border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 rounded-xl transition-all">Tolak</button>
-                        </form>
-                        <form action={updateTransactionStatus} className="flex-1">
-                          <input type="hidden" name="id" value={tx.id} />
-                          <input type="hidden" name="status" value="APPROVED" />
-                          <button type="submit" className="w-full py-2.5 bg-emerald-500 text-white font-bold hover:bg-emerald-600 rounded-xl transition-all">Setujui</button>
-                        </form>
+                        <ApproveRejectButtons transactionId={tx.id} isMobile />
                         <form action={deleteTransaction}>
                           <input type="hidden" name="id" value={tx.id} />
                           <DeleteButton className="p-3 rounded-xl h-full" />
@@ -1007,7 +726,6 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                           currentPrice={tx.totalPrice}
                           totalTickets={tx.totalTickets}
                           categories={eventTicketCategories}
-                          upgradeAction={upgradeTicketCategory}
                           className="px-4 py-2.5"
                         />
                       )}
@@ -1056,7 +774,6 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                           totalTickets={tx.totalTickets}
                           existingProofUrl={tx.paymentProofUrl}
                           existingSenderName={tx.senderAccountName}
-                          approveExpiredAction={approveExpiredTransaction}
                           className="w-full py-2.5 justify-center"
                         />
                       )}
@@ -1064,7 +781,6 @@ export default async function AdminTransactionsPage({ searchParams }: Props) {
                         {!isValidator && (
                           <ReactivateButton
                             transactionId={tx.id}
-                            reactivateAction={reactivateTransaction}
                             className="flex-1 py-2.5 justify-center"
                           />
                         )}
